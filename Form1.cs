@@ -5,7 +5,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
     {
         // Criação dos componentes do Form (esses botões acessarão outros forms):
         private Button toDo;
-        private Button images;
+        private Button media;
         private Button mathTable;
         private Button calculator;
 
@@ -52,7 +52,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
                 Height = 100
             };
 
-            images = new Button()
+            media = new Button()
             {
                 Text = "Images",
                 Width = 100,
@@ -75,13 +75,13 @@ namespace Sistema_De_Aplicativos_Simples__.NET
 
             // Reseta a âncora de cada componente, de modo que sejam renderizados no centro de suas respectivas células no grid.
             toDo.Anchor = AnchorStyles.None;
-            images.Anchor = AnchorStyles.None;
+            media.Anchor = AnchorStyles.None;
             mathTable.Anchor = AnchorStyles.None;
             calculator.Anchor = AnchorStyles.None;
 
             // Por último adiciono os componentes ao grid e então o próprio grid é adicionado ao Form:
             grid.Controls.Add(toDo);
-            grid.Controls.Add(images);
+            grid.Controls.Add(media);
             grid.Controls.Add(mathTable);
             grid.Controls.Add(calculator);
 
