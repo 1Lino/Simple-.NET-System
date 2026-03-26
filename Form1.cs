@@ -83,13 +83,13 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             mathTable.Anchor = AnchorStyles.None;
             calculator.Anchor = AnchorStyles.None;
 
-            // Por último adiciono os componentes ao grid e então o próprio grid é adicionado ao Form:
+            // Por último adiciono os componentes ao grid:
             grid.Controls.Add(toDo);
             grid.Controls.Add(mediaPlayer);
             grid.Controls.Add(mathTable);
             grid.Controls.Add(calculator);
 
-            this.Controls.Add(grid);
+            this.Controls.Add(grid); // adiciona o grid ao Form.
 
             //TIP: (_, _) são argumentos nulos, mas normalmente seriam "e" e "s", onde "e" é evento (click, no caso) e "s" é sender (objeto que causa o evento, no caso o botão), que fazem parte da exigência do event handler da linguagem. Mesmo não usando esses argumentos, eles têm de existir aqui só pra satisfazer essa exigência da linguagem.
             calculator.Click += (_, _) => OpenForm<Calculator>();
@@ -99,14 +99,14 @@ namespace Sistema_De_Aplicativos_Simples__.NET
 
         }
 
-        // método de clique utilizando Type (T) para que o método possa ser usado de maneira dinâmica:
+        // Método genérico restritivo, onde T (Type) deve ser qualquer objeto que seja Form, e deve ser permitido uso de construtor, new():
         private void OpenForm<T>() where T : Form, new()
         {
-            T form = new T();
-            form.Show();
+            T form = new T(); // constrói um novo Form com as características passadas em T.
+            form.Show(); // mostra o objeto.
         }
 
-        // Isto aqui é a estrutura real do event handler:
+        // Isto aqui é a estrutura comum exigida pelo event handler:
         // private void OpenFormEvent(object sender, EventArgs e)
         // {
         //     MathTable mathTable = new MathTable();

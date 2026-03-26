@@ -1,46 +1,46 @@
-Categoria;Componente;Propriedades
-Controles Visuais;Label;Text, Font, ForeColor, BackColor, TextAlign
-Controles Visuais;TextBox;Text, Multiline, ReadOnly, PasswordChar, MaxLength
-Controles Visuais;RichTextBox;Text, Rtf, SelectionFont, SelectionColor, ReadOnly
-Controles Visuais;Button;Text, Enabled, BackColor, ForeColor, Image, Click (evento)
-Controles Visuais;CheckBox;Text, Checked, CheckAlign, ThreeState
-Controles Visuais;RadioButton;Text, Checked, GroupName (via contêiner), CheckedChange
-Controles Visuais;ListBox;Items, SelectedIndex, SelectedItem, MultiColumn, SelectionMode
-Controles Visuais;ComboBox;Items, SelectedIndex, SelectedItem, DropDownStyle
-Controles Visuais;PictureBox;Image, SizeMode, BorderStyle
-Controles Visuais;LinkLabel;Text, LinkBehavior, LinkColor, Click (evento)
-Controles Visuais;ProgressBar;Minimum, Maximum, Value, Step, Style
-Controles Visuais;TrackBar;Minimum, Maximum, Value, TickFrequency, Orientation
-Controles Visuais;MaskedTextBox;Mask, Text, PasswordChar, PromptChar
-Controles Visuais;MonthCalendar;SelectionStart, SelectionEnd, MaxSelectionCount
-Controles Visuais;DateTimePicker;Value, Format, CustomFormat, MinDate, MaxDate
-Controles Visuais;NumericUpDown;Minimum, Maximum, Value, Increment, DecimalPlaces
-Controles Visuais;ToolTip;SetToolTip(control, text), AutoPopDelay, InitialDelay, ReshowDelay
-Controles de Contêiner;Panel;Controls, Dock, AutoScroll, BorderStyle
-Controles de Contêiner;GroupBox;Text, Controls, Dock, Font
-Controles de Contêiner;TabControl;TabPages, SelectedIndex, Dock
-Controles de Contêiner;TabPage;Text, Controls, BackColor
-Controles de Contêiner;SplitContainer;Panel1, Panel2, Orientation, SplitterDistance
-Controles de Contêiner;FlowLayoutPanel;Controls, FlowDirection, WrapContents, AutoScroll
-Controles de Contêiner;TableLayoutPanel;Controls, RowCount, ColumnCount, Dock, AutoSize
-Controles de Dados;DataGridView;DataSource, Columns, Rows, AllowUserToAddRows, ReadOnly
-Controles de Dados;BindingNavigator;BindingSource, AddNewItem, DeleteItem, MoveFirstItem, MoveLastItem
-Controles de Dados;ListView;Items, View, CheckBoxes, Columns, FullRowSelect
-Controles de Dados;TreeView;Nodes, CheckBoxes, SelectedNode, AfterSelect (evento)
-Menus e Barras de Ferramentas;MenuStrip;Items, Dock, Visible
-Menus e Barras de Ferramentas;ToolStrip;Items, Dock, GripStyle
-Menus e Barras de Ferramentas;StatusStrip;Items, Dock
-Menus e Barras de Ferramentas;ContextMenuStrip;Items, ShowImageMargin
-Menus e Barras de Ferramentas;ToolStripButton;Text, Image, Click (evento), Enabled
-Menus e Barras de Ferramentas;ToolStripDropDownButton;Text, DropDownItems, Enabled
-Menus e Barras de Ferramentas;ToolStripLabel;Text, ForeColor, Font
-Componentes Não Visuais;Timer;Interval, Enabled, Tick (evento)
-Componentes Não Visuais;BackgroundWorker;WorkerReportsProgress, WorkerSupportsCancellation, DoWork, ProgressChanged, RunWorkerCompleted
-Componentes Não Visuais;ErrorProvider;SetError(control, message), BlinkStyle
-Componentes Não Visuais;ImageList;Images, ColorDepth, ImageSize
-Componentes Não Visuais;BindingSource;DataSource, DataMember, Filter, Sort
-Componentes Não Visuais;OpenFileDialog;Filter, InitialDirectory, FileName, Multiselect
-Componentes Não Visuais;SaveFileDialog;Filter, InitialDirectory, FileName
-Componentes Não Visuais;FolderBrowserDialog;SelectedPath, Description, ShowNewFolderButton
-Componentes Não Visuais;ColorDialog;Color, FullOpen, AnyColor
-Componentes Não Visuais;FontDialog;Font, ShowColor, Color
+Categoria,Componente,Propriedades
+Controles Visuais,Label,Text | Font | ForeColor | BackColor | TextAlign
+Controles Visuais,TextBox,Text | Multiline | ReadOnly | PasswordChar | MaxLength
+Controles Visuais,RichTextBox,Text | Rtf | SelectionFont | SelectionColor | ReadOnly
+Controles Visuais,Button,Text | Enabled | BackColor | ForeColor | Image | Click (evento)
+Controles Visuais,CheckBox,Text | Checked | CheckAlign | ThreeState
+Controles Visuais,RadioButton,Text | Checked | GroupName (via contêiner) | CheckedChange
+Controles Visuais,ListBox,Items | SelectedIndex | SelectedItem | MultiColumn | SelectionMode
+Controles Visuais,ComboBox,Items | SelectedIndex | SelectedItem | DropDownStyle
+Controles Visuais,PictureBox,Image | SizeMode | BorderStyle
+Controles Visuais,LinkLabel,Text | LinkBehavior | LinkColor | Click (evento)
+Controles Visuais,ProgressBar,Minimum | Maximum | Value | Step | Style
+Controles Visuais,TrackBar,Minimum | Maximum | Value | TickFrequency | Orientation
+Controles Visuais,MaskedTextBox,Mask | Text | PasswordChar | PromptChar
+Controles Visuais,MonthCalendar,SelectionStart | SelectionEnd | MaxSelectionCount
+Controles Visuais,DateTimePicker,Value | Format | CustomFormat | MinDate | MaxDate
+Controles Visuais,NumericUpDown,Minimum | Maximum | Value | Increment | DecimalPlaces
+Controles Visuais,ToolTip,SetToolTip(control | text) | AutoPopDelay | InitialDelay | ReshowDelay
+Controles de Contêiner,Panel,Controls | Dock | AutoScroll | BorderStyle
+Controles de Contêiner,GroupBox,Text | Controls | Dock | Font
+Controles de Contêiner,TabControl,TabPages | SelectedIndex | Dock
+Controles de Contêiner,TabPage,Text | Controls | BackColor
+Controles de Contêiner,SplitContainer,Panel1 | Panel2 | Orientation | SplitterDistance
+Controles de Contêiner,FlowLayoutPanel,Controls | FlowDirection | WrapContents | AutoScroll
+Controles de Contêiner,TableLayoutPanel,Controls | RowCount | ColumnCount | Dock | AutoSize
+Controles de Dados,DataGridView,DataSource | Columns | Rows | AllowUserToAddRows | ReadOnly
+Controles de Dados,BindingNavigator,BindingSource | AddNewItem | DeleteItem | MoveFirstItem | MoveLastItem
+Controles de Dados,ListView,Items | View | CheckBoxes | Columns | FullRowSelect
+Controles de Dados,TreeView,Nodes | CheckBoxes | SelectedNode | AfterSelect (evento)
+Menus e Barras de Ferramentas,MenuStrip,Items | Dock | Visible
+Menus e Barras de Ferramentas,ToolStrip,Items | Dock | GripStyle
+Menus e Barras de Ferramentas,StatusStrip,Items | Dock
+Menus e Barras de Ferramentas,ContextMenuStrip,Items | ShowImageMargin
+Menus e Barras de Ferramentas,ToolStripButton,Text | Image | Click (evento) | Enabled
+Menus e Barras de Ferramentas,ToolStripDropDownButton,Text | DropDownItems | Enabled
+Menus e Barras de Ferramentas,ToolStripLabel,Text | ForeColor | Font
+Componentes Não Visuais,Timer,Interval | Enabled | Tick (evento)
+Componentes Não Visuais,BackgroundWorker,WorkerReportsProgress | WorkerSupportsCancellation | DoWork | ProgressChanged | RunWorkerCompleted
+Componentes Não Visuais,ErrorProvider,SetError(control | message) | BlinkStyle
+Componentes Não Visuais,ImageList,Images | ColorDepth | ImageSize
+Componentes Não Visuais,BindingSource,DataSource | DataMember | Filter | Sort
+Componentes Não Visuais,OpenFileDialog,Filter | InitialDirectory | FileName | Multiselect
+Componentes Não Visuais,SaveFileDialog,Filter | InitialDirectory | FileName
+Componentes Não Visuais,FolderBrowserDialog,SelectedPath | Description | ShowNewFolderButton
+Componentes Não Visuais,ColorDialog,Color | FullOpen | AnyColor
+Componentes Não Visuais,FontDialog,Font | ShowColor | Color
