@@ -43,4 +43,9 @@ Componentes Não Visuais,OpenFileDialog,Filter | InitialDirectory | FileName | M
 Componentes Não Visuais,SaveFileDialog,Filter | InitialDirectory | FileName
 Componentes Não Visuais,FolderBrowserDialog,SelectedPath | Description | ShowNewFolderButton
 Componentes Não Visuais,ColorDialog,Color | FullOpen | AnyColor
+<<<<<<< HEAD
 Componentes Não Visuais,FontDialog,Font | ShowColor | Color
+=======
+Componentes Não Visuais,FontDialog,Font | ShowColor | Color
+
+>>>>>>> 620cb189d0e394832110cdd32b2ae3ea33bd24f5
