@@ -1,4 +1,5 @@
 // TIP: o Designer não será necessário aqui, pois como ele apenas inicializa configurações do formulário, não seria conveniente um designer pra cada formulário, então as configurações de cada formulário serão locais mesmo. Sendo assim "InitializeComponent" será local mesmo (normalmente fica no designer).
+using System.ComponentModel.DataAnnotations;
 using Microsoft.VisualBasic;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
@@ -36,7 +37,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             appLayout.Controls.Add(mathTableControlPanel, 0, 0);
             appLayout.SetColumnSpan(mathTableControlPanel, appLayout.ColumnCount);
 
-            AppendMathTablesToAppLayout();
+            AppendMathTablesToAppLayout(InitializeMathTable, mathTable, appLayout);
 
             // adiciona a tabela ao form.
             Controls.Add(appLayout);
@@ -49,9 +50,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         // COMPONENTES
 
-        private void InitializeMathTable()
+        private DataGridView InitializeMathTable()
         {
-            mathTable = new DataGridView
+            var table = new DataGridView
             {
                 Dock = DockStyle.None,
                 ColumnCount = 1,
@@ -60,20 +61,24 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 ReadOnly = true,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
             };
-            mathTable.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            mathTable.AllowUserToAddRows = false;
-            mathTable.Anchor = AnchorStyles.None;
+            table.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            table.AllowUserToAddRows = false;
+            table.Anchor = AnchorStyles.None;
+
+            return table;
         }
-        private void AppendMathTablesToAppLayout()
+
+        // DICA: pesquisar mais a fundo sobre Action<T> e Func<T>. São formas bastante interessantes de se fazer referências a métodos externos.
+        private void AppendMathTablesToAppLayout(Func<DataGridView> initMathTable, DataGridView mathTable, TableLayoutPanel layout)
         {
             // atualização do counter precisa persistir através do loop, por isso deve ser declarado aqui fora.
             int counter = 1;
 
-            for (int row = 1; row < appLayout.RowCount; row++)
+            for (int row = 1; row < layout.RowCount; row++)
             {
-                for (int col = 0; col < appLayout.ColumnCount; col++)
+                for (int col = 0; col < layout.ColumnCount; col++)
                 {
-                    InitializeMathTable();
+                    mathTable = initMathTable();
 
                     for (int i = 1; i <= 10; i++)
                     {
@@ -84,7 +89,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
                     counter++;
 
-                    appLayout.Controls.Add(mathTable, col, row);
+                    layout.Controls.Add(mathTable, col, row);
                 }
             }
         }
