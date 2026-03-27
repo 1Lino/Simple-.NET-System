@@ -5,10 +5,11 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class MathTable : Form
     {
-        private TableLayoutPanel tableLayout;
+        private TableLayoutPanel appLayout;
         private Panel mathTableControlPanel;
         private ComboBox mathTableOperationSelection;
         private DataGridView mathTableOperations;
+        private DataGridView mathTable;
 
 
         // Método principal da classe (Main ou constructor):
@@ -16,10 +17,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         {
             InitializeForm();
             InitializeFormComponents();
-            InitializeEvents();
+            HandleEvents();
         }
 
-        // Inicializadores de Form, de componentes e eventos:
         private void InitializeForm()
         {
             Text = "Math Table";
@@ -30,72 +30,78 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void InitializeFormComponents()
         {
-            tableLayout = InitializeAppLayout();
+            InitializeAppLayout();
+            InitializeControlPanelUI();
 
-            mathTableControlPanel = InitializeControlPanel();
-            tableLayout.Controls.Add(mathTableControlPanel, 0, 0);
-            tableLayout.SetColumnSpan(mathTableControlPanel, tableLayout.ColumnCount);
+            appLayout.Controls.Add(mathTableControlPanel, 0, 0);
+            appLayout.SetColumnSpan(mathTableControlPanel, appLayout.ColumnCount);
 
-            InitializeMathTables();
+            AppendMathTablesToAppLayout();
 
-            // adiciona a tabela no form.
-            Controls.Add(tableLayout);
+            // adiciona a tabela ao form.
+            Controls.Add(appLayout);
         }
 
-        private void InitializeMathTables()
+        private void HandleEvents()
         {
+            Resize += (_, _) => ResizeAndCenterAppLayout(appLayout); // quando for dado resize no Form, a tabela será centralizada.
+        }
+
+        // COMPONENTES
+
+        private void InitializeMathTable()
+        {
+            mathTable = new DataGridView
+            {
+                Dock = DockStyle.None,
+                ColumnCount = 1,
+                RowHeadersVisible = false,
+                ColumnHeadersVisible = false,
+                ReadOnly = true,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
+            };
+            mathTable.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            mathTable.AllowUserToAddRows = false;
+            mathTable.Anchor = AnchorStyles.None;
+        }
+        private void AppendMathTablesToAppLayout()
+        {
+            // atualização do counter precisa persistir através do loop, por isso deve ser declarado aqui fora.
             int counter = 1;
 
-            for (int row = 1; row < tableLayout.RowCount; row++)
+            for (int row = 1; row < appLayout.RowCount; row++)
             {
-                for (int col = 0; col < tableLayout.ColumnCount; col++)
+                for (int col = 0; col < appLayout.ColumnCount; col++)
                 {
-                    mathTableOperations = new DataGridView
-                    {
-                        Dock = DockStyle.None,
-                        Name = $"dgv_{row}_{col}",
-                        Tag = counter,
-                        ColumnCount = 1,
-                        RowHeadersVisible = false,
-                        ColumnHeadersVisible = false,
-                    };
-                    mathTableControlPanel.Anchor = AnchorStyles.None;
+                    InitializeMathTable();
 
                     for (int i = 1; i <= 10; i++)
                     {
                         // TODO: nessa parte da operação, um método deve ser adicionado pra fazer essa operação de acordo
                         // com o parâmetro de operação (+ - * /).
-                        mathTableOperations.Rows.Add($"{counter} + {i} = {counter + i}");
+                        mathTable.Rows.Add($"{counter} + {i} = {counter + i}");
                     }
 
                     counter++;
 
-                    tableLayout.Controls.Add(mathTableOperations, col, row);
+                    appLayout.Controls.Add(mathTable, col, row);
                 }
             }
         }
 
-        private Panel InitializeControlPanel()
+        private void InitializeControlPanelUI()
         {
-            var panel = new Panel
+            mathTableControlPanel = new Panel
             {
                 Dock = DockStyle.Fill,
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = Color.Aqua
             };
-            return panel;
         }
 
-        // "inicializar" eventos não é uma expressão muito precisa, mas está assim apenas para manter coerência de nomenclatura. Já que o app é simples, isto não é problema.
-        private void InitializeEvents()
+        public void InitializeAppLayout()
         {
-            Resize += (_, _) => ResizeAndCenterTable(tableLayout); // quando for dado resize no Form, a tabela será centralizada.
-        }
-
-        // COMPONENTES
-        public TableLayoutPanel InitializeAppLayout()
-        {
-            var table = new TableLayoutPanel
+            appLayout = new TableLayoutPanel
             {
                 Dock = DockStyle.None,
                 ColumnCount = 3,
@@ -104,32 +110,29 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 AutoScroll = true,
                 MinimumSize = new Size(400, 500),
             };
-            table.Left = (ClientSize.Width - table.Width) / 2; // não pode ser configurado diretamente na inicialização acima porque necessita que a definição esteja concluída para então puxar table.width;
-            table.Top = (ClientSize.Height - table.Height) / 2;
+            appLayout.Left = (ClientSize.Width - appLayout.Width) / 2; // não pode ser configurado diretamente na inicialização acima porque necessita que a definição esteja concluída para então puxar table.width;
+            appLayout.Top = (ClientSize.Height - appLayout.Height) / 2;
 
-            for (int i = 0; i < table.ColumnCount; i++)
+            for (int i = 0; i < appLayout.ColumnCount; i++)
             {
-                table.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+                appLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
             }
-            for (int i = 0; i < table.RowCount; i++)
+            for (int i = 0; i < appLayout.RowCount; i++)
             {
-                table.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+                appLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
             }
-
-            return table;
         }
 
-        private void ResizeAndCenterTable(TableLayoutPanel table)
+        private void ResizeAndCenterAppLayout(TableLayoutPanel layout)
         {
-            ResizeTable(table);
-            CenterTable(table);
+            ResizeLayout(layout);
+            CenterLayout(layout);
         }
 
-        private void ResizeTable(TableLayoutPanel table)
+        private void ResizeLayout(TableLayoutPanel layout)
         {
             double scaleW = 0.5; // escala para a largura. 50%
             double scaleH = 0.8; // escala para a altura. 80%
-
 
             // converter em int é necessário para essa operação, do contrário, erro, pois não se pode atribuir
             // resultado double ou float para uma variável tipo int.
@@ -140,14 +143,14 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             newTableWidth = Math.Min(newTableWidth, 800);
             newTableHeight = Math.Min(newTableHeight, 600);
 
-            table.Size = new Size(newTableWidth, newTableHeight);
+            layout.Size = new Size(newTableWidth, newTableHeight);
         }
 
-        private void CenterTable(TableLayoutPanel table)
+        private void CenterLayout(TableLayoutPanel layout)
         {
             // Centraliza a tabela:
-            table.Left = (ClientSize.Width - table.Width) / 2;
-            table.Top = (ClientSize.Height - table.Height) / 2;
+            layout.Left = (ClientSize.Width - layout.Width) / 2;
+            layout.Top = (ClientSize.Height - layout.Height) / 2;
         }
 
 
