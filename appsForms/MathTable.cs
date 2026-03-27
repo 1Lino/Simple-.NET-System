@@ -1,6 +1,4 @@
 // TIP: o Designer não será necessário aqui, pois como ele apenas inicializa configurações do formulário, não seria conveniente um designer pra cada formulário, então as configurações de cada formulário serão locais mesmo. Sendo assim "InitializeComponent" será local mesmo (normalmente fica no designer).
-using System.ComponentModel.DataAnnotations;
-using Microsoft.VisualBasic;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -8,10 +6,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     {
         private TableLayoutPanel appLayout;
         private Panel mathTableControlPanel;
-        private ComboBox mathTableOperationSelection;
-        private DataGridView mathTableOperations;
-        private DataGridView mathTable;
-
+        private ComboBox comboBox;
 
         // Método principal da classe (Main ou constructor):
         public MathTable()
@@ -26,6 +21,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Text = "Math Table";
             Width = 450;
             Height = 550;
+            BackColor = Color.Aquamarine;
             FormBorderStyle = FormBorderStyle.FixedSingle; // impede que o form seja redimensionado pelas bordas.
         }
 
@@ -33,11 +29,14 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         {
             InitializeAppLayout();
             InitializeControlPanelUI();
+            InitializeComboBox();
+            comboBox.Location = new Point((mathTableControlPanel.Width - comboBox.Width) / 2, (mathTableControlPanel.Height - comboBox.Height) / 2);
+            mathTableControlPanel?.Controls.Add(comboBox);
 
             appLayout.Controls.Add(mathTableControlPanel, 0, 0);
             appLayout.SetColumnSpan(mathTableControlPanel, appLayout.ColumnCount);
 
-            AppendMathTablesToAppLayout(InitializeMathTable, mathTable, appLayout);
+            AppendMathTablesToAppLayout(InitializeMathTable, appLayout);
 
             // adiciona a tabela ao form.
             Controls.Add(appLayout);
@@ -46,62 +45,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         private void HandleEvents()
         {
             Resize += (_, _) => ResizeAndCenterAppLayout(appLayout); // quando for dado resize no Form, a tabela será centralizada.
-        }
-
-        // COMPONENTES
-
-        private DataGridView InitializeMathTable()
-        {
-            var table = new DataGridView
-            {
-                Dock = DockStyle.None,
-                ColumnCount = 1,
-                RowHeadersVisible = false,
-                ColumnHeadersVisible = false,
-                ReadOnly = true,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
-            };
-            table.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            table.AllowUserToAddRows = false;
-            table.Anchor = AnchorStyles.None;
-
-            return table;
-        }
-
-        // DICA: pesquisar mais a fundo sobre Action<T> e Func<T>. São formas bastante interessantes de se fazer referências a métodos externos.
-        private void AppendMathTablesToAppLayout(Func<DataGridView> initMathTable, DataGridView mathTable, TableLayoutPanel layout)
-        {
-            // atualização do counter precisa persistir através do loop, por isso deve ser declarado aqui fora.
-            int counter = 1;
-
-            for (int row = 1; row < layout.RowCount; row++)
-            {
-                for (int col = 0; col < layout.ColumnCount; col++)
-                {
-                    mathTable = initMathTable();
-
-                    for (int i = 1; i <= 10; i++)
-                    {
-                        // TODO: nessa parte da operação, um método deve ser adicionado pra fazer essa operação de acordo
-                        // com o parâmetro de operação (+ - * /).
-                        mathTable.Rows.Add($"{counter} + {i} = {counter + i}");
-                    }
-
-                    counter++;
-
-                    layout.Controls.Add(mathTable, col, row);
-                }
-            }
-        }
-
-        private void InitializeControlPanelUI()
-        {
-            mathTableControlPanel = new Panel
-            {
-                Dock = DockStyle.Fill,
-                BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.Aqua
-            };
+            comboBox.SelectedIndexChanged += (_, _) => OnSelectedOption();
         }
 
         public void InitializeAppLayout()
@@ -111,7 +55,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 Dock = DockStyle.None,
                 ColumnCount = 3,
                 RowCount = 4,
-                CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
+                //CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
                 AutoScroll = true,
                 MinimumSize = new Size(400, 500),
             };
@@ -126,6 +70,145 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             {
                 appLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
             }
+        }
+
+        private void InitializeControlPanelUI()
+        {
+            mathTableControlPanel = new Panel
+            {
+                Dock = DockStyle.Fill,
+                BorderStyle = BorderStyle.FixedSingle,
+                BackColor = Color.Aqua
+            };
+        }
+
+        private void InitializeComboBox()
+        {
+
+            comboBox = new ComboBox
+            {
+                Dock = DockStyle.None,
+                Size = new Size(100, 0),
+                Anchor = AnchorStyles.None,
+            };
+            comboBox.Items.AddRange(["Adição", "Subtração", "Multiplicação", "Divisão"]);
+            comboBox.DropDownStyle = ComboBoxStyle.DropDownList; // evita edição do texto pelo usuário.
+            comboBox.SelectedIndex = 0;
+            comboBox.MaxDropDownItems = 4;
+
+            // Todo este bloco "complicado" abaixo é só pra garantir que o parente deste componente é de fato um painel, antes de configurar a posição do comboBox ao centro dele.
+            Panel? parent = comboBox.Parent as Panel; // ? aqui é pra garantir que o código continue mesmo se "parent" for null.
+            if (parent != null)  // se "parent" não for null, então prossegue definir a posição do combox.
+            {
+                comboBox.Location = new Point((parent.Width - comboBox.Width) / 2, (parent.Height - comboBox.Height) / 2);
+            }
+        }
+
+        private DataGridView InitializeMathTable()
+        {
+            var table = new DataGridView
+            {
+                Dock = DockStyle.None,
+                ColumnCount = 1,
+                RowHeadersVisible = false,
+                ColumnHeadersVisible = false,
+                ReadOnly = true,
+                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+                AllowUserToResizeRows = false,
+                AllowUserToResizeColumns = false
+            };
+            table.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            table.AllowUserToAddRows = false;
+            table.Anchor = AnchorStyles.None;
+
+            return table;
+        }
+
+        // DICA: pesquisar a fundo sobre Action<T> e Func<T>. São formas bastante interessantes de se fazer referências a métodos externos.
+        private static void AppendMathTablesToAppLayout(Func<DataGridView> initMathTable, TableLayoutPanel layout)
+        {
+            // atualização do counter precisa persistir através do loop, por isso deve ser declarado aqui fora.
+            int counter = 1;
+
+            for (int row = 1; row < layout.RowCount; row++)
+            {
+                for (int col = 0; col < layout.ColumnCount; col++)
+                {
+                    AppendMathTable(initMathTable, layout, counter, col, row);
+                    counter++;
+                }
+            }
+        }
+
+        private static void AppendMathTable(Func<DataGridView> initMathTable, TableLayoutPanel layout, int counter, int col, int row)
+        {
+            var mathTable = initMathTable();
+
+            for (int i = 1; i <= 10; i++)
+            {
+                // TODO: nessa parte da operação, um método deve ser adicionado pra fazer essa operação de acordo
+                // com o parâmetro de operação (+ - * /).
+                mathTable.Rows.Add($"{counter} + {i} = {counter + i}");
+            }
+
+            layout.Controls.Add(mathTable, col, row);
+        }
+
+        // Métodos relacionados a eventos:
+        private void OnSelectedOption()
+        {
+            //string selectedOption = comboBox.SelectedItem?.ToString() ?? "";
+            int selectedOption = comboBox.SelectedIndex;
+            UpdateMathTable(selectedOption);
+        }
+        private void UpdateMathTable(int operationId)
+        {
+            int a = 1;
+            int b;
+
+            foreach (Control control in appLayout.Controls)
+            {
+                if (control is DataGridView mathTable)
+                {
+                    b = 1;
+                    foreach (DataGridViewRow row in mathTable.Rows)
+                    {
+                        foreach (DataGridViewCell cell in row.Cells)
+                        {
+                            cell.Value = GetOperationResult(a, b, operationId);
+                        }
+                        b++;
+                    }
+                    a++;
+                }
+            }
+        }
+
+        private static string GetOperationResult(int a, int b, int operationId)
+        {
+            int c = 0;
+            string mathExpression = "";
+
+            switch (operationId)
+            {
+                case 0:
+                    c = a + b;
+                    mathExpression = $"{a} + {b} = {c}";
+                    break;
+                case 1:
+                    c = a + b; // em subtração, o cálculo da adição permanece, muda-se apenas a apresentação dos dados.
+                    mathExpression = $"{c} - {a} = {b}";
+                    break;
+                case 2:
+                    c = a * b;
+                    mathExpression = $"{a} x {b} = {c}";
+                    break;
+                case 3:
+                    c = b * a; // em divisão, o cálculo da multiplicação permanece, muda-se apenas a apresentação dos dados.
+                    mathExpression = $"{c} / {a} = {b}";
+                    break;
+            }
+            return mathExpression;
         }
 
         private void ResizeAndCenterAppLayout(TableLayoutPanel layout)
@@ -157,7 +240,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             layout.Left = (ClientSize.Width - layout.Width) / 2;
             layout.Top = (ClientSize.Height - layout.Height) / 2;
         }
-
 
     }
 }
