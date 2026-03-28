@@ -1,5 +1,3 @@
-// TIP: o Designer não será necessário aqui, pois como ele apenas inicializa configurações do formulário, não seria conveniente um designer pra cada formulário, então as configurações de cada formulário serão locais mesmo. Sendo assim "InitializeComponent" será local mesmo (normalmente fica no designer).
-
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class MathTable : Form
@@ -8,7 +6,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         private Panel mathTableControlPanel;
         private ComboBox comboBox;
 
-        // Método principal da classe (Main ou constructor):
         public MathTable()
         {
             InitializeForm();
@@ -22,7 +19,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Width = 450;
             Height = 550;
             BackColor = Color.Aquamarine;
-            FormBorderStyle = FormBorderStyle.FixedSingle; // impede que o form seja redimensionado pelas bordas.
+            FormBorderStyle = FormBorderStyle.FixedSingle;
         }
 
         private void InitializeFormComponents()
@@ -38,13 +35,12 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             AppendMathTablesToAppLayout(InitializeMathTable, appLayout);
 
-            // adiciona a tabela ao form.
             Controls.Add(appLayout);
         }
 
         private void HandleEvents()
         {
-            Resize += (_, _) => ResizeAndCenterAppLayout(appLayout); // quando for dado resize no Form, a tabela será centralizada.
+            Resize += (_, _) => ResizeAndCenterAppLayout(appLayout);
             comboBox.SelectedIndexChanged += (_, _) => OnSelectedOption();
         }
 
@@ -55,11 +51,10 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 Dock = DockStyle.None,
                 ColumnCount = 3,
                 RowCount = 4,
-                //CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
                 AutoScroll = true,
                 MinimumSize = new Size(400, 500),
             };
-            appLayout.Left = (ClientSize.Width - appLayout.Width) / 2; // não pode ser configurado diretamente na inicialização acima porque necessita que a definição esteja concluída para então puxar table.width;
+            appLayout.Left = (ClientSize.Width - appLayout.Width) / 2;
             appLayout.Top = (ClientSize.Height - appLayout.Height) / 2;
 
             for (int i = 0; i < appLayout.ColumnCount; i++)
@@ -92,13 +87,12 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 Anchor = AnchorStyles.None,
             };
             comboBox.Items.AddRange(["Adição", "Subtração", "Multiplicação", "Divisão"]);
-            comboBox.DropDownStyle = ComboBoxStyle.DropDownList; // evita edição do texto pelo usuário.
+            comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
             comboBox.SelectedIndex = 0;
             comboBox.MaxDropDownItems = 4;
 
-            // Todo este bloco "complicado" abaixo é só pra garantir que o parente deste componente é de fato um painel, antes de configurar a posição do comboBox ao centro dele.
-            Panel? parent = comboBox.Parent as Panel; // ? aqui é pra garantir que o código continue mesmo se "parent" for null.
-            if (parent != null)  // se "parent" não for null, então prossegue definir a posição do combox.
+            Panel? parent = comboBox.Parent as Panel;
+            if (parent != null)
             {
                 comboBox.Location = new Point((parent.Width - comboBox.Width) / 2, (parent.Height - comboBox.Height) / 2);
             }
@@ -124,10 +118,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             return table;
         }
 
-        // DICA: pesquisar a fundo sobre Action<T> e Func<T>. São formas bastante interessantes de se fazer referências a métodos externos.
         private static void AppendMathTablesToAppLayout(Func<DataGridView> initMathTable, TableLayoutPanel layout)
         {
-            // atualização do counter precisa persistir através do loop, por isso deve ser declarado aqui fora.
             int counter = 1;
 
             for (int row = 1; row < layout.RowCount; row++)
@@ -146,18 +138,14 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             for (int i = 1; i <= 10; i++)
             {
-                // TODO: nessa parte da operação, um método deve ser adicionado pra fazer essa operação de acordo
-                // com o parâmetro de operação (+ - * /).
                 mathTable.Rows.Add($"{counter} + {i} = {counter + i}");
             }
 
             layout.Controls.Add(mathTable, col, row);
         }
 
-        // Métodos relacionados a eventos:
         private void OnSelectedOption()
         {
-            //string selectedOption = comboBox.SelectedItem?.ToString() ?? "";
             int selectedOption = comboBox.SelectedIndex;
             UpdateMathTable(selectedOption);
         }
@@ -219,15 +207,12 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void ResizeLayout(TableLayoutPanel layout)
         {
-            double scaleW = 0.5; // escala para a largura. 50%
-            double scaleH = 0.8; // escala para a altura. 80%
+            double scaleW = 0.5;
+            double scaleH = 0.8;
 
-            // converter em int é necessário para essa operação, do contrário, erro, pois não se pode atribuir
-            // resultado double ou float para uma variável tipo int.
             int newTableWidth = (int)(ClientSize.Width * scaleW);
             int newTableHeight = (int)(ClientSize.Height * scaleH);
 
-            // Math.Min retorna o menor de dois valores. Isto efetivamente impede que newTableWidth fique maior que 800.
             newTableWidth = Math.Min(newTableWidth, 800);
             newTableHeight = Math.Min(newTableHeight, 600);
 
@@ -236,7 +221,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void CenterLayout(TableLayoutPanel layout)
         {
-            // Centraliza a tabela:
             layout.Left = (ClientSize.Width - layout.Width) / 2;
             layout.Top = (ClientSize.Height - layout.Height) / 2;
         }
