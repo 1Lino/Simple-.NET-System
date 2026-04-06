@@ -1,4 +1,4 @@
-using System.CodeDom;
+using System.Windows.Forms.VisualStyles;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -6,6 +6,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     {
         private TableLayoutPanel keyboardLayout;
         private Panel calculatorVisorPanel;
+        private Label calculatorVisor;
+        private Label visorTop;
 
         private List<string> keyList;
 
@@ -13,6 +15,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         {
             InitializeForm();
             InitializeFormComponents();
+            Calculation.CalculationTests();
         }
 
         private void InitializeForm()
@@ -20,8 +23,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Text = "Standard Calculator";
             Width = 450;
             Height = 550;
-            BackColor = Color.Aquamarine;
+            BackColor = Color.FromArgb(29, 49, 49);
             FormBorderStyle = FormBorderStyle.FixedSingle;
+            MaximizeBox = false;
         }
 
 
@@ -38,9 +42,37 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 "1", "2", "3", "+",
                 "+/-", "0", ",", "="};
 
+            calculatorVisor = InitializeVisor();
+            visorTop = InitializeVisor();
+            calculatorVisor.Top = calculatorVisorPanel.Height / 2;
+            visorTop.Top = calculatorVisorPanel.Height / 2 - calculatorVisor.Height;
+
+            calculatorVisorPanel.Controls.Add(calculatorVisor);
+            calculatorVisorPanel.Controls.Add(visorTop);
             Controls.Add(calculatorVisorPanel);
             Controls.Add(keyboardLayout);
-            AppendCalculatorKeysToAppLayout(InitializeCalculatorKey, keyboardLayout, keyList);
+            AppendCalculatorKeysToAppLayout(keyboardLayout, keyList);
+        }
+
+        private Label InitializeVisor()
+        {
+            var visorWidth = 300;
+            var visorCentralOffset = visorWidth / 2;
+
+            Label visor = new Label
+            {
+                BackColor = Color.FromArgb(29, 49, 49),
+                ForeColor = Color.White,
+                Width = visorWidth,
+                Height = 50,
+                Text = "100 + 50",
+                Font = new Font("Segoe UI", 16f, FontStyle.Bold),
+                TextAlign = System.Drawing.ContentAlignment.MiddleRight,
+                Left = calculatorVisorPanel.Width / 2 - visorCentralOffset,
+                //Top = calculatorVisorPanel.Height / 2
+            };
+
+            return visor;
         }
 
         private void InitializeAppLayout()
@@ -53,6 +85,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 RowCount = 6,
                 AutoScroll = true,
                 MinimumSize = new Size(400, 300),
+                BackColor = Color.FromArgb(62, 85, 85)
             };
             int margin = 20;
             keyboardLayout.Left = (ClientSize.Width - keyboardLayout.Width) / 2;
@@ -70,16 +103,17 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void InitializeVisorPanelUI()
         {
+            var formWidth = Width; // pra não confundir o Width do componente com o Width do form.
             calculatorVisorPanel = new Panel
             {
-                Width = 500,
+                Width = formWidth,
                 Height = 180,
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.Aqua
+                BackColor = Color.FromArgb(62, 85, 85)
             };
         }
 
-        private static void AppendCalculatorKeysToAppLayout(Func<Button> initCalculatorKey, TableLayoutPanel layout, List<string> keyList)
+        private static void AppendCalculatorKeysToAppLayout(TableLayoutPanel layout, List<string> keyList)
         {
             int counter = 0;
 
@@ -87,31 +121,79 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             {
                 for (int col = 0; col < layout.ColumnCount; col++)
                 {
-                    AppendCalculatorKey(initCalculatorKey, layout, counter, col, row, keyList);
+                    AppendCalculatorKey(layout, counter, col, row, keyList);
                     counter++;
                 }
             }
         }
 
-        private static void AppendCalculatorKey(Func<Button> initCalculatorKey, TableLayoutPanel layout, int counter, int col, int row, List<string> keyList)
+        private static void AppendCalculatorKey(TableLayoutPanel layout, int counter, int col, int row, List<string> keyList)
         {
-            //var key = initCalculatorKey();
-            var key = new Button
-            {
-                Dock = DockStyle.Fill,
-                Text = keyList[counter]
-            };
+            var key = CreateCalculatorKey(counter, keyList);
             layout.Controls.Add(key, col, row);
         }
 
-        private Button InitializeCalculatorKey()
+        private static Button CreateCalculatorKey(int counter, List<string> keyList)
         {
             var key = new Button
             {
-                Dock = DockStyle.Fill
+                Dock = DockStyle.Fill,
+                Text = keyList[counter],
+                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+                ForeColor = Color.White
             };
-
             return key;
         }
+    }
+}
+
+
+// TIP: um exercício interessante seria tentar implementar todas estas operações usando matemática pura, ao invés de simplesmente usar apoio de libs, mas isto está em um escopo diferente desse projeto. Mas é algo a ser pensado.
+public class Calculation
+{
+    public static void CalculationTests()
+    {
+        // Fazer todos os testes aqui antes de mandar conectar a lógica com a interface.
+        var a = 100;
+        var b = 2;
+
+        // TESTES:
+        Console.WriteLine($"Sum: {a} + {b} = {Sum(a, b)}");
+        Console.WriteLine($"Sub: {a} - {b} = {Sub(a, b)}");
+        Console.WriteLine($"Mult: {a} x {b} = {Mult(a, b)}");
+        Console.WriteLine($"Div: {a} / {b} = {Div(a, b)}");
+        Console.WriteLine($"Sqrt of {a} = {Sqrt(a)}");
+        Console.WriteLine($"Pow of {b} by 2 = {Pow(b, 2)}");
+    }
+
+    // TODO: Aperfeiçoar estas funções quando estiverem prontas.
+    private static double Sum(double a, double b)
+    {
+        return a + b;
+    }
+
+    private static double Sub(double a, double b)
+    {
+        return a - b;
+    }
+
+    private static double Mult(double a, double b)
+    {
+        return a * b;
+    }
+
+    private static double Div(double a, double b)
+    {
+        return a / b;
+    }
+
+    private static double Sqrt(double a)
+    {
+        return Math.Sqrt(a);
+    }
+
+    private static double Pow(double a, double b)
+    {
+        return Math.Pow(a, b);
     }
 }

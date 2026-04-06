@@ -18,7 +18,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Text = "Math Table";
             Width = 450;
             Height = 550;
-            BackColor = Color.Aquamarine;
+            BackColor = Color.FromArgb(62, 85, 85);
             FormBorderStyle = FormBorderStyle.FixedSingle;
         }
 
@@ -73,7 +73,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             {
                 Dock = DockStyle.Fill,
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.Aqua
+                BackColor = Color.FromArgb(29, 49, 49)
             };
         }
 
@@ -109,8 +109,12 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 ReadOnly = true,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 AllowUserToResizeRows = false,
-                AllowUserToResizeColumns = false
+                AllowUserToResizeColumns = false,
+                BackgroundColor = Color.FromArgb(62, 85, 85),
             };
+            table.DefaultCellStyle.BackColor = Color.FromArgb(29, 49, 49);
+            table.DefaultCellStyle.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
+            table.DefaultCellStyle.ForeColor = Color.White;
             table.Columns[0].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             table.AllowUserToAddRows = false;
             table.Anchor = AnchorStyles.None;
@@ -174,7 +178,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private static string GetOperationResult(int a, int b, int operationId)
         {
-            int c = 0;
+            int c;
             string mathExpression = "";
 
             switch (operationId)

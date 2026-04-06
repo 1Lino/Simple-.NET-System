@@ -30,9 +30,17 @@ O sistema é composto por vários módulos independentes:
 
 - Abrir e visualizar arquivos de mídia locais
 
+### Tabela de Operações Matemáticas
+
+- Clássica tabela das principais operações aritiméticas da matemática
+
 ### Calculadora Completa
 
 - Operações básicas e intermediárias
+
+### Conversor de Unidades
+
+- Conversor de vários tipos de umedidas para outros. Binário pra decimal, decimal pra hexadecimal, etc
 
 ### CRUD com Banco de Dados
 
