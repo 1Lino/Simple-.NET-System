@@ -1,6 +1,3 @@
-using System.Security.Cryptography.X509Certificates;
-using System.Windows.Forms.VisualStyles;
-
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Calculator : Form
@@ -11,6 +8,10 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         private Label visorTop;
         private List<string> keyListTxt;
         private IEnumerable<Button> btnList;
+
+        // Estas duas variáveis abaixo estão num escopo inadequado, temporariamente. Devem ficar fora de eventos, muito embora sejam usadas somente nos eventos.
+        private List<double> operands = new List<double>();
+        private string operatorr = "";
 
         public Calculator()
         {
@@ -169,30 +170,39 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             }
         }
 
+        //TODO: a validação de input presente neste método deverá ocorrer em método separado. Outra coisa, UI e os dados para o cálculo das operações deverão ser separados, ou seja: puxa o valor de input, valida tais valores, realiza a operação e atualiza a UI conforme. Por exemplo, após digitar 40, e clicar em +, 40 deverá ir para uma variável de dado que deverá então ser validado e convertido em dado puro para uma função matemática trabalhar sobre... e assim por diante.
         private void ClickKeyEvent(string text)
         {
-            //TODO: criar validação de input (deve ser método separado):
+            // Estas variáveis, bem como os if/else e switches concernem à camada de validação:
             List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
             List<string> operations = ["+", "-", "x", "/"];
-            List<string> special = ["%", "sqrt", "x²", "1/x", "CE", "C", "DEL", ","];
 
             if (calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
             if (numbers.Contains(text))
             {
-                Console.WriteLine($"{text} is a number!");
-
+                // concerns UI layer:
                 if (calculatorVisor.Text == "0") calculatorVisor.Text = text;
                 else calculatorVisor.Text += text;
+
+                //Console.WriteLine($"{text} is a number!");
             }
             else if (operations.Contains(text))
             {
-                calculatorVisor.Text += $" {text} ";
                 switch (text)
                 {
                     case "+":
-                        //TODO...
+                        // concerns operation layer:
+                        operands.Add(int.Parse(calculatorVisor.Text));
+
+                        // concerns UI layer:
+                        operatorr = "+";
+                        if (visorTop.Text == "0") visorTop.Text = calculatorVisor.Text + $" {operatorr} ";
+                        else visorTop.Text += calculatorVisor.Text + $" {operatorr} ";
+                        calculatorVisor.Text = "0";
+
                         break;
+
                     case "-":
                         //TODO...
                         break;
@@ -209,15 +219,48 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 switch (text)
                 {
                     case "DEL":
+
+                        // concerns UI layer:
                         if (calculatorVisor.Text.Length != 1)
                             calculatorVisor.Text = calculatorVisor.Text.Remove(calculatorVisor.Text.Length - 1);
                         else calculatorVisor.Text = "0";
+
                         break;
+
                     case "CE":
+                        // concerns UI layer:
                         calculatorVisor.Text = "0";
+
                         break;
+
                     case "C":
+                        // concerns UI layer:
                         calculatorVisor.Text = "0";
+                        visorTop.Text = "0";
+                        // concerns operation layer:
+                        operands = [];
+
+                        break;
+
+                    case "=":
+                        if (operands.Count < 1) break;
+
+                        // concerns operation layer:
+                        operands.Add(int.Parse(calculatorVisor.Text));
+                        var result = Calculation.Sum(operands[0], operands[1]);
+
+                        // testes:
+                        // operands.ForEach(e => Console.WriteLine($"Operand: {e}"));
+                        // Console.WriteLine($"{operands[0]} {operatorr} {operands[1]} = {result}");
+
+                        // concerns operation layer:
+                        operands = [];
+                        operands.Add(result);
+
+                        // concerns UI layer:
+                        visorTop.Text = $"{result} {operatorr} ";
+                        calculatorVisor.Text = $"{result}";
+
                         break;
                 }
             }
@@ -255,7 +298,7 @@ public class Calculation
     }
 
     // TODO: Aperfeiçoar estas funções quando estiverem prontas.
-    private static double Sum(double a, double b)
+    public static double Sum(double a, double b)
     {
         return a + b;
     }
