@@ -1,7 +1,24 @@
+
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
+    // Varáveis de estado, modificadas pela classe Calculations, e lidas pela classe GUIUpdate.
+    public class AppState
+    {
+        public static List<double> operands { get; set; }
+        public static string operatorr { get; set; }
+        public static double result { get; set; }
+
+        public static void InitializeAppState()
+        {
+            AppState.operands = new List<double>();
+            AppState.operatorr = "";
+            AppState.result = 0;
+        }
+    }
+
     public partial class Calculator : Form
     {
+        // Componentes:
         private TableLayoutPanel keyboardLayout;
         private Panel calculatorVisorPanel;
         private Label calculatorVisor;
@@ -9,15 +26,14 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         private List<string> keyListTxt;
         private IEnumerable<Button> btnList;
 
-        // Estas duas variáveis abaixo estão num escopo inadequado, temporariamente. Devem ficar fora de eventos, muito embora sejam usadas somente nos eventos.
-        private List<double> operands = new List<double>();
-        private string operatorr = "";
-
         public Calculator()
         {
             InitializeForm();
             InitializeFormComponents();
+            AppState.InitializeAppState();
             InitializeEvents();
+
+            // tests:
             Calculation.CalculationTests();
         }
 
@@ -154,14 +170,20 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         }
 
         // Uso de recursão para capturar todos os elementos Button de um dado Control:
+        // NOTA: pesquisar melhor sobre recursões.
         private IEnumerable<Button> GetCalculatorKeys(Control parent)
         {
+            // para cada componente do parente.
             foreach (Control c in parent.Controls)
             {
+                // se tal componente for um botão, "guarda" o retorno deste componente na lista enumerável (yield faz isso).
                 if (c is Button btn)
                 {
                     yield return btn;
                 }
+
+                // em seguida chama novamente a função GetCalculatorKeys e itera sobre cada 
+                // elemento, de modo que a função efetivamente fará novamente o passo acima. Isto, na prática, faz com que todos os elementos botão do parente sejam capturados. Se a função fosse chamada uma vez apenas, iria parar no primeiro elemento botão que encontrasse, e já que precisamos de uma lista, então é necessário uso de recursão.
 
                 foreach (var child in GetCalculatorKeys(c))
                 {
@@ -171,7 +193,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         }
 
         //TODO: a validação de input presente neste método deverá ocorrer em método separado. Outra coisa, UI e os dados para o cálculo das operações deverão ser separados, ou seja: puxa o valor de input, valida tais valores, realiza a operação e atualiza a UI conforme. Por exemplo, após digitar 40, e clicar em +, 40 deverá ir para uma variável de dado que deverá então ser validado e convertido em dado puro para uma função matemática trabalhar sobre... e assim por diante.
-        private void ClickKeyEvent(string text)
+        private void InputValidation(string text)
         {
             // Estas variáveis, bem como os if/else e switches concernem à camada de validação:
             List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
@@ -181,11 +203,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             if (numbers.Contains(text))
             {
-                // concerns UI layer:
-                if (calculatorVisor.Text == "0") calculatorVisor.Text = text;
-                else calculatorVisor.Text += text;
-
-                //Console.WriteLine($"{text} is a number!");
+                GUIUpdate.OnDigit(calculatorVisor, text);
             }
             else if (operations.Contains(text))
             {
@@ -193,13 +211,24 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 {
                     case "+":
                         // concerns operation layer:
-                        operands.Add(int.Parse(calculatorVisor.Text));
+                        AppState.operands.Add(int.Parse(calculatorVisor.Text));
+                        if (AppState.operands.Count > 1)
+                        {
+                            // concerns operation layer:
+                            // Calculation.Sum deve fazer a operação diretamente nesta variável.
+                            // também a GUI deve ser capaz de acessar esse estado. De modo que Calculation sobrescreve e atualiza o estado, e a GUIUpdate apenas leia o estado para atualizar interface.
+                            AppState.result = Calculation.Sum(AppState.operands[0], AppState.operands[1]);
+                            AppState.operands = [];
+                            AppState.operands.Add(AppState.result);
 
-                        // concerns UI layer:
-                        operatorr = "+";
-                        if (visorTop.Text == "0") visorTop.Text = calculatorVisor.Text + $" {operatorr} ";
-                        else visorTop.Text += calculatorVisor.Text + $" {operatorr} ";
-                        calculatorVisor.Text = "0";
+                            // concerns UI layer:
+                            GUIUpdate.AfterOperation(calculatorVisor, visorTop, AppState.result, AppState.operatorr);
+                        }
+                        else
+                        {
+                            AppState.operatorr = "+";
+                            GUIUpdate.OnOperation(calculatorVisor, visorTop, text);
+                        }
 
                         break;
 
@@ -219,47 +248,33 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 switch (text)
                 {
                     case "DEL":
-
-                        // concerns UI layer:
-                        if (calculatorVisor.Text.Length != 1)
-                            calculatorVisor.Text = calculatorVisor.Text.Remove(calculatorVisor.Text.Length - 1);
-                        else calculatorVisor.Text = "0";
-
+                        GUIUpdate.OnDel(calculatorVisor);
                         break;
 
                     case "CE":
-                        // concerns UI layer:
-                        calculatorVisor.Text = "0";
-
+                        GUIUpdate.OnCE(calculatorVisor);
                         break;
 
                     case "C":
-                        // concerns UI layer:
-                        calculatorVisor.Text = "0";
-                        visorTop.Text = "0";
                         // concerns operation layer:
-                        operands = [];
+                        AppState.operands = [];
+
+                        // concerns UI layer:
+                        GUIUpdate.OnC(calculatorVisor, visorTop);
 
                         break;
 
                     case "=":
-                        if (operands.Count < 1) break;
+                        if (AppState.operands.Count < 1) break;
 
                         // concerns operation layer:
-                        operands.Add(int.Parse(calculatorVisor.Text));
-                        var result = Calculation.Sum(operands[0], operands[1]);
-
-                        // testes:
-                        // operands.ForEach(e => Console.WriteLine($"Operand: {e}"));
-                        // Console.WriteLine($"{operands[0]} {operatorr} {operands[1]} = {result}");
-
-                        // concerns operation layer:
-                        operands = [];
-                        operands.Add(result);
+                        AppState.operands.Add(int.Parse(calculatorVisor.Text));
+                        AppState.result = Calculation.Sum(AppState.operands[0], AppState.operands[1]);
+                        AppState.operands = [];
+                        AppState.operands.Add(AppState.result);
 
                         // concerns UI layer:
-                        visorTop.Text = $"{result} {operatorr} ";
-                        calculatorVisor.Text = $"{result}";
+                        GUIUpdate.AfterOperation(calculatorVisor, visorTop, AppState.result, AppState.operatorr);
 
                         break;
                 }
@@ -272,10 +287,54 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         {
             foreach (Button btn in btnList)
             {
-                btn.Click += (_, _) => ClickKeyEvent(btn.Text);
+                btn.Click += (_, _) => InputValidation(btn.Text);
             }
         }
     }
+}
+
+public class GUIUpdate
+{
+    public static void SetOperator(string operatorr, string operation)
+    {
+        operatorr = operation;
+    }
+    public static void OnDigit(Label calculatorVisor, string text)
+    {
+        if (calculatorVisor.Text == "0") calculatorVisor.Text = text;
+        else calculatorVisor.Text += text;
+    }
+    public static void AfterOperation(Label calculatorVisor, Label visorTop, double result, string operatorr)
+    {
+        visorTop.Text = $"{result} {operatorr} ";
+        calculatorVisor.Text = "0";
+    }
+
+    public static void OnOperation(Label calculatorVisor, Label visorTop, string operatorr)
+    {
+        if (visorTop.Text == "0") visorTop.Text = $"{calculatorVisor.Text} {operatorr} ";
+        else visorTop.Text += $"{calculatorVisor.Text} {operatorr} ";
+        calculatorVisor.Text = "0";
+    }
+
+    public static void OnDel(Label calculatorVisor)
+    {
+        if (calculatorVisor.Text.Length != 1)
+            calculatorVisor.Text = calculatorVisor.Text.Remove(calculatorVisor.Text.Length - 1);
+        else calculatorVisor.Text = "0";
+    }
+
+    public static void OnCE(Label calculatorVisor)
+    {
+        calculatorVisor.Text = "0";
+    }
+
+    public static void OnC(Label calculatorVisor, Label visorTop)
+    {
+        calculatorVisor.Text = "0";
+        visorTop.Text = "0";
+    }
+
 }
 
 
@@ -303,27 +362,27 @@ public class Calculation
         return a + b;
     }
 
-    private static double Sub(double a, double b)
+    public static double Sub(double a, double b)
     {
         return a - b;
     }
 
-    private static double Mult(double a, double b)
+    public static double Mult(double a, double b)
     {
         return a * b;
     }
 
-    private static double Div(double a, double b)
+    public static double Div(double a, double b)
     {
         return a / b;
     }
 
-    private static double Sqrt(double a)
+    public static double Sqrt(double a)
     {
         return Math.Sqrt(a);
     }
 
-    private static double Pow(double a, double b)
+    public static double Pow(double a, double b)
     {
         return Math.Pow(a, b);
     }
