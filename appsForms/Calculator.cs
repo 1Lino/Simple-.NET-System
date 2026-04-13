@@ -1,20 +1,8 @@
 
+using System.Runtime.InteropServices;
+
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
-    // Varáveis de estado, modificadas pela classe Calculations, e lidas pela classe GUIUpdate.
-    public class AppState
-    {
-        public static List<double> operands { get; set; }
-        public static string operatorr { get; set; }
-        public static double result { get; set; }
-
-        public static void InitializeAppState()
-        {
-            AppState.operands = new List<double>();
-            AppState.operatorr = "";
-            AppState.result = 0;
-        }
-    }
 
     public partial class Calculator : Form
     {
@@ -29,9 +17,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         public Calculator()
         {
             InitializeForm();
-            InitializeFormComponents();
+            InitializeFormComponents(); // TODO: deve ir pra classe Components (InitializeAppComponents)
             AppState.InitializeAppState();
-            InitializeEvents();
+            InitializeEvents(); // TODO: deve ir pra classe Events (InitializeAppEvents)
 
             // tests:
             Calculation.CalculationTests();
@@ -52,18 +40,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             InitializeAppLayout();
             InitializeVisorPanelUI();
 
-            keyListTxt = new List<string> {
-                "%", "CE", "C", "DEL",
-                "1/x", "x²", "sqrt", "/",
-                "7", "8", "9", "x",
-                "4", "5", "6", "-",
-                "1", "2", "3", "+",
-                "+/-", "0", ",", "="};
-
-            calculatorVisor = InitializeVisor();
-            visorTop = InitializeVisor();
-            calculatorVisor.Top = calculatorVisorPanel.Height / 2;
-            visorTop.Top = calculatorVisorPanel.Height / 2 - calculatorVisor.Height;
+            keyListTxt = InitializeKeyTexts();
+            calculatorVisor = InitializeVisor(0);
+            visorTop = InitializeVisor(calculatorVisor.Height);
 
             calculatorVisorPanel.Controls.Add(calculatorVisor);
             calculatorVisorPanel.Controls.Add(visorTop);
@@ -74,12 +53,24 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             btnList = GetCalculatorKeys(keyboardLayout);
         }
 
+        private List<string> InitializeKeyTexts()
+        {
+            return new List<string> {
+                "%", "CE", "C", "DEL",
+                "1/x", "x²", "sqrt", "/",
+                "7", "8", "9", "x",
+                "4", "5", "6", "-",
+                "1", "2", "3", "+",
+                "+/-", "0", ",", "="};
+        }
+
+        // TODO: para classe Events
         private void InitializeEvents()
         {
             ApplyEventsToKeys(btnList);
         }
 
-        private Label InitializeVisor()
+        private Label InitializeVisor(int verticalOffset)
         {
             var visorWidth = 300;
             var visorCentralOffset = visorWidth / 2;
@@ -94,6 +85,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 Font = new Font("Segoe UI", 16f, FontStyle.Bold),
                 TextAlign = System.Drawing.ContentAlignment.MiddleRight,
                 Left = calculatorVisorPanel.Width / 2 - visorCentralOffset,
+                Top = calculatorVisorPanel.Height / 2 - verticalOffset
             };
 
             return visor;
@@ -192,7 +184,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             }
         }
 
-        //TODO: a validação de input presente neste método deverá ocorrer em método separado. Outra coisa, UI e os dados para o cálculo das operações deverão ser separados, ou seja: puxa o valor de input, valida tais valores, realiza a operação e atualiza a UI conforme. Por exemplo, após digitar 40, e clicar em +, 40 deverá ir para uma variável de dado que deverá então ser validado e convertido em dado puro para uma função matemática trabalhar sobre... e assim por diante.
+        //TODO: InputValidation deve ir pra classe Events:
         private void InputValidation(string text)
         {
             // Estas variáveis, bem como os if/else e switches concernem à camada de validação:
@@ -211,23 +203,21 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 {
                     case "+":
                         // concerns operation layer:
-                        AppState.operands.Add(int.Parse(calculatorVisor.Text));
+                        var operand = calculatorVisor.Text;
+                        Calculation.AddOperand(operand);
                         if (AppState.operands.Count > 1)
                         {
                             // concerns operation layer:
-                            // Calculation.Sum deve fazer a operação diretamente nesta variável.
-                            // também a GUI deve ser capaz de acessar esse estado. De modo que Calculation sobrescreve e atualiza o estado, e a GUIUpdate apenas leia o estado para atualizar interface.
-                            AppState.result = Calculation.Sum(AppState.operands[0], AppState.operands[1]);
-                            AppState.operands = [];
-                            AppState.operands.Add(AppState.result);
+                            Calculation.Sum();
 
                             // concerns UI layer:
-                            GUIUpdate.AfterOperation(calculatorVisor, visorTop, AppState.result, AppState.operatorr);
+                            GUIUpdate.AfterOperation(calculatorVisor, visorTop);
                         }
                         else
                         {
-                            AppState.operatorr = "+";
-                            GUIUpdate.OnOperation(calculatorVisor, visorTop, text);
+                            // AppState.operatorr = "+";
+                            Calculation.SetOperator("+");
+                            GUIUpdate.OnOperation(calculatorVisor, visorTop);
                         }
 
                         break;
@@ -257,7 +247,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
                     case "C":
                         // concerns operation layer:
-                        AppState.operands = [];
+                        //AppState.operands = [];
+                        Calculation.ResetOperands();
 
                         // concerns UI layer:
                         GUIUpdate.OnC(calculatorVisor, visorTop);
@@ -268,13 +259,12 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                         if (AppState.operands.Count < 1) break;
 
                         // concerns operation layer:
-                        AppState.operands.Add(int.Parse(calculatorVisor.Text));
-                        AppState.result = Calculation.Sum(AppState.operands[0], AppState.operands[1]);
-                        AppState.operands = [];
-                        AppState.operands.Add(AppState.result);
+                        var operand = calculatorVisor.Text;
+                        Calculation.AddOperand(operand);
+                        Calculation.Sum();
 
                         // concerns UI layer:
-                        GUIUpdate.AfterOperation(calculatorVisor, visorTop, AppState.result, AppState.operatorr);
+                        GUIUpdate.AfterOperation(calculatorVisor, visorTop);
 
                         break;
                 }
@@ -293,27 +283,54 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     }
 }
 
+// Varáveis de estado, modificadas pela classe Calculations, e lidas pela classe GUIUpdate.
+public class AppState
+{
+    public static List<double> operands { get; set; }
+    public static string operatorr { get; set; }
+    public static double result { get; set; }
+
+    public static void InitializeAppState()
+    {
+        AppState.operands = new List<double>();
+        AppState.operatorr = "";
+        AppState.result = 0;
+    }
+}
+
+public class Events
+{
+    public static void InitializeAppEvents()
+    {
+        // TODO...
+    }
+}
+
+public class Components
+{
+    public static void InitializeAppComponents()
+    {
+        // TODO...
+    }
+}
+
 public class GUIUpdate
 {
-    public static void SetOperator(string operatorr, string operation)
-    {
-        operatorr = operation;
-    }
     public static void OnDigit(Label calculatorVisor, string text)
     {
         if (calculatorVisor.Text == "0") calculatorVisor.Text = text;
         else calculatorVisor.Text += text;
     }
-    public static void AfterOperation(Label calculatorVisor, Label visorTop, double result, string operatorr)
+    public static void AfterOperation(Label calculatorVisor, Label visorTop)
     {
-        visorTop.Text = $"{result} {operatorr} ";
+        visorTop.Text = $"{AppState.result} {AppState.operatorr} ";
         calculatorVisor.Text = "0";
     }
 
-    public static void OnOperation(Label calculatorVisor, Label visorTop, string operatorr)
+    public static void OnOperation(Label calculatorVisor, Label visorTop)
     {
-        if (visorTop.Text == "0") visorTop.Text = $"{calculatorVisor.Text} {operatorr} ";
-        else visorTop.Text += $"{calculatorVisor.Text} {operatorr} ";
+        if (visorTop.Text == "0") visorTop.Text = $"{calculatorVisor.Text} {AppState.operatorr} ";
+        else visorTop.Text += $"{calculatorVisor.Text} {AppState.operatorr} ";
         calculatorVisor.Text = "0";
     }
 
@@ -348,18 +365,41 @@ public class Calculation
         var b = 2;
 
         // TESTES:
-        Console.WriteLine($"Sum: {a} + {b} = {Sum(a, b)}");
-        Console.WriteLine($"Sub: {a} - {b} = {Sub(a, b)}");
-        Console.WriteLine($"Mult: {a} x {b} = {Mult(a, b)}");
-        Console.WriteLine($"Div: {a} / {b} = {Div(a, b)}");
-        Console.WriteLine($"Sqrt of {a} = {Sqrt(a)}");
-        Console.WriteLine($"Pow of {b} by 2 = {Pow(b, 2)}");
+        Console.WriteLine($"Sum: {a} + {b} = {a + b}");
+        Console.WriteLine($"Sub: {a} - {b} = {a - b}");
+        Console.WriteLine($"Mult: {a} x {b} = {a * b}");
+        Console.WriteLine($"Div: {a} / {b} = {a / b}");
+        Console.WriteLine($"Sqrt of {a} = {Math.Sqrt(a)}");
+        Console.WriteLine($"Pow of {b} by 2 = {Math.Pow(b, 2)}");
+    }
+
+    public static void SetOperator(string operation)
+    {
+        AppState.operatorr = operation;
+    }
+
+    public static void AddOperand(string value)
+    {
+        AppState.operands.Add(int.Parse(value));
+    }
+
+    public static void ResetOperands()
+    {
+        AppState.operands = [];
+    }
+
+    // basicamente zera o registro de operandos e adiciona o resultado como um novo operando, assim, operandos de operações passadas não acumulam na lista. 
+    private static void UpdateOperation()
+    {
+        AppState.operands = [];
+        AppState.operands.Add(AppState.result);
     }
 
     // TODO: Aperfeiçoar estas funções quando estiverem prontas.
-    public static double Sum(double a, double b)
+    public static void Sum()
     {
-        return a + b;
+        AppState.result = AppState.operands[0] + AppState.operands[1];
+        UpdateOperation();
     }
 
     public static double Sub(double a, double b)
