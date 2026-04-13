@@ -1,25 +1,19 @@
 
-using System.Runtime.InteropServices;
+using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
 
     public partial class Calculator : Form
     {
-        // Componentes:
-        private TableLayoutPanel keyboardLayout;
-        private Panel calculatorVisorPanel;
-        private Label calculatorVisor;
-        private Label visorTop;
-        private List<string> keyListTxt;
-        private IEnumerable<Button> btnList;
+        public static Calculator Instance { get; private set; } // Classe Components precisa acessar este Form.
 
         public Calculator()
         {
+            Instance = this; // define Instance como este Form atual.
             InitializeForm();
-            InitializeFormComponents(); // TODO: deve ir pra classe Components (InitializeAppComponents)
+            Components.InitializeAppComponents();
             AppState.InitializeAppState();
-            InitializeEvents(); // TODO: deve ir pra classe Events (InitializeAppEvents)
 
             // tests:
             Calculation.CalculationTests();
@@ -33,252 +27,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             BackColor = Color.FromArgb(29, 49, 49);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
-        }
-
-        private void InitializeFormComponents()
-        {
-            InitializeAppLayout();
-            InitializeVisorPanelUI();
-
-            keyListTxt = InitializeKeyTexts();
-            calculatorVisor = InitializeVisor(0);
-            visorTop = InitializeVisor(calculatorVisor.Height);
-
-            calculatorVisorPanel.Controls.Add(calculatorVisor);
-            calculatorVisorPanel.Controls.Add(visorTop);
-            Controls.Add(calculatorVisorPanel);
-            Controls.Add(keyboardLayout);
-            AppendCalculatorKeysToAppLayout(keyboardLayout, keyListTxt);
-
-            btnList = GetCalculatorKeys(keyboardLayout);
-        }
-
-        private List<string> InitializeKeyTexts()
-        {
-            return new List<string> {
-                "%", "CE", "C", "DEL",
-                "1/x", "x²", "sqrt", "/",
-                "7", "8", "9", "x",
-                "4", "5", "6", "-",
-                "1", "2", "3", "+",
-                "+/-", "0", ",", "="};
-        }
-
-        // TODO: para classe Events
-        private void InitializeEvents()
-        {
-            ApplyEventsToKeys(btnList);
-        }
-
-        private Label InitializeVisor(int verticalOffset)
-        {
-            var visorWidth = 300;
-            var visorCentralOffset = visorWidth / 2;
-
-            Label visor = new Label
-            {
-                BackColor = Color.FromArgb(29, 49, 49),
-                ForeColor = Color.White,
-                Width = visorWidth,
-                Height = 50,
-                Text = "0",
-                Font = new Font("Segoe UI", 16f, FontStyle.Bold),
-                TextAlign = System.Drawing.ContentAlignment.MiddleRight,
-                Left = calculatorVisorPanel.Width / 2 - visorCentralOffset,
-                Top = calculatorVisorPanel.Height / 2 - verticalOffset
-            };
-
-            return visor;
-        }
-
-        private void InitializeAppLayout()
-        {
-            keyboardLayout = new TableLayoutPanel
-            {
-                CellBorderStyle = TableLayoutPanelCellBorderStyle.Inset,
-                Dock = DockStyle.None,
-                ColumnCount = 4,
-                RowCount = 6,
-                AutoScroll = true,
-                MinimumSize = new Size(400, 300),
-                BackColor = Color.FromArgb(62, 85, 85)
-            };
-            int margin = 20;
-            keyboardLayout.Left = (ClientSize.Width - keyboardLayout.Width) / 2;
-            keyboardLayout.Top = ClientSize.Height - keyboardLayout.Height - margin;
-
-            for (int i = 0; i < keyboardLayout.ColumnCount; i++)
-            {
-                keyboardLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
-            }
-            for (int i = 0; i < keyboardLayout.RowCount; i++)
-            {
-                keyboardLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
-            }
-        }
-
-        private void InitializeVisorPanelUI()
-        {
-            var formWidth = Width; // pra não confundir o Width do componente com o Width do form.
-            calculatorVisorPanel = new Panel
-            {
-                Width = formWidth,
-                Height = 180,
-                BorderStyle = BorderStyle.FixedSingle,
-                BackColor = Color.FromArgb(62, 85, 85)
-            };
-        }
-
-        private static void AppendCalculatorKeysToAppLayout(TableLayoutPanel layout, List<string> keyListTxt)
-        {
-            int counter = 0;
-
-            for (int row = 0; row < layout.RowCount; row++)
-            {
-                for (int col = 0; col < layout.ColumnCount; col++)
-                {
-                    AppendCalculatorKey(layout, counter, col, row, keyListTxt);
-                    counter++;
-                }
-            }
-        }
-
-        private static void AppendCalculatorKey(TableLayoutPanel layout, int counter, int col, int row, List<string> keyListTxt)
-        {
-            var key = CreateCalculatorKey(counter, keyListTxt);
-            layout.Controls.Add(key, col, row);
-        }
-
-        private static Button CreateCalculatorKey(int counter, List<string> keyListTxt)
-        {
-            var key = new Button
-            {
-                Dock = DockStyle.Fill,
-                Text = keyListTxt[counter],
-                Font = new Font("Segoe UI", 12f, FontStyle.Bold),
-                ForeColor = Color.White
-            };
-            return key;
-        }
-
-        // Uso de recursão para capturar todos os elementos Button de um dado Control:
-        // NOTA: pesquisar melhor sobre recursões.
-        private IEnumerable<Button> GetCalculatorKeys(Control parent)
-        {
-            // para cada componente do parente.
-            foreach (Control c in parent.Controls)
-            {
-                // se tal componente for um botão, "guarda" o retorno deste componente na lista enumerável (yield faz isso).
-                if (c is Button btn)
-                {
-                    yield return btn;
-                }
-
-                // em seguida chama novamente a função GetCalculatorKeys e itera sobre cada 
-                // elemento, de modo que a função efetivamente fará novamente o passo acima. Isto, na prática, faz com que todos os elementos botão do parente sejam capturados. Se a função fosse chamada uma vez apenas, iria parar no primeiro elemento botão que encontrasse, e já que precisamos de uma lista, então é necessário uso de recursão.
-
-                foreach (var child in GetCalculatorKeys(c))
-                {
-                    yield return child;
-                }
-            }
-        }
-
-        //TODO: InputValidation deve ir pra classe Events:
-        private void InputValidation(string text)
-        {
-            // Estas variáveis, bem como os if/else e switches concernem à camada de validação:
-            List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-            List<string> operations = ["+", "-", "x", "/"];
-
-            if (calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
-
-            if (numbers.Contains(text))
-            {
-                GUIUpdate.OnDigit(calculatorVisor, text);
-            }
-            else if (operations.Contains(text))
-            {
-                switch (text)
-                {
-                    case "+":
-                        // concerns operation layer:
-                        var operand = calculatorVisor.Text;
-                        Calculation.AddOperand(operand);
-                        if (AppState.operands.Count > 1)
-                        {
-                            // concerns operation layer:
-                            Calculation.Sum();
-
-                            // concerns UI layer:
-                            GUIUpdate.AfterOperation(calculatorVisor, visorTop);
-                        }
-                        else
-                        {
-                            // AppState.operatorr = "+";
-                            Calculation.SetOperator("+");
-                            GUIUpdate.OnOperation(calculatorVisor, visorTop);
-                        }
-
-                        break;
-
-                    case "-":
-                        //TODO...
-                        break;
-                    case "x":
-                        //TODO...
-                        break;
-                    case "/":
-                        //TODO...
-                        break;
-                }
-            }
-            else
-            {
-                switch (text)
-                {
-                    case "DEL":
-                        GUIUpdate.OnDel(calculatorVisor);
-                        break;
-
-                    case "CE":
-                        GUIUpdate.OnCE(calculatorVisor);
-                        break;
-
-                    case "C":
-                        // concerns operation layer:
-                        //AppState.operands = [];
-                        Calculation.ResetOperands();
-
-                        // concerns UI layer:
-                        GUIUpdate.OnC(calculatorVisor, visorTop);
-
-                        break;
-
-                    case "=":
-                        if (AppState.operands.Count < 1) break;
-
-                        // concerns operation layer:
-                        var operand = calculatorVisor.Text;
-                        Calculation.AddOperand(operand);
-                        Calculation.Sum();
-
-                        // concerns UI layer:
-                        GUIUpdate.AfterOperation(calculatorVisor, visorTop);
-
-                        break;
-                }
-            }
-
-
-        }
-
-        private void ApplyEventsToKeys(IEnumerable<Button> btnList)
-        {
-            foreach (Button btn in btnList)
-            {
-                btn.Click += (_, _) => InputValidation(btn.Text);
-            }
         }
     }
 }
@@ -298,17 +46,267 @@ public class AppState
     }
 }
 
+public class Components
+{
+    private static TableLayoutPanel keyboardLayout;
+    private static Panel calculatorVisorPanel;
+    private static Label calculatorVisor;
+    private static Label visorTop;
+    private static List<string> keyListTxt;
+    private static IEnumerable<Button> btnList;
+
+    public static void InitializeAppComponents()
+    {
+        InitializeAppLayout();
+        InitializeVisorPanelUI();
+
+        keyListTxt = InitializeKeyTexts();
+        calculatorVisor = InitializeVisor(0);
+        visorTop = InitializeVisor(calculatorVisor.Height);
+
+        calculatorVisorPanel.Controls.Add(calculatorVisor);
+        calculatorVisorPanel.Controls.Add(visorTop);
+        Calculator.Instance.Controls.Add(calculatorVisorPanel);
+        Calculator.Instance.Controls.Add(keyboardLayout);
+        AppendCalculatorKeysToAppLayout(keyboardLayout, keyListTxt);
+
+        btnList = GetCalculatorKeys(keyboardLayout);
+        ApplyEventsToKeys(btnList);
+    }
+
+    private static List<string> InitializeKeyTexts()
+    {
+        return new List<string> {
+                "%", "CE", "C", "DEL",
+                "1/x", "x²", "sqrt", "/",
+                "7", "8", "9", "x",
+                "4", "5", "6", "-",
+                "1", "2", "3", "+",
+                "+/-", "0", ",", "="};
+    }
+
+    private static Label InitializeVisor(int verticalOffset)
+    {
+        var visorWidth = 300;
+        var visorCentralOffset = visorWidth / 2;
+
+        Label visor = new Label
+        {
+            BackColor = Color.FromArgb(29, 49, 49),
+            ForeColor = Color.White,
+            Width = visorWidth,
+            Height = 50,
+            Text = "0",
+            Font = new Font("Segoe UI", 16f, FontStyle.Bold),
+            TextAlign = System.Drawing.ContentAlignment.MiddleRight,
+            Left = calculatorVisorPanel.Width / 2 - visorCentralOffset,
+            Top = calculatorVisorPanel.Height / 2 - verticalOffset
+        };
+
+        return visor;
+    }
+
+    private static void InitializeAppLayout()
+    {
+        keyboardLayout = new TableLayoutPanel
+        {
+            CellBorderStyle = TableLayoutPanelCellBorderStyle.Inset,
+            Dock = DockStyle.None,
+            ColumnCount = 4,
+            RowCount = 6,
+            AutoScroll = true,
+            MinimumSize = new Size(400, 300),
+            BackColor = Color.FromArgb(62, 85, 85)
+        };
+
+        int margin = 20;
+
+        if (Calculator.Instance != null)
+        {
+            keyboardLayout.Left = (Calculator.Instance.ClientSize.Width - keyboardLayout.Width) / 2;
+            keyboardLayout.Top = Calculator.Instance.ClientSize.Height - keyboardLayout.Height - margin;
+        }
+
+        for (int i = 0; i < keyboardLayout.ColumnCount; i++)
+        {
+            keyboardLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+        }
+        for (int i = 0; i < keyboardLayout.RowCount; i++)
+        {
+            keyboardLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+        }
+    }
+
+    private static void InitializeVisorPanelUI()
+    {
+        var formWidth = Calculator.Instance.Width; // pra não confundir o Width do componente com o Width do form.
+        calculatorVisorPanel = new Panel
+        {
+            Width = formWidth,
+            Height = 180,
+            BorderStyle = BorderStyle.FixedSingle,
+            BackColor = Color.FromArgb(62, 85, 85)
+        };
+    }
+
+    private static void AppendCalculatorKeysToAppLayout(TableLayoutPanel layout, List<string> keyListTxt)
+    {
+        int counter = 0;
+
+        for (int row = 0; row < layout.RowCount; row++)
+        {
+            for (int col = 0; col < layout.ColumnCount; col++)
+            {
+                AppendCalculatorKey(layout, counter, col, row, keyListTxt);
+                counter++;
+            }
+        }
+    }
+
+    private static void AppendCalculatorKey(TableLayoutPanel layout, int counter, int col, int row, List<string> keyListTxt)
+    {
+        var key = CreateCalculatorKey(counter, keyListTxt);
+        layout.Controls.Add(key, col, row);
+    }
+
+    private static Button CreateCalculatorKey(int counter, List<string> keyListTxt)
+    {
+        var key = new Button
+        {
+            Dock = DockStyle.Fill,
+            Text = keyListTxt[counter],
+            Font = new Font("Segoe UI", 12f, FontStyle.Bold),
+            ForeColor = Color.White
+        };
+        return key;
+    }
+
+    // Uso de recursão para capturar todos os elementos Button de um dado Control:
+    // NOTA: pesquisar melhor sobre recursões.
+    private static IEnumerable<Button> GetCalculatorKeys(Control parent)
+    {
+        // para cada componente do parente.
+        foreach (Control c in parent.Controls)
+        {
+            // se tal componente for um botão, "guarda" o retorno deste componente na lista enumerável (yield faz isso).
+            if (c is Button btn)
+            {
+                yield return btn;
+            }
+
+            // em seguida chama novamente a função GetCalculatorKeys e itera sobre cada 
+            // elemento, de modo que a função efetivamente fará novamente o passo acima. Isto, na prática, faz com que todos os elementos botão do parente sejam capturados. Se a função fosse chamada uma vez apenas, iria parar no primeiro elemento botão que encontrasse, e já que precisamos de uma lista, então é necessário uso de recursão.
+
+            foreach (var child in GetCalculatorKeys(c))
+            {
+                yield return child;
+            }
+        }
+    }
+
+    //TODO: InputValidation deve ir pra classe Events:
+    private static void InputValidation(string text)
+    {
+        // Estas variáveis, bem como os if/else e switches concernem à camada de validação:
+        List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+        List<string> operations = ["+", "-", "x", "/"];
+
+        if (calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
+
+        if (numbers.Contains(text))
+        {
+            GUIUpdate.OnDigit(calculatorVisor, text);
+        }
+        else if (operations.Contains(text))
+        {
+            switch (text)
+            {
+                case "+":
+                    // concerns operation layer:
+                    var operand = calculatorVisor.Text;
+                    Calculation.AddOperand(operand);
+                    if (AppState.operands.Count > 1)
+                    {
+                        // concerns operation layer:
+                        Calculation.Sum();
+
+                        // concerns UI layer:
+                        GUIUpdate.AfterOperation(calculatorVisor, visorTop);
+                    }
+                    else
+                    {
+                        // AppState.operatorr = "+";
+                        Calculation.SetOperator("+");
+                        GUIUpdate.OnOperation(calculatorVisor, visorTop);
+                    }
+
+                    break;
+
+                case "-":
+                    //TODO...
+                    break;
+                case "x":
+                    //TODO...
+                    break;
+                case "/":
+                    //TODO...
+                    break;
+            }
+        }
+        else
+        {
+            switch (text)
+            {
+                case "DEL":
+                    GUIUpdate.OnDel(calculatorVisor);
+                    break;
+
+                case "CE":
+                    GUIUpdate.OnCE(calculatorVisor);
+                    break;
+
+                case "C":
+                    // concerns operation layer:
+                    //AppState.operands = [];
+                    Calculation.ResetOperands();
+
+                    // concerns UI layer:
+                    GUIUpdate.OnC(calculatorVisor, visorTop);
+
+                    break;
+
+                case "=":
+                    if (AppState.operands.Count < 1) break;
+
+                    // concerns operation layer:
+                    var operand = calculatorVisor.Text;
+                    Calculation.AddOperand(operand);
+                    Calculation.Sum();
+
+                    // concerns UI layer:
+                    GUIUpdate.AfterOperation(calculatorVisor, visorTop);
+
+                    break;
+            }
+        }
+
+
+    }
+
+    private static void ApplyEventsToKeys(IEnumerable<Button> btnList)
+    {
+        foreach (Button btn in btnList)
+        {
+            btn.Click += (_, _) => InputValidation(btn.Text);
+        }
+    }
+
+}
+
+// TODO: InputValidation e ApplyEventsToKeys devem vir para cá. E deve existir aqui uma referência à btnList.
 public class Events
 {
     public static void InitializeAppEvents()
-    {
-        // TODO...
-    }
-}
-
-public class Components
-{
-    public static void InitializeAppComponents()
     {
         // TODO...
     }
