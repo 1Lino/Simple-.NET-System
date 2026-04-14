@@ -220,20 +220,17 @@ public class AppEvents
     {
         var operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand);
+        Calculation.SetOperator(operatorr);
 
-        // TODO: resolver o bug visual da operação não ser atualizada na GUI quando muda de operação.
         var isOperationPossibleAfterAddedOperand = AppState.operands.Count > 1;
+
         if (isOperationPossibleAfterAddedOperand)
         {
-            // concerns operation layer:
             Operation();
-
-            // concerns UI layer:
             GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
         }
         else
         {
-            Calculation.SetOperator(operatorr);
             GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
         }
     }
