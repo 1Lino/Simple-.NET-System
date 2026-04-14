@@ -37,14 +37,16 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 public class AppState
 {
     public static List<double> operands { get; set; }
+    public static List<string> expression { get; set; }
     public static string operatorr { get; set; }
     public static double result { get; set; }
 
     public static void InitializeAppState()
     {
-        AppState.operands = [];
-        AppState.operatorr = "";
-        AppState.result = 0;
+        operands = [];
+        expression = [];
+        operatorr = "";
+        result = 0;
     }
 }
 
@@ -219,27 +221,34 @@ public class AppEvents
     private static void DispatchOperation(Action Operation, string operatorr)
     {
         var operand = Components.calculatorVisor.Text;
-        Calculation.AddOperand(operand);
+        Calculation.AddOperand(operand, operatorr);
         Calculation.SetOperator(operatorr);
 
-        var isOperationPossibleAfterAddedOperand = AppState.operands.Count > 1;
+        GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
 
-        if (isOperationPossibleAfterAddedOperand)
-        {
-            Operation();
-            GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
-        }
-        else
-        {
-            GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
-        }
+
+        // var isOperationPossibleAfterAddedOperand = AppState.operands.Count > 1;
+
+        // if (isOperationPossibleAfterAddedOperand)
+        // {
+        //     Operation();
+        //     GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
+        // }
+        // else
+        // {
+        //     GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
+        // }
     }
 
-    private static void DispatchResultEquals(Action Operation)
+    // TODO: mudar nome para DispatchOperationResult
+    private static void DispatchResultEquals(Action Operation, string operatorr)
     {
         var operand = Components.calculatorVisor.Text;
-        Calculation.AddOperand(operand);
-        Operation();
+        Calculation.AddOperand(operand, operatorr);
+        //Operation();
+        Calculation.Calculate();
+
+        GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
     }
 
     private static void InputValidation(string text)
@@ -255,7 +264,6 @@ public class AppEvents
         }
         else if (operations.Contains(text))
         {
-            // var operand = "";
             var operatorr = "";
 
             switch (text)
@@ -272,10 +280,14 @@ public class AppEvents
                     DispatchOperation(operation, operatorr);
                     break;
                 case "x":
-                    //TODO...
+                    operation = Calculation.Mult;
+                    operatorr = "x";
+                    DispatchOperation(operation, operatorr);
                     break;
                 case "/":
-                    //TODO...
+                    operation = Calculation.Div;
+                    operatorr = "/";
+                    DispatchOperation(operation, operatorr);
                     break;
                 case "DEL":
                     GUIUpdate.OnDel(Components.calculatorVisor);
@@ -298,15 +310,8 @@ public class AppEvents
                     var isSumNotPossibleYet = AppState.operands.Count < 1;
                     if (isSumNotPossibleYet) break;
 
-                    // concerns operation layer:
-                    //var operand = Components.calculatorVisor.Text;
-                    //operation = Calculation.Sum;
-                    // Calculation.AddOperand(operand);
-                    // Calculation.Sub();
-                    DispatchResultEquals(operation);
-
-                    // concerns UI layer:
-                    GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
+                    DispatchResultEquals(operation, operatorr);
+                    Calculation.ResetOperands();
 
                     break;
             }
@@ -392,14 +397,69 @@ public class Calculation
         AppState.operatorr = operation;
     }
 
-    public static void AddOperand(string value)
+    public static void AddOperand(string value, string operatorr)
     {
         AppState.operands.Add(int.Parse(value));
+        AppState.expression.Add(operatorr);
     }
 
+    // TODO: talvez seja possível refatorar este método, pois há algumas repetições.
+    public static void Calculate()
+    {
+        Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
+        Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
+
+        // Prioridade: resolver operaçõed de * e /
+        for (int i = 0; i < AppState.expression.Count;)
+        {
+            switch (AppState.expression[i])
+            {
+                case "x":
+                    AppState.operands[i] = AppState.operands[i] * AppState.operands[i + 1];
+                    AppState.operands.RemoveAt(i + 1);
+                    AppState.expression.RemoveAt(i);
+                    break;
+                case "/":
+                    AppState.operands[i] = AppState.operands[i] / AppState.operands[i + 1];
+                    AppState.operands.RemoveAt(i + 1);
+                    AppState.expression.RemoveAt(i);
+                    break;
+                default:
+                    i++; // só incrementa o iterador caso os casos acima não ocorram.
+                    break;
+            }
+        }
+
+        // depois resolve operações de + e -
+        for (int i = 0; i < AppState.expression.Count;)
+        {
+            switch (AppState.expression[i])
+            {
+                case "+":
+                    AppState.operands[i] = AppState.operands[i] + AppState.operands[i + 1];
+                    AppState.operands.RemoveAt(i + 1);
+                    AppState.expression.RemoveAt(i);
+                    break;
+                case "-":
+                    AppState.operands[i] = AppState.operands[i] - AppState.operands[i + 1];
+                    AppState.operands.RemoveAt(i + 1);
+                    AppState.expression.RemoveAt(i);
+                    break;
+                default:
+                    i++;
+                    break;
+            }
+        }
+
+        Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
+        Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
+    }
+
+    // TODO: deve ser ResetOperation
     public static void ResetOperands()
     {
         AppState.operands = [];
+        AppState.expression = [];
     }
 
     // basicamente zera o registro de operandos e adiciona o resultado como um novo operando, assim, operandos de operações passadas não acumulam na lista. 
