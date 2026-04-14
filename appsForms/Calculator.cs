@@ -1,4 +1,5 @@
 
+using System.Reflection.Metadata.Ecma335;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
@@ -206,20 +207,48 @@ public class Components
     }
 }
 
-// TODO: InputValidation e ApplyEventsToKeys acima devem vir para cá. E deve existir aqui uma referência à btnList.
+
 public class AppEvents
 {
+    private static Action operation = () => { };
     public static void InitializeAppEvents()
     {
         ApplyEventsToKeys(Components.btnList);
     }
 
-    //TODO: InputValidation deve ir pra classe Events:
+    private static void DispatchOperation(Action Operation, string operatorr)
+    {
+        var operand = Components.calculatorVisor.Text;
+        Calculation.AddOperand(operand);
+
+        // TODO: resolver o bug visual da operação não ser atualizada na GUI quando muda de operação.
+        var isOperationPossibleAfterAddedOperand = AppState.operands.Count > 1;
+        if (isOperationPossibleAfterAddedOperand)
+        {
+            // concerns operation layer:
+            Operation();
+
+            // concerns UI layer:
+            GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
+        }
+        else
+        {
+            Calculation.SetOperator(operatorr);
+            GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
+        }
+    }
+
+    private static void DispatchResultEquals(Action Operation)
+    {
+        var operand = Components.calculatorVisor.Text;
+        Calculation.AddOperand(operand);
+        Operation();
+    }
+
     private static void InputValidation(string text)
     {
-        // Estas variáveis, bem como os if/else e switches concernem à camada de validação:
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "="];
+        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ","];
 
         if (Components.calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
@@ -229,31 +258,21 @@ public class AppEvents
         }
         else if (operations.Contains(text))
         {
+            // var operand = "";
+            var operatorr = "";
+
             switch (text)
             {
                 case "+":
-                    // concerns operation layer:
-                    var operand = Components.calculatorVisor.Text;
-                    Calculation.AddOperand(operand);
-                    if (AppState.operands.Count > 1)
-                    {
-                        // concerns operation layer:
-                        Calculation.Sum();
-
-                        // concerns UI layer:
-                        GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
-                    }
-                    else
-                    {
-                        // AppState.operatorr = "+";
-                        Calculation.SetOperator("+");
-                        GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
-                    }
-
+                    operation = Calculation.Sum;
+                    operatorr = "+";
+                    DispatchOperation(operation, operatorr);
                     break;
 
                 case "-":
-                    //TODO...
+                    operation = Calculation.Sub;
+                    operatorr = "-";
+                    DispatchOperation(operation, operatorr);
                     break;
                 case "x":
                     //TODO...
@@ -261,12 +280,6 @@ public class AppEvents
                 case "/":
                     //TODO...
                     break;
-            }
-        }
-        else
-        {
-            switch (text)
-            {
                 case "DEL":
                     GUIUpdate.OnDel(Components.calculatorVisor);
                     break;
@@ -277,7 +290,6 @@ public class AppEvents
 
                 case "C":
                     // concerns operation layer:
-                    //AppState.operands = [];
                     Calculation.ResetOperands();
 
                     // concerns UI layer:
@@ -286,12 +298,15 @@ public class AppEvents
                     break;
 
                 case "=":
-                    if (AppState.operands.Count < 1) break;
+                    var isSumNotPossibleYet = AppState.operands.Count < 1;
+                    if (isSumNotPossibleYet) break;
 
                     // concerns operation layer:
-                    var operand = Components.calculatorVisor.Text;
-                    Calculation.AddOperand(operand);
-                    Calculation.Sum();
+                    //var operand = Components.calculatorVisor.Text;
+                    //operation = Calculation.Sum;
+                    // Calculation.AddOperand(operand);
+                    // Calculation.Sub();
+                    DispatchResultEquals(operation);
 
                     // concerns UI layer:
                     GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
@@ -299,8 +314,6 @@ public class AppEvents
                     break;
             }
         }
-
-
     }
 
     public static void ApplyEventsToKeys(IEnumerable<Button> btnList)
@@ -327,8 +340,14 @@ public class GUIUpdate
 
     public static void OnOperation(Label calculatorVisor, Label visorTop)
     {
-        if (visorTop.Text == "0") visorTop.Text = $"{calculatorVisor.Text} {AppState.operatorr} ";
-        else visorTop.Text += $"{calculatorVisor.Text} {AppState.operatorr} ";
+        if (visorTop.Text == "0")
+        {
+            visorTop.Text = $"{calculatorVisor.Text} {AppState.operatorr} ";
+        }
+        else
+        {
+            visorTop.Text += $"{calculatorVisor.Text} {AppState.operatorr} ";
+        }
         calculatorVisor.Text = "0";
     }
 
@@ -400,19 +419,25 @@ public class Calculation
         UpdateOperation();
     }
 
-    public static double Sub(double a, double b)
+    public static void Sub()
     {
-        return a - b;
+        AppState.result = AppState.operands[0] - AppState.operands[1];
+        UpdateOperation();
     }
 
-    public static double Mult(double a, double b)
+    public static void Mult()
     {
-        return a * b;
+        AppState.result = AppState.operands[0] * AppState.operands[1];
+        UpdateOperation();
     }
 
-    public static double Div(double a, double b)
+    public static void Div()
     {
-        return a / b;
+        if (AppState.operands[0] != 0)
+        {
+            AppState.result = AppState.operands[0] / AppState.operands[1];
+            UpdateOperation();
+        }
     }
 
     public static double Sqrt(double a)
