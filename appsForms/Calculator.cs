@@ -14,6 +14,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             InitializeForm();
             Components.InitializeAppComponents();
             AppState.InitializeAppState();
+            AppEvents.InitializeAppEvents();
 
             // tests:
             Calculation.CalculationTests();
@@ -40,7 +41,7 @@ public class AppState
 
     public static void InitializeAppState()
     {
-        AppState.operands = new List<double>();
+        AppState.operands = [];
         AppState.operatorr = "";
         AppState.result = 0;
     }
@@ -49,11 +50,11 @@ public class AppState
 public class Components
 {
     private static TableLayoutPanel keyboardLayout;
-    private static Panel calculatorVisorPanel;
-    private static Label calculatorVisor;
-    private static Label visorTop;
+    public static Panel calculatorVisorPanel;
+    public static Label calculatorVisor;
+    public static Label visorTop;
     private static List<string> keyListTxt;
-    private static IEnumerable<Button> btnList;
+    public static IEnumerable<Button> btnList;
 
     public static void InitializeAppComponents()
     {
@@ -71,7 +72,7 @@ public class Components
         AppendCalculatorKeysToAppLayout(keyboardLayout, keyListTxt);
 
         btnList = GetCalculatorKeys(keyboardLayout);
-        ApplyEventsToKeys(btnList);
+        // Events.ApplyEventsToKeys(btnList);
     }
 
     private static List<string> InitializeKeyTexts()
@@ -182,7 +183,7 @@ public class Components
     }
 
     // Uso de recursão para capturar todos os elementos Button de um dado Control:
-    // NOTA: pesquisar melhor sobre recursões.
+    // NOTA: pesquisar melhor sobre recursões e sobre yield.
     private static IEnumerable<Button> GetCalculatorKeys(Control parent)
     {
         // para cada componente do parente.
@@ -203,19 +204,28 @@ public class Components
             }
         }
     }
+}
+
+// TODO: InputValidation e ApplyEventsToKeys acima devem vir para cá. E deve existir aqui uma referência à btnList.
+public class AppEvents
+{
+    public static void InitializeAppEvents()
+    {
+        ApplyEventsToKeys(Components.btnList);
+    }
 
     //TODO: InputValidation deve ir pra classe Events:
     private static void InputValidation(string text)
     {
         // Estas variáveis, bem como os if/else e switches concernem à camada de validação:
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        List<string> operations = ["+", "-", "x", "/"];
+        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "="];
 
-        if (calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
+        if (Components.calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
         if (numbers.Contains(text))
         {
-            GUIUpdate.OnDigit(calculatorVisor, text);
+            GUIUpdate.OnDigit(Components.calculatorVisor, text);
         }
         else if (operations.Contains(text))
         {
@@ -223,7 +233,7 @@ public class Components
             {
                 case "+":
                     // concerns operation layer:
-                    var operand = calculatorVisor.Text;
+                    var operand = Components.calculatorVisor.Text;
                     Calculation.AddOperand(operand);
                     if (AppState.operands.Count > 1)
                     {
@@ -231,13 +241,13 @@ public class Components
                         Calculation.Sum();
 
                         // concerns UI layer:
-                        GUIUpdate.AfterOperation(calculatorVisor, visorTop);
+                        GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
                     }
                     else
                     {
                         // AppState.operatorr = "+";
                         Calculation.SetOperator("+");
-                        GUIUpdate.OnOperation(calculatorVisor, visorTop);
+                        GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
                     }
 
                     break;
@@ -258,11 +268,11 @@ public class Components
             switch (text)
             {
                 case "DEL":
-                    GUIUpdate.OnDel(calculatorVisor);
+                    GUIUpdate.OnDel(Components.calculatorVisor);
                     break;
 
                 case "CE":
-                    GUIUpdate.OnCE(calculatorVisor);
+                    GUIUpdate.OnCE(Components.calculatorVisor);
                     break;
 
                 case "C":
@@ -271,7 +281,7 @@ public class Components
                     Calculation.ResetOperands();
 
                     // concerns UI layer:
-                    GUIUpdate.OnC(calculatorVisor, visorTop);
+                    GUIUpdate.OnC(Components.calculatorVisor, Components.visorTop);
 
                     break;
 
@@ -279,12 +289,12 @@ public class Components
                     if (AppState.operands.Count < 1) break;
 
                     // concerns operation layer:
-                    var operand = calculatorVisor.Text;
+                    var operand = Components.calculatorVisor.Text;
                     Calculation.AddOperand(operand);
                     Calculation.Sum();
 
                     // concerns UI layer:
-                    GUIUpdate.AfterOperation(calculatorVisor, visorTop);
+                    GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
 
                     break;
             }
@@ -293,22 +303,12 @@ public class Components
 
     }
 
-    private static void ApplyEventsToKeys(IEnumerable<Button> btnList)
+    public static void ApplyEventsToKeys(IEnumerable<Button> btnList)
     {
         foreach (Button btn in btnList)
         {
             btn.Click += (_, _) => InputValidation(btn.Text);
         }
-    }
-
-}
-
-// TODO: InputValidation e ApplyEventsToKeys devem vir para cá. E deve existir aqui uma referência à btnList.
-public class Events
-{
-    public static void InitializeAppEvents()
-    {
-        // TODO...
     }
 }
 
