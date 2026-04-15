@@ -225,27 +225,12 @@ public class AppEvents
         Calculation.SetOperator(operatorr);
 
         GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
-
-
-        // var isOperationPossibleAfterAddedOperand = AppState.operands.Count > 1;
-
-        // if (isOperationPossibleAfterAddedOperand)
-        // {
-        //     Operation();
-        //     GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
-        // }
-        // else
-        // {
-        //     GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
-        // }
     }
 
-    // TODO: mudar nome para DispatchOperationResult
-    private static void DispatchResultEquals(Action Operation, string operatorr)
+    private static void DispatchOperationResult(Action Operation, string operatorr)
     {
         var operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, operatorr);
-        //Operation();
         Calculation.Calculate();
 
         GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
@@ -264,28 +249,24 @@ public class AppEvents
         }
         else if (operations.Contains(text))
         {
-            var operatorr = "";
+            var operatorr = ""; // não deve ser confundido com AppState.operatorr. Seu uso também não é intercambiável.
 
             switch (text)
             {
                 case "+":
-                    operation = Calculation.Sum;
                     operatorr = "+";
                     DispatchOperation(operation, operatorr);
                     break;
 
                 case "-":
-                    operation = Calculation.Sub;
                     operatorr = "-";
                     DispatchOperation(operation, operatorr);
                     break;
                 case "x":
-                    operation = Calculation.Mult;
                     operatorr = "x";
                     DispatchOperation(operation, operatorr);
                     break;
                 case "/":
-                    operation = Calculation.Div;
                     operatorr = "/";
                     DispatchOperation(operation, operatorr);
                     break;
@@ -298,20 +279,15 @@ public class AppEvents
                     break;
 
                 case "C":
-                    // concerns operation layer:
                     Calculation.ResetOperands();
-
-                    // concerns UI layer:
                     GUIUpdate.OnC(Components.calculatorVisor, Components.visorTop);
-
                     break;
 
                 case "=":
                     var isSumNotPossibleYet = AppState.operands.Count < 1;
                     if (isSumNotPossibleYet) break;
 
-                    DispatchResultEquals(operation, operatorr);
-                    Calculation.ResetOperands();
+                    DispatchOperationResult(operation, operatorr);
 
                     break;
             }
@@ -374,7 +350,6 @@ public class GUIUpdate
 }
 
 
-// TIP: um exercício interessante seria tentar implementar todas estas operações usando matemática pura, ao invés de simplesmente usar apoio de libs, mas isto está em um escopo diferente desse projeto. Mas é algo a ser pensado.
 public class Calculation
 {
     public static void CalculationTests()
@@ -389,7 +364,7 @@ public class Calculation
         Console.WriteLine($"Mult: {a} x {b} = {a * b}");
         Console.WriteLine($"Div: {a} / {b} = {a / b}");
         Console.WriteLine($"Sqrt of {a} = {Math.Sqrt(a)}");
-        Console.WriteLine($"Pow of {b} by 2 = {Math.Pow(b, 2)}");
+        Console.WriteLine($"Pow of {b} by 2 = {Pow(b, 2)}");
     }
 
     public static void SetOperator(string operation)
@@ -451,6 +426,9 @@ public class Calculation
             }
         }
 
+        AppState.result = AppState.operands[0];
+        UpdateOperation();
+
         Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
         Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
     }
@@ -462,44 +440,13 @@ public class Calculation
         AppState.expression = [];
     }
 
-    // basicamente zera o registro de operandos e adiciona o resultado como um novo operando, assim, operandos de operações passadas não acumulam na lista. 
+    // Atualiza a operação com os valores do resultado:
     private static void UpdateOperation()
     {
         AppState.operands = [];
+        AppState.expression = [];
         AppState.operands.Add(AppState.result);
-    }
-
-    // TODO: Aperfeiçoar estas funções quando estiverem prontas.
-    public static void Sum()
-    {
-        AppState.result = AppState.operands[0] + AppState.operands[1];
-        UpdateOperation();
-    }
-
-    public static void Sub()
-    {
-        AppState.result = AppState.operands[0] - AppState.operands[1];
-        UpdateOperation();
-    }
-
-    public static void Mult()
-    {
-        AppState.result = AppState.operands[0] * AppState.operands[1];
-        UpdateOperation();
-    }
-
-    public static void Div()
-    {
-        if (AppState.operands[0] != 0)
-        {
-            AppState.result = AppState.operands[0] / AppState.operands[1];
-            UpdateOperation();
-        }
-    }
-
-    public static double Sqrt(double a)
-    {
-        return Math.Sqrt(a);
+        AppState.expression.Add(AppState.operatorr);
     }
 
     public static double Pow(double a, double b)
