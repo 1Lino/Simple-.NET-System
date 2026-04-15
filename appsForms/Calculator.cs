@@ -41,12 +41,18 @@ public class AppState
     public static string operatorr { get; set; }
     public static double result { get; set; }
 
+    public static bool canConcatOperation { get; set; }
+
     public static void InitializeAppState()
     {
         operands = [];
         expression = [];
         operatorr = "";
         result = 0;
+        // controla se a operação pode ou não ser concatenada, no caso, isso impede que o usuário concatene o mesmo número
+        // várias vezes para a operação ao clicar repetidamente o mesmo botão do operador (+ - x / etc). Isto também impede
+        // de vários operadores seguidos serem concatenados pro visor, o que gera erro na operação (retorna NaN).
+        canConcatOperation = true;
     }
 }
 
@@ -209,6 +215,81 @@ public class Components
     }
 }
 
+public class GUIUpdate
+{
+    public static void OnDigit(Label calculatorVisor, Label visorTop, string text)
+    {
+        if (calculatorVisor.Text == "0")
+        {
+            calculatorVisor.Text = text;
+        }
+        else
+        {
+            calculatorVisor.Text += text;
+        }
+
+        if (visorTop.Text == "0")
+        {
+            visorTop.Text = text;
+        }
+        else
+        {
+            visorTop.Text += text;
+        }
+    }
+    public static void AfterOperation(Label calculatorVisor, Label visorTop)
+    {
+        visorTop.Text = $"{AppState.result} {AppState.operatorr} ";
+        calculatorVisor.Text = "0";
+    }
+
+    public static void OnOperation(Label calculatorVisor, Label visorTop)
+    {
+        if (visorTop.Text == "0")
+        {
+            visorTop.Text = $" {AppState.operatorr} ";
+        }
+        else
+        {
+            visorTop.Text += $" {AppState.operatorr} ";
+        }
+        calculatorVisor.Text = "0";
+    }
+
+    public static void OnDel(Label calculatorVisor, Label visorTop)
+    {
+        string currentNumber = calculatorVisor.Text;
+        int charsToRemove = currentNumber.Length;
+
+        if (currentNumber.Length > 1)
+        {
+            calculatorVisor.Text = calculatorVisor.Text.Remove(calculatorVisor.Text.Length - 1);
+        }
+        else
+        {
+            calculatorVisor.Text = "0";
+        }
+
+        // TODO: 0 no visorTop deve sumir aqui ou ser substituído pelo operando ao digitar.
+        if (visorTop.Text.Length > 1)
+        {
+            int newLength = Math.Max(visorTop.Text.Length - charsToRemove, 0);
+            visorTop.Text = visorTop.Text.Substring(0, newLength) + calculatorVisor.Text;
+        }
+    }
+
+    public static void OnCE(Label calculatorVisor)
+    {
+        calculatorVisor.Text = "0";
+    }
+
+    public static void OnC(Label calculatorVisor, Label visorTop)
+    {
+        calculatorVisor.Text = "0";
+        visorTop.Text = "0";
+    }
+
+}
 
 public class AppEvents
 {
@@ -218,21 +299,24 @@ public class AppEvents
         ApplyEventsToKeys(Components.btnList);
     }
 
-    private static void DispatchOperation(Action Operation, string operatorr)
+    private static void DispatchOperation(string operatorr)
     {
+        if (!AppState.canConcatOperation) return;
         var operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, operatorr);
         Calculation.SetOperator(operatorr);
 
+        AppState.canConcatOperation = false;
         GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
     }
 
-    private static void DispatchOperationResult(Action Operation, string operatorr)
+    private static void DispatchOperationResult(string operatorr)
     {
         var operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, operatorr);
         Calculation.Calculate();
 
+        AppState.canConcatOperation = false;
         GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
     }
 
@@ -245,7 +329,8 @@ public class AppEvents
 
         if (numbers.Contains(text))
         {
-            GUIUpdate.OnDigit(Components.calculatorVisor, text);
+            AppState.canConcatOperation = true;
+            GUIUpdate.OnDigit(Components.calculatorVisor, Components.visorTop, text);
         }
         else if (operations.Contains(text))
         {
@@ -255,23 +340,23 @@ public class AppEvents
             {
                 case "+":
                     operatorr = "+";
-                    DispatchOperation(operation, operatorr);
+                    DispatchOperation(operatorr);
                     break;
 
                 case "-":
                     operatorr = "-";
-                    DispatchOperation(operation, operatorr);
+                    DispatchOperation(operatorr);
                     break;
                 case "x":
                     operatorr = "x";
-                    DispatchOperation(operation, operatorr);
+                    DispatchOperation(operatorr);
                     break;
                 case "/":
                     operatorr = "/";
-                    DispatchOperation(operation, operatorr);
+                    DispatchOperation(operatorr);
                     break;
                 case "DEL":
-                    GUIUpdate.OnDel(Components.calculatorVisor);
+                    GUIUpdate.OnDel(Components.calculatorVisor, Components.visorTop);
                     break;
 
                 case "CE":
@@ -287,7 +372,7 @@ public class AppEvents
                     var isSumNotPossibleYet = AppState.operands.Count < 1;
                     if (isSumNotPossibleYet) break;
 
-                    DispatchOperationResult(operation, operatorr);
+                    DispatchOperationResult(operatorr);
 
                     break;
             }
@@ -301,52 +386,6 @@ public class AppEvents
             btn.Click += (_, _) => InputValidation(btn.Text);
         }
     }
-}
-
-public class GUIUpdate
-{
-    public static void OnDigit(Label calculatorVisor, string text)
-    {
-        if (calculatorVisor.Text == "0") calculatorVisor.Text = text;
-        else calculatorVisor.Text += text;
-    }
-    public static void AfterOperation(Label calculatorVisor, Label visorTop)
-    {
-        visorTop.Text = $"{AppState.result} {AppState.operatorr} ";
-        calculatorVisor.Text = "0";
-    }
-
-    public static void OnOperation(Label calculatorVisor, Label visorTop)
-    {
-        if (visorTop.Text == "0")
-        {
-            visorTop.Text = $"{calculatorVisor.Text} {AppState.operatorr} ";
-        }
-        else
-        {
-            visorTop.Text += $"{calculatorVisor.Text} {AppState.operatorr} ";
-        }
-        calculatorVisor.Text = "0";
-    }
-
-    public static void OnDel(Label calculatorVisor)
-    {
-        if (calculatorVisor.Text.Length != 1)
-            calculatorVisor.Text = calculatorVisor.Text.Remove(calculatorVisor.Text.Length - 1);
-        else calculatorVisor.Text = "0";
-    }
-
-    public static void OnCE(Label calculatorVisor)
-    {
-        calculatorVisor.Text = "0";
-    }
-
-    public static void OnC(Label calculatorVisor, Label visorTop)
-    {
-        calculatorVisor.Text = "0";
-        visorTop.Text = "0";
-    }
-
 }
 
 
