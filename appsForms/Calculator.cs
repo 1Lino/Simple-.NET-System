@@ -1,6 +1,13 @@
 
-using System.Reflection.Metadata.Ecma335;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
+
+// TODO: 
+// 1. Operações básicas [+ - x /] (ok)
+// 2. Implementar uso de vírgula ()
+// 3. Operações intermediárias [sqrt, pow, 1/x, %, +-] ()
+// 4. Testar limites dos cálculos, procurar por erros ()
+// 5. Implementar funcionalidade de histórico de operações ()
+// 6. 
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -219,6 +226,8 @@ public class GUIUpdate
 {
     public static void OnDigit(Label calculatorVisor, Label visorTop, string text)
     {
+        if (calculatorVisor.Text.Length >= 15) return; // limita quantidade de dígitos para a quantidade normal suportada por um double ~15.
+
         if (calculatorVisor.Text == "0")
         {
             calculatorVisor.Text = text;
@@ -258,8 +267,9 @@ public class GUIUpdate
 
     public static void OnDel(Label calculatorVisor, Label visorTop)
     {
+        if (calculatorVisor.Text == "0") return; // impede que visorTop seja deletado para além do que é deletado em calculatorVisor.
+
         string currentNumber = calculatorVisor.Text;
-        int charsToRemove = currentNumber.Length;
 
         if (currentNumber.Length > 1)
         {
@@ -270,12 +280,7 @@ public class GUIUpdate
             calculatorVisor.Text = "0";
         }
 
-        // TODO: 0 no visorTop deve sumir aqui ou ser substituído pelo operando ao digitar.
-        if (visorTop.Text.Length > 1)
-        {
-            int newLength = Math.Max(visorTop.Text.Length - charsToRemove, 0);
-            visorTop.Text = visorTop.Text.Substring(0, newLength) + calculatorVisor.Text;
-        }
+        visorTop.Text = visorTop.Text.Remove(visorTop.Text.Length - 1);
     }
 
     public static void OnCE(Label calculatorVisor)
@@ -301,7 +306,8 @@ public class AppEvents
 
     private static void DispatchOperation(string operatorr)
     {
-        if (!AppState.canConcatOperation) return;
+        if (!AppState.canConcatOperation || AppState.operands.Count >= 4) return;
+
         var operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, operatorr);
         Calculation.SetOperator(operatorr);
@@ -413,7 +419,7 @@ public class Calculation
 
     public static void AddOperand(string value, string operatorr)
     {
-        AppState.operands.Add(int.Parse(value));
+        AppState.operands.Add(double.Parse(value));
         AppState.expression.Add(operatorr);
     }
 
