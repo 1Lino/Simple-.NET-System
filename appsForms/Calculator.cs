@@ -7,7 +7,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 // 3. Operações intermediárias [sqrt, pow, 1/x, %, +-] ()
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações ()
-// 6. Rever nomenclaturas ()
+// 6. Rever nomenclaturas, principalmente onde houver comentários explicando código ()
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -323,21 +323,30 @@ public class GUIUpdate
 
 public class AppEvents
 {
-    private static Action operation = () => { };
+    // private static Action operation = () => { };
     public static void InitializeAppEvents()
     {
         ApplyEventsToKeys(Components.btnList);
     }
 
+    public static void ChangeOperator(string operatorr)
+    {
+        GUIUpdate.OnOperatorChange(Components.visorTop, operatorr);
+        Calculation.SetOperator(operatorr);
+        AppState.expression[AppState.expression.Count - 1] = operatorr;
+        Console.WriteLine($"Changed operation to {AppState.operatorr}");
+    }
+
     private static void DispatchOperation(string operatorr)
     {
+        bool operatorDuplicationRisk = !AppState.canConcatOperation; // verifica se há risco de duplicar operador.
+        bool operationTooBig = AppState.operands.Count >= 4; // basicamente cria um limite de operandos para a operação.
 
-        if (!AppState.canConcatOperation || AppState.operands.Count >= 4)
+        // se houver risco de duplicar operador, por exemplo, se o usuário já clicou num operador, ou então se a operação for
+        // já grande demais (maior igual a 4 operandos), então apenas muda o operador e sai da função.
+        if (operatorDuplicationRisk || operationTooBig)
         {
-            GUIUpdate.OnOperatorChange(Components.visorTop, operatorr);
-            Calculation.SetOperator(operatorr);
-            AppState.expression[AppState.expression.Count - 1] = operatorr;
-            Console.WriteLine($"Changed operation to {AppState.operatorr}");
+            ChangeOperator(operatorr); // apenas muda o operador, tanto na operação como no visor.
             return;
         }
 
