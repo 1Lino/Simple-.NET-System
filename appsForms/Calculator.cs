@@ -7,7 +7,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 // 3. Operações intermediárias [sqrt, pow, 1/x, %, +-] ()
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações ()
-// 6. 
+// 6. Rever nomenclaturas ()
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -25,7 +25,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             AppEvents.InitializeAppEvents();
 
             // tests:
-            Calculation.CalculationTests();
+            // Calculation.CalculationTests();
         }
 
         private void InitializeForm()
@@ -307,6 +307,18 @@ public class GUIUpdate
         }
     }
 
+    public static void OnSqrt(Label calculatorVisor, Label visorTop, double result)
+    {
+        visorTop.Text = $"{result}";
+        calculatorVisor.Text = "0";
+    }
+
+    public static void OnOperatorChange(Label visorTop, string operatorr)
+    {
+        string CopyText = visorTop.Text;
+        visorTop.Text = CopyText.Substring(0, CopyText.Length - 2) + $"{operatorr} ";
+    }
+
 }
 
 public class AppEvents
@@ -319,7 +331,16 @@ public class AppEvents
 
     private static void DispatchOperation(string operatorr)
     {
-        if (!AppState.canConcatOperation || AppState.operands.Count >= 4) return;
+
+        if (!AppState.canConcatOperation || AppState.operands.Count >= 4)
+        {
+            GUIUpdate.OnOperatorChange(Components.visorTop, operatorr);
+            Calculation.SetOperator(operatorr);
+            AppState.expression[AppState.expression.Count - 1] = operatorr;
+            Console.WriteLine($"Changed operation to {AppState.operatorr}");
+            return;
+        }
+
 
         var operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, operatorr);
@@ -330,10 +351,10 @@ public class AppEvents
         GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop, AppState.operatorr);
     }
 
-    private static void DispatchOperationResult(string operatorr)
+    private static void DispatchOperationResult()
     {
         var operand = Components.calculatorVisor.Text;
-        Calculation.AddOperand(operand, operatorr);
+        Calculation.AddOperand(operand, "");
         Calculation.Calculate();
 
         AppState.canConcatOperation = false;
@@ -344,7 +365,7 @@ public class AppEvents
     private static void InputValidation(string text)
     {
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ","];
+        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "sqrt"];
 
         if (Components.calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
@@ -355,7 +376,8 @@ public class AppEvents
         }
         else if (operations.Contains(text))
         {
-            var operatorr = ""; // não deve ser confundido com AppState.operatorr. Seu uso também não é intercambiável.
+            string operatorr; // não deve ser confundido com AppState.operatorr. Seu uso também não é intercambiável.
+            var operationNotPossible = AppState.operands.Count < 1;
 
             switch (text)
             {
@@ -380,6 +402,10 @@ public class AppEvents
                     GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
                     AppState.canUseDot = false;
                     break;
+                case "sqrt":
+
+                    // GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result);
+                    break;
                 case "DEL":
                     GUIUpdate.OnDel(Components.calculatorVisor, Components.visorTop);
                     break;
@@ -394,10 +420,9 @@ public class AppEvents
                     break;
 
                 case "=":
-                    var isSumNotPossibleYet = AppState.operands.Count < 1;
-                    if (isSumNotPossibleYet) break;
+                    if (operationNotPossible) break;
 
-                    DispatchOperationResult(operatorr);
+                    DispatchOperationResult();
 
                     break;
             }
@@ -445,8 +470,8 @@ public class Calculation
     // TODO: talvez seja possível refatorar este método, pois há algumas repetições.
     public static void Calculate()
     {
-        Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
-        Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
+        // Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
+        // Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
 
         // Prioridade: resolver operaçõed de * e /
         for (int i = 0; i < AppState.expression.Count;)
@@ -493,8 +518,14 @@ public class Calculation
         AppState.result = AppState.operands[0];
         UpdateOperation();
 
-        Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
-        Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
+        // Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
+        // Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
+    }
+
+    public static void Sqrt()
+    {
+        AppState.result = Math.Sqrt(AppState.operands[0]);
+        UpdateOperation();
     }
 
     // TODO: deve ser ResetOperation
