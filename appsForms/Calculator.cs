@@ -3,7 +3,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 // TODO: 
 // 1. Operações básicas [+ - x /] (ok)
-// 2. Implementar uso de vírgula ()
+// 2. Implementar uso de vírgula (ok)
 // 3. Operações intermediárias [sqrt, pow, 1/x, %, +-] ()
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações ()
@@ -49,6 +49,7 @@ public class AppState
     public static double result { get; set; }
 
     public static bool canConcatOperation { get; set; }
+    public static bool canUseDot { get; set; }
 
     public static void InitializeAppState()
     {
@@ -60,6 +61,7 @@ public class AppState
         // várias vezes para a operação ao clicar repetidamente o mesmo botão do operador (+ - x / etc). Isto também impede
         // de vários operadores seguidos serem concatenados pro visor, o que gera erro na operação (retorna NaN).
         canConcatOperation = true;
+        canUseDot = true;
     }
 }
 
@@ -222,6 +224,7 @@ public class Components
     }
 }
 
+
 public class GUIUpdate
 {
     public static void OnDigit(Label calculatorVisor, Label visorTop, string text)
@@ -246,21 +249,21 @@ public class GUIUpdate
             visorTop.Text += text;
         }
     }
-    public static void AfterOperation(Label calculatorVisor, Label visorTop)
+    public static void AfterOperation(Label calculatorVisor, Label visorTop, double result, string operatorr)
     {
-        visorTop.Text = $"{AppState.result} {AppState.operatorr} ";
+        visorTop.Text = $"{result} {operatorr} ";
         calculatorVisor.Text = "0";
     }
 
-    public static void OnOperation(Label calculatorVisor, Label visorTop)
+    public static void OnOperation(Label calculatorVisor, Label visorTop, string operatorr)
     {
         if (visorTop.Text == "0")
         {
-            visorTop.Text = $" {AppState.operatorr} ";
+            visorTop.Text = $" {operatorr} ";
         }
         else
         {
-            visorTop.Text += $" {AppState.operatorr} ";
+            visorTop.Text += $" {operatorr} ";
         }
         calculatorVisor.Text = "0";
     }
@@ -294,6 +297,16 @@ public class GUIUpdate
         visorTop.Text = "0";
     }
 
+    public static void OnDot(Label calculatorVisor, Label visorTop, bool canUseDot)
+    {
+        if (canUseDot)
+        {
+            if (visorTop.Text[visorTop.Text.Length - 1] == ' ') visorTop.Text += "0,";
+            else visorTop.Text += ",";
+            calculatorVisor.Text += ",";
+        }
+    }
+
 }
 
 public class AppEvents
@@ -313,7 +326,8 @@ public class AppEvents
         Calculation.SetOperator(operatorr);
 
         AppState.canConcatOperation = false;
-        GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop);
+        AppState.canUseDot = true;
+        GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop, AppState.operatorr);
     }
 
     private static void DispatchOperationResult(string operatorr)
@@ -323,7 +337,8 @@ public class AppEvents
         Calculation.Calculate();
 
         AppState.canConcatOperation = false;
-        GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop);
+        AppState.canUseDot = true;
+        GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop, AppState.result, AppState.operatorr);
     }
 
     private static void InputValidation(string text)
@@ -360,6 +375,10 @@ public class AppEvents
                 case "/":
                     operatorr = "/";
                     DispatchOperation(operatorr);
+                    break;
+                case ",":
+                    GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
+                    AppState.canUseDot = false;
                     break;
                 case "DEL":
                     GUIUpdate.OnDel(Components.calculatorVisor, Components.visorTop);
