@@ -8,6 +8,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações ()
 // 6. Rever nomenclaturas, principalmente onde houver comentários explicando código ()
+// 7. Implementar keyboard, de modo que seja permitido digitar números pelo teclado numérico ()
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -23,7 +24,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Components.InitializeAppComponents();
             AppState.InitializeAppState();
             AppEvents.InitializeAppEvents();
-
             // tests:
             // Calculation.CalculationTests();
         }
@@ -37,6 +37,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             FormBorderStyle = FormBorderStyle.FixedSingle;
             MaximizeBox = false;
         }
+
+
     }
 }
 
@@ -323,10 +325,11 @@ public class GUIUpdate
 
 public class AppEvents
 {
-    // private static Action operation = () => { };
     public static void InitializeAppEvents()
     {
         ApplyEventsToKeys(Components.btnList);
+        Calculator.Instance.KeyPreview = true; // very important!
+        Calculator.Instance.KeyDown += MyExistingForm_KeyDown;
     }
 
     public static void ChangeOperator(string operatorr)
@@ -435,6 +438,63 @@ public class AppEvents
 
                     break;
             }
+        }
+
+    }
+
+    public static void MyExistingForm_KeyDown(object sender, KeyEventArgs e)
+    {
+        int numberPressed = -1;
+
+        // Check numeric keypad
+        if (e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9)
+        {
+            numberPressed = e.KeyCode - Keys.NumPad0;
+        }
+        // Check top-row numbers (above letters)
+        else if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
+        {
+            numberPressed = e.KeyCode - Keys.D0;
+        }
+
+        if (numberPressed != -1)
+        {
+            Console.WriteLine($"Number pressed: {numberPressed}");
+            // Do something with the number here
+        }
+
+        // Detect special symbols:
+        if (e.KeyCode == Keys.Oemcomma)
+        {
+            Console.WriteLine("You pressed the 'Comma' key!");
+        }
+        if (e.KeyCode == Keys.Add)
+        {
+            Console.WriteLine("You pressed the '+' key!");
+        }
+        if (e.KeyCode == Keys.Subtract)
+        {
+            Console.WriteLine("You pressed the '-' key!");
+        }
+        if (e.KeyCode == Keys.Multiply)
+        {
+            Console.WriteLine("You pressed the '*' key!");
+        }
+        if (e.KeyCode == Keys.Divide)
+        {
+            Console.WriteLine("You pressed the '/' key!");
+        }
+        if (e.KeyCode == Keys.Oemplus)
+        {
+            Console.WriteLine("You pressed the '=' key!");
+        }
+        if (e.KeyCode == Keys.Back)
+        {
+            Console.WriteLine("You pressed the 'Back' key!");
+        }
+        if (e.KeyCode == Keys.Delete)
+        {
+            Console.WriteLine("You pressed the 'Delete' key!");
         }
     }
 
