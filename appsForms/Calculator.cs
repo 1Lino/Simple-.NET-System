@@ -1,4 +1,6 @@
 
+using System.Diagnostics.Eventing.Reader;
+using System.Security.Cryptography.X509Certificates;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 // TODO: 
@@ -285,7 +287,8 @@ public class GUIUpdate
             calculatorVisor.Text = "0";
         }
 
-        visorTop.Text = visorTop.Text.Remove(visorTop.Text.Length - 1);
+        if (visorTop.Text.Length == 1) visorTop.Text = "0";
+        else visorTop.Text = visorTop.Text.Remove(visorTop.Text.Length - 1);
     }
 
     public static void OnCE(Label calculatorVisor)
@@ -327,9 +330,9 @@ public class AppEvents
 {
     public static void InitializeAppEvents()
     {
-        ApplyEventsToKeys(Components.btnList);
-        Calculator.Instance.KeyPreview = true; // very important!
-        Calculator.Instance.KeyDown += MyExistingForm_KeyDown;
+        ApplyEventsToKeys(Components.btnList); // "key" se refere aos botões da calculadora.
+        Calculator.Instance.KeyPreview = true; // Permite que eventos de teclado sejam primeiro capturados pelo Form, ao invés de pelos componentes em foco.
+        Calculator.Instance.KeyDown += CalculatorKeyDownEvent;
     }
 
     public static void ChangeOperator(string operatorr)
@@ -388,8 +391,8 @@ public class AppEvents
         }
         else if (operations.Contains(text))
         {
-            string operatorr; // não deve ser confundido com AppState.operatorr. Seu uso também não é intercambiável.
             var operationNotPossible = AppState.operands.Count < 1;
+            string operatorr; // não deve ser confundido com AppState.operatorr. Seu uso também não é intercambiável.
 
             switch (text)
             {
@@ -397,7 +400,6 @@ public class AppEvents
                     operatorr = "+";
                     DispatchOperation(operatorr);
                     break;
-
                 case "-":
                     operatorr = "-";
                     DispatchOperation(operatorr);
@@ -442,16 +444,16 @@ public class AppEvents
 
     }
 
-    public static void MyExistingForm_KeyDown(object sender, KeyEventArgs e)
+    public static void CalculatorKeyDownEvent(object sender, KeyEventArgs e)
     {
         int numberPressed = -1;
 
-        // Check numeric keypad
+        // Keypad Numérico
         if (e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9)
         {
             numberPressed = e.KeyCode - Keys.NumPad0;
         }
-        // Check top-row numbers (above letters)
+        // Números do teclado QWERTY
         else if (e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9)
         {
             numberPressed = e.KeyCode - Keys.D0;
@@ -460,41 +462,70 @@ public class AppEvents
         if (numberPressed != -1)
         {
             Console.WriteLine($"Number pressed: {numberPressed}");
-            // Do something with the number here
+
+            AppState.canConcatOperation = true;
+            GUIUpdate.OnDigit(Components.calculatorVisor, Components.visorTop, $"{numberPressed}");
         }
 
-        // Detect special symbols:
+        // Demais operações:
+        string operatorr;
+        var operationNotPossible = AppState.operands.Count < 1;
+
         if (e.KeyCode == Keys.Oemcomma)
         {
             Console.WriteLine("You pressed the 'Comma' key!");
+
+            GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
+            AppState.canUseDot = false;
         }
         if (e.KeyCode == Keys.Add)
         {
             Console.WriteLine("You pressed the '+' key!");
+
+            operatorr = "+";
+            DispatchOperation(operatorr);
         }
         if (e.KeyCode == Keys.Subtract)
         {
             Console.WriteLine("You pressed the '-' key!");
+
+            operatorr = "-";
+            DispatchOperation(operatorr);
         }
         if (e.KeyCode == Keys.Multiply)
         {
             Console.WriteLine("You pressed the '*' key!");
+
+            operatorr = "x";
+            DispatchOperation(operatorr);
         }
         if (e.KeyCode == Keys.Divide)
         {
             Console.WriteLine("You pressed the '/' key!");
+
+            operatorr = "/";
+            DispatchOperation(operatorr);
         }
         if (e.KeyCode == Keys.Oemplus)
         {
             Console.WriteLine("You pressed the '=' key!");
+
+            if (operationNotPossible) return;
+
+            DispatchOperationResult();
         }
         if (e.KeyCode == Keys.Back)
         {
             Console.WriteLine("You pressed the 'Back' key!");
+
+            GUIUpdate.OnDel(Components.calculatorVisor, Components.visorTop);
         }
         if (e.KeyCode == Keys.Delete)
         {
             Console.WriteLine("You pressed the 'Delete' key!");
+
+            Calculation.ResetOperands();
+            GUIUpdate.OnC(Components.calculatorVisor, Components.visorTop);
         }
     }
 
@@ -510,21 +541,6 @@ public class AppEvents
 
 public class Calculation
 {
-    public static void CalculationTests()
-    {
-        // Fazer todos os testes aqui antes de mandar conectar a lógica com a interface.
-        var a = 100;
-        var b = 2;
-
-        // TESTES:
-        Console.WriteLine($"Sum: {a} + {b} = {a + b}");
-        Console.WriteLine($"Sub: {a} - {b} = {a - b}");
-        Console.WriteLine($"Mult: {a} x {b} = {a * b}");
-        Console.WriteLine($"Div: {a} / {b} = {a / b}");
-        Console.WriteLine($"Sqrt of {a} = {Math.Sqrt(a)}");
-        Console.WriteLine($"Pow of {b} by 2 = {Pow(b, 2)}");
-    }
-
     public static void SetOperator(string operation)
     {
         AppState.operatorr = operation;
@@ -536,12 +552,14 @@ public class Calculation
         AppState.expression.Add(operatorr);
     }
 
-    // TODO: talvez seja possível refatorar este método, pois há algumas repetições.
+    public static void RemoveOperandAndOperatorAt(int index)
+    {
+        AppState.operands.RemoveAt(index + 1);
+        AppState.expression.RemoveAt(index);
+    }
+
     public static void Calculate()
     {
-        // Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
-        // Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
-
         // Prioridade: resolver operaçõed de * e /
         for (int i = 0; i < AppState.expression.Count;)
         {
@@ -549,13 +567,11 @@ public class Calculation
             {
                 case "x":
                     AppState.operands[i] = AppState.operands[i] * AppState.operands[i + 1];
-                    AppState.operands.RemoveAt(i + 1);
-                    AppState.expression.RemoveAt(i);
+                    RemoveOperandAndOperatorAt(i);
                     break;
                 case "/":
                     AppState.operands[i] = AppState.operands[i] / AppState.operands[i + 1];
-                    AppState.operands.RemoveAt(i + 1);
-                    AppState.expression.RemoveAt(i);
+                    RemoveOperandAndOperatorAt(i);
                     break;
                 default:
                     i++; // só incrementa o iterador caso os casos acima não ocorram.
@@ -570,13 +586,11 @@ public class Calculation
             {
                 case "+":
                     AppState.operands[i] = AppState.operands[i] + AppState.operands[i + 1];
-                    AppState.operands.RemoveAt(i + 1);
-                    AppState.expression.RemoveAt(i);
+                    RemoveOperandAndOperatorAt(i);
                     break;
                 case "-":
                     AppState.operands[i] = AppState.operands[i] - AppState.operands[i + 1];
-                    AppState.operands.RemoveAt(i + 1);
-                    AppState.expression.RemoveAt(i);
+                    RemoveOperandAndOperatorAt(i);
                     break;
                 default:
                     i++;
@@ -586,9 +600,6 @@ public class Calculation
 
         AppState.result = AppState.operands[0];
         UpdateOperation();
-
-        // Console.WriteLine($"Operands: {string.Join(", ", AppState.operands)}");
-        // Console.WriteLine($"Operators: {string.Join(" ", AppState.expression)}");
     }
 
     public static void Sqrt()
