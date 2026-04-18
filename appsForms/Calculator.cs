@@ -314,8 +314,8 @@ public class GUIUpdate
 
     public static void OnSqrt(Label calculatorVisor, Label visorTop, double result)
     {
+        calculatorVisor.Text = $"{result}";
         visorTop.Text = $"{result}";
-        calculatorVisor.Text = "0";
     }
 
     public static void OnOperatorChange(Label visorTop, string operatorr)
@@ -341,6 +341,16 @@ public class AppEvents
         Calculation.SetOperator(operatorr);
         AppState.expression[AppState.expression.Count - 1] = operatorr;
         Console.WriteLine($"Changed operation to {AppState.operatorr}");
+    }
+
+    // funções: sqrt, %, 1/x (qualquer operação que exija apenas um input)
+    private static void DispatchFunction(Action action)
+    {
+        var operand = Components.calculatorVisor.Text;
+        Calculation.AddOperand(operand, "");
+        action();
+        Calculation.ResetOperands();
+        GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result);
     }
 
     private static void DispatchOperation(string operatorr)
@@ -370,7 +380,20 @@ public class AppEvents
     {
         var operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, "");
-        Calculation.Calculate();
+
+        if (AppState.operatorr == "^")
+        {
+            Calculation.Pow(AppState.operands[0], AppState.operands[1]);
+        }
+        else if (AppState.operatorr == "%")
+        {
+            Calculation.Percent();
+        }
+        else
+        {
+            Calculation.Calculate();
+        }
+
 
         AppState.canConcatOperation = false;
         AppState.canUseDot = true;
@@ -380,7 +403,7 @@ public class AppEvents
     private static void InputValidation(string text)
     {
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "sqrt"];
+        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "sqrt", "x²", "%"];
 
         if (Components.calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
@@ -412,13 +435,20 @@ public class AppEvents
                     operatorr = "/";
                     DispatchOperation(operatorr);
                     break;
+                case "x²":
+                    operatorr = "^";
+                    DispatchOperation(operatorr);
+                    break;
+                case "%":
+                    operatorr = "%";
+                    DispatchOperation(operatorr);
+                    break;
+                case "sqrt":
+                    DispatchFunction(Calculation.Sqrt);
+                    break;
                 case ",":
                     GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
                     AppState.canUseDot = false;
-                    break;
-                case "sqrt":
-
-                    // GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result);
                     break;
                 case "DEL":
                     GUIUpdate.OnDel(Components.calculatorVisor, Components.visorTop);
@@ -435,9 +465,7 @@ public class AppEvents
 
                 case "=":
                     if (operationNotPossible) break;
-
                     DispatchOperationResult();
-
                     break;
             }
         }
@@ -602,10 +630,36 @@ public class Calculation
         UpdateOperation();
     }
 
+    // Pow é uma operação que exige dois inputs, então deve seguir a lógica das quatro operações básicas.
+    public static void Pow(double basee, double expo)
+    {
+        AppState.result = Math.Pow(basee, expo);
+        UpdateOperation();
+    }
+
+    // já Sqrt é uma função que exige apenas um input, então sua lógica é um pouco diferente.
+    // primeiramente pegamos o resultado de qualquer operação e usamos este resultado.
     public static void Sqrt()
     {
+        if (AppState.operatorr == "^")
+        {
+            Pow(AppState.operands[0], AppState.operands[1]);
+        }
+        else if (AppState.operatorr == "%")
+        {
+            // TODO...
+        }
+        else
+        {
+            Calculate();
+        }
+
         AppState.result = Math.Sqrt(AppState.operands[0]);
-        UpdateOperation();
+    }
+
+    public static void Percent()
+    {
+
     }
 
     // TODO: deve ser ResetOperation
@@ -622,10 +676,5 @@ public class Calculation
         AppState.expression = [];
         AppState.operands.Add(AppState.result);
         AppState.expression.Add(AppState.operatorr);
-    }
-
-    public static double Pow(double a, double b)
-    {
-        return Math.Pow(a, b);
     }
 }
