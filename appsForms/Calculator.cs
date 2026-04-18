@@ -1,6 +1,4 @@
 
-using System.Diagnostics.Eventing.Reader;
-using System.Security.Cryptography.X509Certificates;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 // TODO: 
@@ -324,6 +322,20 @@ public class GUIUpdate
         visorTop.Text = CopyText.Substring(0, CopyText.Length - 2) + $"{operatorr} ";
     }
 
+    public static void OnPercentage(Label calculatorVisor, Label visorTop, List<double> operands, string operatorr)
+    {
+        if (operands.Count == 0)
+        {
+            visorTop.Text = "0";
+        }
+        else
+        {
+            visorTop.Text = $"{operands[0]} {operatorr} {operands[1]}";
+        }
+
+        calculatorVisor.Text = "0";
+    }
+
 }
 
 public class AppEvents
@@ -343,16 +355,6 @@ public class AppEvents
         Console.WriteLine($"Changed operation to {AppState.operatorr}");
     }
 
-    // funções: sqrt, %, 1/x (qualquer operação que exija apenas um input)
-    private static void DispatchFunction(Action action)
-    {
-        var operand = Components.calculatorVisor.Text;
-        Calculation.AddOperand(operand, "");
-        action();
-        Calculation.ResetOperands();
-        GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result);
-    }
-
     private static void DispatchOperation(string operatorr)
     {
         bool operatorDuplicationRisk = !AppState.canConcatOperation; // verifica se há risco de duplicar operador.
@@ -367,7 +369,7 @@ public class AppEvents
         }
 
 
-        var operand = Components.calculatorVisor.Text;
+        string operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, operatorr);
         Calculation.SetOperator(operatorr);
 
@@ -378,16 +380,12 @@ public class AppEvents
 
     private static void DispatchOperationResult()
     {
-        var operand = Components.calculatorVisor.Text;
+        string operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, "");
 
         if (AppState.operatorr == "^")
         {
             Calculation.Pow(AppState.operands[0], AppState.operands[1]);
-        }
-        else if (AppState.operatorr == "%")
-        {
-            Calculation.Percent();
         }
         else
         {
@@ -414,7 +412,7 @@ public class AppEvents
         }
         else if (operations.Contains(text))
         {
-            var operationNotPossible = AppState.operands.Count < 1;
+            bool operationNotPossible = AppState.operands.Count < 1;
             string operatorr; // não deve ser confundido com AppState.operatorr. Seu uso também não é intercambiável.
 
             switch (text)
@@ -440,11 +438,16 @@ public class AppEvents
                     DispatchOperation(operatorr);
                     break;
                 case "%":
-                    operatorr = "%";
-                    DispatchOperation(operatorr);
+                    double lastOperand = Double.Parse(Components.calculatorVisor.Text);
+                    Calculation.Percent(lastOperand);
+                    GUIUpdate.OnPercentage(Components.calculatorVisor, Components.visorTop, AppState.operands, AppState.operatorr);
                     break;
                 case "sqrt":
-                    DispatchFunction(Calculation.Sqrt);
+                    string operand = Components.calculatorVisor.Text;
+                    Calculation.AddOperand(operand, "");
+                    Calculation.Sqrt();
+                    Calculation.ResetOperands();
+                    GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result);
                     break;
                 case ",":
                     GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
@@ -657,8 +660,24 @@ public class Calculation
         AppState.result = Math.Sqrt(AppState.operands[0]);
     }
 
-    public static void Percent()
+    public static void Percent(double lastOperand)
     {
+        if (AppState.operands.Count >= 1)
+        {
+            if (AppState.operands.Count == 0) return; // se não há nada no registro, não faz nada.
+
+            // Para evitar "index out of range" (pois ainda que o registro contenha um operando, o segundo, que é lastOperand, não entrará para o registro, somente percentageOfResult que irá entrar para o registro do próximo cálculo):
+            if (AppState.operatorr == "x" || AppState.operatorr == "/")
+                AppState.operands.Add(1); // porque qualquer número multiplicado ou dividido por um é igual a ele mesmo.
+            else AppState.operands.Add(0); // porque qualquer número adicionado ou subtraído em zero é igual a ele mesmo.
+
+            // realiza o cálculo e upa o resultado ao registro como novo operando, bem como a última operação:
+            Calculate();
+
+            // upa então o resultado do cálculo da porcentagem sobre o resultado da expressão anterior:
+            var percentageOfResult = AppState.result / 100 * lastOperand;
+            AppState.operands.Add(percentageOfResult);
+        }
 
     }
 
