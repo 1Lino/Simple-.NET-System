@@ -327,13 +327,13 @@ public class GUIUpdate
         if (operands.Count == 0)
         {
             visorTop.Text = "0";
+            calculatorVisor.Text = "0";
         }
         else
         {
             visorTop.Text = $"{operands[0]} {operatorr} {operands[1]}";
+            calculatorVisor.Text = $"{operands[1]}";
         }
-
-        calculatorVisor.Text = "0";
     }
 
 }
@@ -357,17 +357,17 @@ public class AppEvents
 
     private static void DispatchOperation(string operatorr)
     {
-        bool operatorDuplicationRisk = !AppState.canConcatOperation; // verifica se há risco de duplicar operador.
-        bool operationTooBig = AppState.operands.Count >= 4; // basicamente cria um limite de operandos para a operação.
+        bool onOperatorDuplicationRisk = !AppState.canConcatOperation; // verifica se há risco de duplicar operador.
+        bool isOperationTooBig = AppState.operands.Count >= 4; // basicamente cria um limite de operandos para a operação.
 
         // se houver risco de duplicar operador, por exemplo, se o usuário já clicou num operador, ou então se a operação for
         // já grande demais (maior igual a 4 operandos), então apenas muda o operador e sai da função.
-        if (operatorDuplicationRisk || operationTooBig)
+        if (isOperationTooBig) return;
+        if (onOperatorDuplicationRisk)
         {
             ChangeOperator(operatorr); // apenas muda o operador, tanto na operação como no visor.
             return;
         }
-
 
         string operand = Components.calculatorVisor.Text;
         Calculation.AddOperand(operand, operatorr);
