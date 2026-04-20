@@ -4,7 +4,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 // TODO: 
 // 1. Operações básicas [+ - x /] (ok)
 // 2. Implementar uso de vírgula (ok)
-// 3. Operações intermediárias [sqrt, pow, 1/x, %, +-] ()
+// 3. Operações intermediárias [sqrt, pow, %, 1/x, +-] ()
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações ()
 // 6. Rever nomenclaturas, principalmente onde houver comentários explicando código ()
@@ -99,7 +99,7 @@ public class Components
     {
         return new List<string> {
                 "%", "CE", "C", "DEL",
-                "1/x", "x²", "sqrt", "/",
+                "1/x", "x²", "²√x", "/",
                 "7", "8", "9", "x",
                 "4", "5", "6", "-",
                 "1", "2", "3", "+",
@@ -310,10 +310,10 @@ public class GUIUpdate
         }
     }
 
-    public static void OnSqrt(Label calculatorVisor, Label visorTop, double result)
+    public static void OnSqrt(Label calculatorVisor, Label visorTop, double result, string operand)
     {
+        visorTop.Text = $"√({operand})";
         calculatorVisor.Text = $"{result}";
-        visorTop.Text = $"{result}";
     }
 
     public static void OnOperatorChange(Label visorTop, string operatorr)
@@ -401,7 +401,7 @@ public class AppEvents
     private static void InputValidation(string text)
     {
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "sqrt", "x²", "%"];
+        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "²√x", "x²", "%"];
 
         if (Components.calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
@@ -442,12 +442,12 @@ public class AppEvents
                     Calculation.Percent(lastOperand);
                     GUIUpdate.OnPercentage(Components.calculatorVisor, Components.visorTop, AppState.operands, AppState.operatorr);
                     break;
-                case "sqrt":
+                case "²√x":
                     string operand = Components.calculatorVisor.Text;
                     Calculation.AddOperand(operand, "");
                     Calculation.Sqrt();
                     Calculation.ResetOperands();
-                    GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result);
+                    GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result, operand);
                     break;
                 case ",":
                     GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
