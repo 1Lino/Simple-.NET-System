@@ -4,7 +4,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 // TODO: 
 // 1. Operações básicas [+ - x /] (ok)
 // 2. Implementar uso de vírgula (ok)
-// 3. Operações intermediárias [sqrt, pow, %, 1/x, +-] ()
+// 3. Operações intermediárias [sqrt, pow, %, 1/x, +-] (x) 
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações ()
 // 6. Rever nomenclaturas, principalmente onde houver comentários explicando código ()
@@ -229,26 +229,26 @@ public class Components
 
 public class GUIUpdate
 {
-    public static void OnDigit(Label calculatorVisor, Label visorTop, string text)
+    public static void OnDigit(Label calculatorVisor, Label visorTop, string operand)
     {
         if (calculatorVisor.Text.Length >= 15) return; // limita quantidade de dígitos para a quantidade normal suportada por um double ~15.
 
         if (calculatorVisor.Text == "0")
         {
-            calculatorVisor.Text = text;
+            calculatorVisor.Text = operand;
         }
         else
         {
-            calculatorVisor.Text += text;
+            calculatorVisor.Text += operand;
         }
 
         if (visorTop.Text == "0")
         {
-            visorTop.Text = text;
+            visorTop.Text = operand;
         }
         else
         {
-            visorTop.Text += text;
+            visorTop.Text += operand;
         }
     }
     public static void AfterOperation(Label calculatorVisor, Label visorTop, double result, string operatorr)
@@ -316,10 +316,35 @@ public class GUIUpdate
         calculatorVisor.Text = $"{result}";
     }
 
+    public static void OnOneBy(Label calculatorVisor, Label visorTop, double result, string operand)
+    {
+        visorTop.Text = $"1 / {operand}";
+        calculatorVisor.Text = $"{result}";
+    }
+
     public static void OnOperatorChange(Label visorTop, string operatorr)
     {
         string CopyText = visorTop.Text;
         visorTop.Text = CopyText.Substring(0, CopyText.Length - 2) + $"{operatorr} ";
+    }
+
+    public static void OnReverseOperator(Label calculatorVisor, Label visorTop)
+    {
+        calculatorVisor.Text = $"{-Double.Parse(Components.calculatorVisor.Text)}";
+        string number = calculatorVisor.Text;
+        // pega o índice do último espaço da expressão, que deve ser logo após o sinal do operador.
+        int lastSpace = visorTop.Text.LastIndexOf(' ');
+
+        if (lastSpace == -1)
+        {
+            visorTop.Text = number;
+        }
+        else
+        {
+            // corta a expressão até o último espaço.
+            string expressionBeforeLastSpace = visorTop.Text.Substring(0, lastSpace);
+            visorTop.Text = $"{expressionBeforeLastSpace} {number}"; // junta o corte ao número.
+        }
     }
 
     public static void OnPercentage(Label calculatorVisor, Label visorTop, List<double> operands, string operatorr)
@@ -401,7 +426,7 @@ public class AppEvents
     private static void InputValidation(string text)
     {
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "²√x", "x²", "%"];
+        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "²√x", "x²", "%", "1/x", "+/-"];
 
         if (Components.calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
@@ -448,6 +473,16 @@ public class AppEvents
                     Calculation.Sqrt();
                     Calculation.ResetOperands();
                     GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result, operand);
+                    break;
+                case "1/x":
+                    operand = Components.calculatorVisor.Text;
+                    Calculation.AddOperand(operand, "");
+                    Calculation.OneBy();
+                    Calculation.ResetOperands();
+                    GUIUpdate.OnOneBy(Components.calculatorVisor, Components.visorTop, AppState.result, operand);
+                    break;
+                case "+/-":
+                    GUIUpdate.OnReverseOperator(Components.calculatorVisor, Components.visorTop);
                     break;
                 case ",":
                     GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
@@ -648,16 +683,17 @@ public class Calculation
         {
             Pow(AppState.operands[0], AppState.operands[1]);
         }
-        else if (AppState.operatorr == "%")
-        {
-            // TODO...
-        }
         else
         {
             Calculate();
         }
 
         AppState.result = Math.Sqrt(AppState.operands[0]);
+    }
+
+    public static void OneBy()
+    {
+        AppState.result = 1 / AppState.operands[0];
     }
 
     public static void Percent(double lastOperand)
