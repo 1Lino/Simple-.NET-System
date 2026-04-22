@@ -190,10 +190,14 @@ public class Components
 
     private static Button CreateCalculatorBtn(int btnTxtListId, List<string> btnTxtList)
     {
+        // Tag é pra assegurar algum metadado para o componente. Será usado para eventos.
+        // Como Tag é um objeto sem tipo específico, é necessário que, em seu uso, seja especificado o tipo do dado.
+        // Ex.: "btn.Tag as string"
         var key = new Button
         {
             Dock = DockStyle.Fill,
             Text = btnTxtList[btnTxtListId],
+            Tag = btnTxtList[btnTxtListId],
             Font = new Font("Segoe UI", 12f, FontStyle.Bold),
             ForeColor = Color.White
         };
@@ -354,7 +358,7 @@ public class AppEvents
 {
     public static void InitializeAppEvents()
     {
-        ApplyEventsToKeys(Components.btnList); // "key" se refere aos botões da calculadora.
+        ApplyEventsToBtns(Components.btnList);
         Calculator.Instance.KeyPreview = true; // Permite que eventos de teclado sejam primeiro capturados pelo Form, ao invés de pelos componentes em foco.
         Calculator.Instance.KeyDown += CalculatorKeyDownEvent;
     }
@@ -410,24 +414,24 @@ public class AppEvents
         GUIUpdate.OnResult(Components.visorBottom, Components.visorTop, AppState.result, AppState.operatorr);
     }
 
-    private static void InputValidation(string text)
+    private static void InputValidation(string operation)
     {
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
         List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "²√x", "x²", "%", "1/x", "+/-"];
 
         if (Components.visorBottom.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
-        if (numbers.Contains(text))
+        if (numbers.Contains(operation))
         {
             AppState.canConcatOperation = true;
-            GUIUpdate.OnDigit(Components.visorBottom, Components.visorTop, text);
+            GUIUpdate.OnDigit(Components.visorBottom, Components.visorTop, operation);
         }
-        else if (operations.Contains(text))
+        else if (operations.Contains(operation))
         {
             bool operationNotPossible = AppState.operands.Count < 1;
             string operatorr; // não deve ser confundido com AppState.operatorr. Seu uso também não é intercambiável.
 
-            switch (text)
+            switch (operation)
             {
                 case "+":
                     operatorr = "+";
@@ -478,16 +482,13 @@ public class AppEvents
                 case "DEL":
                     GUIUpdate.OnDel(Components.visorBottom, Components.visorTop);
                     break;
-
                 case "CE":
                     GUIUpdate.OnCE(Components.visorBottom);
                     break;
-
                 case "C":
                     Calculation.ResetOperands();
                     GUIUpdate.OnC(Components.visorBottom, Components.visorTop);
                     break;
-
                 case "=":
                     if (operationNotPossible) break;
                     DispatchOperationResult();
@@ -582,15 +583,14 @@ public class AppEvents
         }
     }
 
-    public static void ApplyEventsToKeys(IEnumerable<Button> btnList)
+    public static void ApplyEventsToBtns(IEnumerable<Button> btnList)
     {
         foreach (Button btn in btnList)
         {
-            btn.Click += (_, _) => InputValidation(btn.Text);
+            btn.Click += (_, _) => InputValidation(btn.Tag as string);
         }
     }
 }
-
 
 public class Calculation
 {
