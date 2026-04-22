@@ -8,7 +8,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações ()
 // 6. Rever nomenclaturas, principalmente onde houver comentários explicando código ()
-// 7. Implementar keyboard, de modo que seja permitido digitar números pelo teclado numérico ()
+// 7. Implementar keyboard, de modo que seja permitido digitar números pelo teclado numérico (x)
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -42,11 +42,10 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     }
 }
 
-// Varáveis de estado, modificadas pela classe Calculations, e lidas pela classe GUIUpdate.
 public class AppState
 {
     public static List<double> operands { get; set; }
-    public static List<string> expression { get; set; }
+    public static List<string> operators { get; set; }
     public static string operatorr { get; set; }
     public static double result { get; set; }
 
@@ -56,7 +55,7 @@ public class AppState
     public static void InitializeAppState()
     {
         operands = [];
-        expression = [];
+        operators = [];
         operatorr = "";
         result = 0;
         // controla se a operação pode ou não ser concatenada, no caso, isso impede que o usuário concatene o mesmo número
@@ -69,33 +68,32 @@ public class AppState
 
 public class Components
 {
-    private static TableLayoutPanel keyboardLayout;
-    public static Panel calculatorVisorPanel;
-    public static Label calculatorVisor;
+    private static TableLayoutPanel appGrid;
+    public static Panel visorPanel;
+    public static Label visorBottom;
     public static Label visorTop;
-    private static List<string> keyListTxt;
+    private static List<string> btnTxtList;
     public static IEnumerable<Button> btnList;
 
     public static void InitializeAppComponents()
     {
-        InitializeAppLayout();
-        InitializeVisorPanelUI();
+        InitializeAppGrid();
+        InitializeVisorPanel();
 
-        keyListTxt = InitializeKeyTexts();
-        calculatorVisor = InitializeVisor(0);
-        visorTop = InitializeVisor(calculatorVisor.Height);
+        btnTxtList = GetBtnTexts();
+        visorBottom = InitializeVisor(0);
+        visorTop = InitializeVisor(visorBottom.Height);
 
-        calculatorVisorPanel.Controls.Add(calculatorVisor);
-        calculatorVisorPanel.Controls.Add(visorTop);
-        Calculator.Instance.Controls.Add(calculatorVisorPanel);
-        Calculator.Instance.Controls.Add(keyboardLayout);
-        AppendCalculatorKeysToAppLayout(keyboardLayout, keyListTxt);
+        visorPanel.Controls.Add(visorBottom);
+        visorPanel.Controls.Add(visorTop);
+        Calculator.Instance.Controls.Add(visorPanel);
+        Calculator.Instance.Controls.Add(appGrid);
+        AddCalculatorBtnsToAppGrid(appGrid, btnTxtList);
 
-        btnList = GetCalculatorKeys(keyboardLayout);
-        // Events.ApplyEventsToKeys(btnList);
+        btnList = GetCalculatorBtns(appGrid);
     }
 
-    private static List<string> InitializeKeyTexts()
+    private static List<string> GetBtnTexts()
     {
         return new List<string> {
                 "%", "CE", "C", "DEL",
@@ -120,16 +118,16 @@ public class Components
             Text = "0",
             Font = new Font("Segoe UI", 16f, FontStyle.Bold),
             TextAlign = System.Drawing.ContentAlignment.MiddleRight,
-            Left = calculatorVisorPanel.Width / 2 - visorCentralOffset,
-            Top = calculatorVisorPanel.Height / 2 - verticalOffset
+            Left = visorPanel.Width / 2 - visorCentralOffset,
+            Top = visorPanel.Height / 2 - verticalOffset
         };
 
         return visor;
     }
 
-    private static void InitializeAppLayout()
+    private static void InitializeAppGrid()
     {
-        keyboardLayout = new TableLayoutPanel
+        appGrid = new TableLayoutPanel
         {
             CellBorderStyle = TableLayoutPanelCellBorderStyle.Inset,
             Dock = DockStyle.None,
@@ -144,24 +142,24 @@ public class Components
 
         if (Calculator.Instance != null)
         {
-            keyboardLayout.Left = (Calculator.Instance.ClientSize.Width - keyboardLayout.Width) / 2;
-            keyboardLayout.Top = Calculator.Instance.ClientSize.Height - keyboardLayout.Height - margin;
+            appGrid.Left = (Calculator.Instance.ClientSize.Width - appGrid.Width) / 2;
+            appGrid.Top = Calculator.Instance.ClientSize.Height - appGrid.Height - margin;
         }
 
-        for (int i = 0; i < keyboardLayout.ColumnCount; i++)
+        for (int gridCell = 0; gridCell < appGrid.ColumnCount; gridCell++)
         {
-            keyboardLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
+            appGrid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 25F));
         }
-        for (int i = 0; i < keyboardLayout.RowCount; i++)
+        for (int gridCell = 0; gridCell < appGrid.RowCount; gridCell++)
         {
-            keyboardLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
+            appGrid.RowStyles.Add(new RowStyle(SizeType.Percent, 33.33F));
         }
     }
 
-    private static void InitializeVisorPanelUI()
+    private static void InitializeVisorPanel()
     {
         var formWidth = Calculator.Instance.Width; // pra não confundir o Width do componente com o Width do form.
-        calculatorVisorPanel = new Panel
+        visorPanel = new Panel
         {
             Width = formWidth,
             Height = 180,
@@ -170,32 +168,32 @@ public class Components
         };
     }
 
-    private static void AppendCalculatorKeysToAppLayout(TableLayoutPanel layout, List<string> keyListTxt)
+    private static void AddCalculatorBtnsToAppGrid(TableLayoutPanel appGrid, List<string> btnTxtList)
     {
-        int counter = 0;
+        int btnTxtListId = 0;
 
-        for (int row = 0; row < layout.RowCount; row++)
+        for (int gridRow = 0; gridRow < appGrid.RowCount; gridRow++)
         {
-            for (int col = 0; col < layout.ColumnCount; col++)
+            for (int gridCol = 0; gridCol < appGrid.ColumnCount; gridCol++)
             {
-                AppendCalculatorKey(layout, counter, col, row, keyListTxt);
-                counter++;
+                AddCalculatorBtn(appGrid, gridCol, gridRow, btnTxtList, btnTxtListId);
+                btnTxtListId++;
             }
         }
     }
 
-    private static void AppendCalculatorKey(TableLayoutPanel layout, int counter, int col, int row, List<string> keyListTxt)
+    private static void AddCalculatorBtn(TableLayoutPanel appGrid, int gridCol, int gridRow, List<string> btnTxtList, int btnTxtListId)
     {
-        var key = CreateCalculatorKey(counter, keyListTxt);
-        layout.Controls.Add(key, col, row);
+        var btn = CreateCalculatorBtn(btnTxtListId, btnTxtList);
+        appGrid.Controls.Add(btn, gridCol, gridRow);
     }
 
-    private static Button CreateCalculatorKey(int counter, List<string> keyListTxt)
+    private static Button CreateCalculatorBtn(int btnTxtListId, List<string> btnTxtList)
     {
         var key = new Button
         {
             Dock = DockStyle.Fill,
-            Text = keyListTxt[counter],
+            Text = btnTxtList[btnTxtListId],
             Font = new Font("Segoe UI", 12f, FontStyle.Bold),
             ForeColor = Color.White
         };
@@ -204,21 +202,21 @@ public class Components
 
     // Uso de recursão para capturar todos os elementos Button de um dado Control:
     // NOTA: pesquisar melhor sobre recursões e sobre yield.
-    private static IEnumerable<Button> GetCalculatorKeys(Control parent)
+    private static IEnumerable<Button> GetCalculatorBtns(Control appGrid)
     {
         // para cada componente do parente.
-        foreach (Control c in parent.Controls)
+        foreach (Control component in appGrid.Controls)
         {
             // se tal componente for um botão, "guarda" o retorno deste componente na lista enumerável (yield faz isso).
-            if (c is Button btn)
+            if (component is Button btn)
             {
                 yield return btn;
             }
 
-            // em seguida chama novamente a função GetCalculatorKeys e itera sobre cada 
+            // em seguida chama novamente a função GetCalculatorBtns e itera sobre cada 
             // elemento, de modo que a função efetivamente fará novamente o passo acima. Isto, na prática, faz com que todos os elementos botão do parente sejam capturados. Se a função fosse chamada uma vez apenas, iria parar no primeiro elemento botão que encontrasse, e já que precisamos de uma lista, então é necessário uso de recursão.
 
-            foreach (var child in GetCalculatorKeys(c))
+            foreach (var child in GetCalculatorBtns(component))
             {
                 yield return child;
             }
@@ -229,17 +227,17 @@ public class Components
 
 public class GUIUpdate
 {
-    public static void OnDigit(Label calculatorVisor, Label visorTop, string operand)
+    public static void OnDigit(Label visorBottom, Label visorTop, string operand)
     {
-        if (calculatorVisor.Text.Length >= 15) return; // limita quantidade de dígitos para a quantidade normal suportada por um double ~15.
+        if (visorBottom.Text.Length >= 15) return; // limita quantidade de dígitos para a quantidade normal suportada por um double ~15.
 
-        if (calculatorVisor.Text == "0")
+        if (visorBottom.Text == "0")
         {
-            calculatorVisor.Text = operand;
+            visorBottom.Text = operand;
         }
         else
         {
-            calculatorVisor.Text += operand;
+            visorBottom.Text += operand;
         }
 
         if (visorTop.Text == "0")
@@ -251,13 +249,13 @@ public class GUIUpdate
             visorTop.Text += operand;
         }
     }
-    public static void AfterOperation(Label calculatorVisor, Label visorTop, double result, string operatorr)
+    public static void AfterOperation(Label visorBottom, Label visorTop, double result, string operatorr)
     {
         visorTop.Text = $"{result} {operatorr} ";
-        calculatorVisor.Text = "0";
+        visorBottom.Text = "0";
     }
 
-    public static void OnOperation(Label calculatorVisor, Label visorTop, string operatorr)
+    public static void OnOperation(Label visorBottom, Label visorTop, string operatorr)
     {
         if (visorTop.Text == "0")
         {
@@ -267,59 +265,59 @@ public class GUIUpdate
         {
             visorTop.Text += $" {operatorr} ";
         }
-        calculatorVisor.Text = "0";
+        visorBottom.Text = "0";
     }
 
-    public static void OnDel(Label calculatorVisor, Label visorTop)
+    public static void OnDel(Label visorBottom, Label visorTop)
     {
-        if (calculatorVisor.Text == "0") return; // impede que visorTop seja deletado para além do que é deletado em calculatorVisor.
+        if (visorBottom.Text == "0") return; // impede que visorTop seja deletado para além do que é deletado em visorBottom.
 
-        string currentNumber = calculatorVisor.Text;
+        string currentNumber = visorBottom.Text;
 
         if (currentNumber.Length > 1)
         {
-            calculatorVisor.Text = calculatorVisor.Text.Remove(calculatorVisor.Text.Length - 1);
+            visorBottom.Text = visorBottom.Text.Remove(visorBottom.Text.Length - 1);
         }
         else
         {
-            calculatorVisor.Text = "0";
+            visorBottom.Text = "0";
         }
 
         if (visorTop.Text.Length == 1) visorTop.Text = "0";
         else visorTop.Text = visorTop.Text.Remove(visorTop.Text.Length - 1);
     }
 
-    public static void OnCE(Label calculatorVisor)
+    public static void OnCE(Label visorBottom)
     {
-        calculatorVisor.Text = "0";
+        visorBottom.Text = "0";
     }
 
-    public static void OnC(Label calculatorVisor, Label visorTop)
+    public static void OnC(Label visorBottom, Label visorTop)
     {
-        calculatorVisor.Text = "0";
+        visorBottom.Text = "0";
         visorTop.Text = "0";
     }
 
-    public static void OnDot(Label calculatorVisor, Label visorTop, bool canUseDot)
+    public static void OnDot(Label visorBottom, Label visorTop, bool canUseDot)
     {
         if (canUseDot)
         {
             if (visorTop.Text[visorTop.Text.Length - 1] == ' ') visorTop.Text += "0,";
             else visorTop.Text += ",";
-            calculatorVisor.Text += ",";
+            visorBottom.Text += ",";
         }
     }
 
-    public static void OnSqrt(Label calculatorVisor, Label visorTop, double result, string operand)
+    public static void OnSqrt(Label visorBottom, Label visorTop, double result, string operand)
     {
         visorTop.Text = $"√({operand})";
-        calculatorVisor.Text = $"{result}";
+        visorBottom.Text = $"{result}";
     }
 
-    public static void OnOneBy(Label calculatorVisor, Label visorTop, double result, string operand)
+    public static void OnOneBy(Label visorBottom, Label visorTop, double result, string operand)
     {
         visorTop.Text = $"1 / {operand}";
-        calculatorVisor.Text = $"{result}";
+        visorBottom.Text = $"{result}";
     }
 
     public static void OnOperatorChange(Label visorTop, string operatorr)
@@ -328,10 +326,10 @@ public class GUIUpdate
         visorTop.Text = CopyText.Substring(0, CopyText.Length - 2) + $"{operatorr} ";
     }
 
-    public static void OnReverseOperator(Label calculatorVisor, Label visorTop)
+    public static void OnReverseOperator(Label visorBottom, Label visorTop)
     {
-        calculatorVisor.Text = $"{-Double.Parse(Components.calculatorVisor.Text)}";
-        string number = calculatorVisor.Text;
+        visorBottom.Text = $"{-Double.Parse(Components.visorBottom.Text)}";
+        string number = visorBottom.Text;
         // pega o índice do último espaço da expressão, que deve ser logo após o sinal do operador.
         int lastSpace = visorTop.Text.LastIndexOf(' ');
 
@@ -347,17 +345,17 @@ public class GUIUpdate
         }
     }
 
-    public static void OnPercentage(Label calculatorVisor, Label visorTop, List<double> operands, string operatorr)
+    public static void OnPercentage(Label visorBottom, Label visorTop, List<double> operands, string operatorr)
     {
         if (operands.Count == 0)
         {
             visorTop.Text = "0";
-            calculatorVisor.Text = "0";
+            visorBottom.Text = "0";
         }
         else
         {
             visorTop.Text = $"{operands[0]} {operatorr} {operands[1]}";
-            calculatorVisor.Text = $"{operands[1]}";
+            visorBottom.Text = $"{operands[1]}";
         }
     }
 
@@ -376,7 +374,7 @@ public class AppEvents
     {
         GUIUpdate.OnOperatorChange(Components.visorTop, operatorr);
         Calculation.SetOperator(operatorr);
-        AppState.expression[AppState.expression.Count - 1] = operatorr;
+        AppState.operators[AppState.operators.Count - 1] = operatorr;
         Console.WriteLine($"Changed operation to {AppState.operatorr}");
     }
 
@@ -394,18 +392,18 @@ public class AppEvents
             return;
         }
 
-        string operand = Components.calculatorVisor.Text;
+        string operand = Components.visorBottom.Text;
         Calculation.AddOperand(operand, operatorr);
         Calculation.SetOperator(operatorr);
 
         AppState.canConcatOperation = false;
         AppState.canUseDot = true;
-        GUIUpdate.OnOperation(Components.calculatorVisor, Components.visorTop, AppState.operatorr);
+        GUIUpdate.OnOperation(Components.visorBottom, Components.visorTop, AppState.operatorr);
     }
 
     private static void DispatchOperationResult()
     {
-        string operand = Components.calculatorVisor.Text;
+        string operand = Components.visorBottom.Text;
         Calculation.AddOperand(operand, "");
 
         if (AppState.operatorr == "^")
@@ -420,7 +418,7 @@ public class AppEvents
 
         AppState.canConcatOperation = false;
         AppState.canUseDot = true;
-        GUIUpdate.AfterOperation(Components.calculatorVisor, Components.visorTop, AppState.result, AppState.operatorr);
+        GUIUpdate.AfterOperation(Components.visorBottom, Components.visorTop, AppState.result, AppState.operatorr);
     }
 
     private static void InputValidation(string text)
@@ -428,12 +426,12 @@ public class AppEvents
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
         List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "²√x", "x²", "%", "1/x", "+/-"];
 
-        if (Components.calculatorVisor.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
+        if (Components.visorBottom.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
         if (numbers.Contains(text))
         {
             AppState.canConcatOperation = true;
-            GUIUpdate.OnDigit(Components.calculatorVisor, Components.visorTop, text);
+            GUIUpdate.OnDigit(Components.visorBottom, Components.visorTop, text);
         }
         else if (operations.Contains(text))
         {
@@ -463,42 +461,42 @@ public class AppEvents
                     DispatchOperation(operatorr);
                     break;
                 case "%":
-                    double lastOperand = Double.Parse(Components.calculatorVisor.Text);
+                    double lastOperand = Double.Parse(Components.visorBottom.Text);
                     Calculation.Percent(lastOperand);
-                    GUIUpdate.OnPercentage(Components.calculatorVisor, Components.visorTop, AppState.operands, AppState.operatorr);
+                    GUIUpdate.OnPercentage(Components.visorBottom, Components.visorTop, AppState.operands, AppState.operatorr);
                     break;
                 case "²√x":
-                    string operand = Components.calculatorVisor.Text;
+                    string operand = Components.visorBottom.Text;
                     Calculation.AddOperand(operand, "");
                     Calculation.Sqrt();
                     Calculation.ResetOperands();
-                    GUIUpdate.OnSqrt(Components.calculatorVisor, Components.visorTop, AppState.result, operand);
+                    GUIUpdate.OnSqrt(Components.visorBottom, Components.visorTop, AppState.result, operand);
                     break;
                 case "1/x":
-                    operand = Components.calculatorVisor.Text;
+                    operand = Components.visorBottom.Text;
                     Calculation.AddOperand(operand, "");
                     Calculation.OneBy();
                     Calculation.ResetOperands();
-                    GUIUpdate.OnOneBy(Components.calculatorVisor, Components.visorTop, AppState.result, operand);
+                    GUIUpdate.OnOneBy(Components.visorBottom, Components.visorTop, AppState.result, operand);
                     break;
                 case "+/-":
-                    GUIUpdate.OnReverseOperator(Components.calculatorVisor, Components.visorTop);
+                    GUIUpdate.OnReverseOperator(Components.visorBottom, Components.visorTop);
                     break;
                 case ",":
-                    GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
+                    GUIUpdate.OnDot(Components.visorBottom, Components.visorTop, AppState.canUseDot);
                     AppState.canUseDot = false;
                     break;
                 case "DEL":
-                    GUIUpdate.OnDel(Components.calculatorVisor, Components.visorTop);
+                    GUIUpdate.OnDel(Components.visorBottom, Components.visorTop);
                     break;
 
                 case "CE":
-                    GUIUpdate.OnCE(Components.calculatorVisor);
+                    GUIUpdate.OnCE(Components.visorBottom);
                     break;
 
                 case "C":
                     Calculation.ResetOperands();
-                    GUIUpdate.OnC(Components.calculatorVisor, Components.visorTop);
+                    GUIUpdate.OnC(Components.visorBottom, Components.visorTop);
                     break;
 
                 case "=":
@@ -530,7 +528,7 @@ public class AppEvents
             Console.WriteLine($"Number pressed: {numberPressed}");
 
             AppState.canConcatOperation = true;
-            GUIUpdate.OnDigit(Components.calculatorVisor, Components.visorTop, $"{numberPressed}");
+            GUIUpdate.OnDigit(Components.visorBottom, Components.visorTop, $"{numberPressed}");
         }
 
         // Demais operações:
@@ -541,7 +539,7 @@ public class AppEvents
         {
             Console.WriteLine("You pressed the 'Comma' key!");
 
-            GUIUpdate.OnDot(Components.calculatorVisor, Components.visorTop, AppState.canUseDot);
+            GUIUpdate.OnDot(Components.visorBottom, Components.visorTop, AppState.canUseDot);
             AppState.canUseDot = false;
         }
         if (e.KeyCode == Keys.Add)
@@ -584,14 +582,14 @@ public class AppEvents
         {
             Console.WriteLine("You pressed the 'Back' key!");
 
-            GUIUpdate.OnDel(Components.calculatorVisor, Components.visorTop);
+            GUIUpdate.OnDel(Components.visorBottom, Components.visorTop);
         }
         if (e.KeyCode == Keys.Delete)
         {
             Console.WriteLine("You pressed the 'Delete' key!");
 
             Calculation.ResetOperands();
-            GUIUpdate.OnC(Components.calculatorVisor, Components.visorTop);
+            GUIUpdate.OnC(Components.visorBottom, Components.visorTop);
         }
     }
 
@@ -615,21 +613,21 @@ public class Calculation
     public static void AddOperand(string value, string operatorr)
     {
         AppState.operands.Add(double.Parse(value));
-        AppState.expression.Add(operatorr);
+        AppState.operators.Add(operatorr);
     }
 
     public static void RemoveOperandAndOperatorAt(int index)
     {
         AppState.operands.RemoveAt(index + 1);
-        AppState.expression.RemoveAt(index);
+        AppState.operators.RemoveAt(index);
     }
 
     public static void Calculate()
     {
         // Prioridade: resolver operaçõed de * e /
-        for (int i = 0; i < AppState.expression.Count;)
+        for (int i = 0; i < AppState.operators.Count;)
         {
-            switch (AppState.expression[i])
+            switch (AppState.operators[i])
             {
                 case "x":
                     AppState.operands[i] = AppState.operands[i] * AppState.operands[i + 1];
@@ -646,9 +644,9 @@ public class Calculation
         }
 
         // depois resolve operações de + e -
-        for (int i = 0; i < AppState.expression.Count;)
+        for (int i = 0; i < AppState.operators.Count;)
         {
-            switch (AppState.expression[i])
+            switch (AppState.operators[i])
             {
                 case "+":
                     AppState.operands[i] = AppState.operands[i] + AppState.operands[i + 1];
@@ -721,15 +719,15 @@ public class Calculation
     public static void ResetOperands()
     {
         AppState.operands = [];
-        AppState.expression = [];
+        AppState.operators = [];
     }
 
     // Atualiza a operação com os valores do resultado:
     private static void UpdateOperation()
     {
         AppState.operands = [];
-        AppState.expression = [];
+        AppState.operators = [];
         AppState.operands.Add(AppState.result);
-        AppState.expression.Add(AppState.operatorr);
+        AppState.operators.Add(AppState.operatorr);
     }
 }
