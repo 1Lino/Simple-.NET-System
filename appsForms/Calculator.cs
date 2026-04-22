@@ -224,7 +224,6 @@ public class Components
     }
 }
 
-
 public class GUIUpdate
 {
     public static void OnDigit(Label visorBottom, Label visorTop, string operand)
@@ -249,13 +248,12 @@ public class GUIUpdate
             visorTop.Text += operand;
         }
     }
-    public static void AfterOperation(Label visorBottom, Label visorTop, double result, string operatorr)
+    public static void OnResult(Label visorBottom, Label visorTop, double result, string operatorr)
     {
         visorTop.Text = $"{result} {operatorr} ";
         visorBottom.Text = "0";
     }
-
-    public static void OnOperation(Label visorBottom, Label visorTop, string operatorr)
+    public static void OnOperationSet(Label visorBottom, Label visorTop, string operatorr)
     {
         if (visorTop.Text == "0")
         {
@@ -267,7 +265,6 @@ public class GUIUpdate
         }
         visorBottom.Text = "0";
     }
-
     public static void OnDel(Label visorBottom, Label visorTop)
     {
         if (visorBottom.Text == "0") return; // impede que visorTop seja deletado para além do que é deletado em visorBottom.
@@ -286,18 +283,15 @@ public class GUIUpdate
         if (visorTop.Text.Length == 1) visorTop.Text = "0";
         else visorTop.Text = visorTop.Text.Remove(visorTop.Text.Length - 1);
     }
-
     public static void OnCE(Label visorBottom)
     {
         visorBottom.Text = "0";
     }
-
     public static void OnC(Label visorBottom, Label visorTop)
     {
         visorBottom.Text = "0";
         visorTop.Text = "0";
     }
-
     public static void OnDot(Label visorBottom, Label visorTop, bool canUseDot)
     {
         if (canUseDot)
@@ -307,44 +301,39 @@ public class GUIUpdate
             visorBottom.Text += ",";
         }
     }
-
     public static void OnSqrt(Label visorBottom, Label visorTop, double result, string operand)
     {
         visorTop.Text = $"√({operand})";
         visorBottom.Text = $"{result}";
     }
-
     public static void OnOneBy(Label visorBottom, Label visorTop, double result, string operand)
     {
         visorTop.Text = $"1 / {operand}";
         visorBottom.Text = $"{result}";
     }
-
-    public static void OnOperatorChange(Label visorTop, string operatorr)
+    public static void OnOperationChange(Label visorTop, string operatorr)
     {
-        string CopyText = visorTop.Text;
-        visorTop.Text = CopyText.Substring(0, CopyText.Length - 2) + $"{operatorr} ";
+        string expression = visorTop.Text;
+        visorTop.Text = expression.Substring(0, expression.Length - 2) + $"{operatorr} ";
     }
-
-    public static void OnReverseOperator(Label visorBottom, Label visorTop)
+    public static void OnOperandSignalChange(Label visorBottom, Label visorTop)
     {
         visorBottom.Text = $"{-Double.Parse(Components.visorBottom.Text)}";
-        string number = visorBottom.Text;
+        string value = visorBottom.Text;
         // pega o índice do último espaço da expressão, que deve ser logo após o sinal do operador.
         int lastSpace = visorTop.Text.LastIndexOf(' ');
 
         if (lastSpace == -1)
         {
-            visorTop.Text = number;
+            visorTop.Text = value;
         }
         else
         {
             // corta a expressão até o último espaço.
             string expressionBeforeLastSpace = visorTop.Text.Substring(0, lastSpace);
-            visorTop.Text = $"{expressionBeforeLastSpace} {number}"; // junta o corte ao número.
+            visorTop.Text = $"{expressionBeforeLastSpace} {value}"; // junta o corte ao número.
         }
     }
-
     public static void OnPercentage(Label visorBottom, Label visorTop, List<double> operands, string operatorr)
     {
         if (operands.Count == 0)
@@ -372,7 +361,7 @@ public class AppEvents
 
     public static void ChangeOperator(string operatorr)
     {
-        GUIUpdate.OnOperatorChange(Components.visorTop, operatorr);
+        GUIUpdate.OnOperationChange(Components.visorTop, operatorr);
         Calculation.SetOperator(operatorr);
         AppState.operators[AppState.operators.Count - 1] = operatorr;
         Console.WriteLine($"Changed operation to {AppState.operatorr}");
@@ -398,7 +387,7 @@ public class AppEvents
 
         AppState.canConcatOperation = false;
         AppState.canUseDot = true;
-        GUIUpdate.OnOperation(Components.visorBottom, Components.visorTop, AppState.operatorr);
+        GUIUpdate.OnOperationSet(Components.visorBottom, Components.visorTop, AppState.operatorr);
     }
 
     private static void DispatchOperationResult()
@@ -418,7 +407,7 @@ public class AppEvents
 
         AppState.canConcatOperation = false;
         AppState.canUseDot = true;
-        GUIUpdate.AfterOperation(Components.visorBottom, Components.visorTop, AppState.result, AppState.operatorr);
+        GUIUpdate.OnResult(Components.visorBottom, Components.visorTop, AppState.result, AppState.operatorr);
     }
 
     private static void InputValidation(string text)
@@ -480,7 +469,7 @@ public class AppEvents
                     GUIUpdate.OnOneBy(Components.visorBottom, Components.visorTop, AppState.result, operand);
                     break;
                 case "+/-":
-                    GUIUpdate.OnReverseOperator(Components.visorBottom, Components.visorTop);
+                    GUIUpdate.OnOperandSignalChange(Components.visorBottom, Components.visorTop);
                     break;
                 case ",":
                     GUIUpdate.OnDot(Components.visorBottom, Components.visorTop, AppState.canUseDot);
