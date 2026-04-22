@@ -7,7 +7,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 // 3. Operações intermediárias [sqrt, pow, %, 1/x, +-] (x) 
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações ()
-// 6. Rever nomenclaturas, principalmente onde houver comentários explicando código ()
+// 6. Rever nomenclaturas, principalmente onde houver comentários explicando código (x)
 // 7. Implementar keyboard, de modo que seja permitido digitar números pelo teclado numérico (x)
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
