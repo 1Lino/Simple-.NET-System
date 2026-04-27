@@ -35,7 +35,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Height = 550;
             BackColor = Color.FromArgb(29, 49, 49);
             FormBorderStyle = FormBorderStyle.FixedSingle;
-            MaximizeBox = false;
+            MaximizeBox = true;
         }
 
 
@@ -68,7 +68,7 @@ public class AppState
 
 public class Components
 {
-    private static TableLayoutPanel appGrid;
+    public static TableLayoutPanel appGrid;
     public static Panel visorPanel;
     public static Label visorBottom;
     public static Label visorTop;
@@ -129,7 +129,7 @@ public class Components
     {
         appGrid = new TableLayoutPanel
         {
-            CellBorderStyle = TableLayoutPanelCellBorderStyle.Inset,
+            CellBorderStyle = TableLayoutPanelCellBorderStyle.None,
             Dock = DockStyle.None,
             ColumnCount = 4,
             RowCount = 6,
@@ -361,6 +361,51 @@ public class AppEvents
         ApplyEventsToBtns(Components.btnList);
         Calculator.Instance.KeyPreview = true; // Permite que eventos de teclado sejam primeiro capturados pelo Form, ao invés de pelos componentes em foco.
         Calculator.Instance.KeyDown += CalculatorKeyDownEvent;
+        Calculator.Instance.Resize += OnFormResize;
+    }
+
+    private static void OnFormResize(Object sender, EventArgs e)
+    {
+        var percentOfCalculatorWindowWidth = 70;
+        var offsetWhenMaximized = Components.visorTop.Width;
+        var offsetWhenMinimized = 150;
+        var visorTopBottomStandardWidth = 300;
+
+        Calculator.Instance.SuspendLayout();
+
+        if (Calculator.Instance.WindowState == FormWindowState.Maximized)
+        {
+            Components.visorPanel.Width = Calculator.Instance.Width / 100 * percentOfCalculatorWindowWidth;
+            Components.visorPanel.Left += 18;
+            Components.visorPanel.Top += 20;
+            Components.appGrid.Width = Components.visorPanel.Width;
+            Components.appGrid.Height += Components.appGrid.Height - 150;
+            Components.appGrid.Top += 20;
+
+            Components.visorTop.Width = visorTopBottomStandardWidth * 2;
+            Components.visorBottom.Width = visorTopBottomStandardWidth * 2;
+
+            Components.visorTop.Left = Components.visorPanel.Width / 2 - offsetWhenMaximized;
+            Components.visorBottom.Left = Components.visorPanel.Width / 2 - offsetWhenMaximized;
+        }
+        else if (Calculator.Instance.WindowState == FormWindowState.Normal)
+        {
+            Components.visorPanel.Width = Calculator.Instance.Width;
+            Components.appGrid.Width = 300;
+            Components.appGrid.Height = 300;
+            Components.visorPanel.Left = 0;
+            Components.visorPanel.Top = 0;
+
+            Components.appGrid.Top = Calculator.Instance.ClientSize.Height - Components.appGrid.Height - 20;
+
+            Components.visorTop.Width = visorTopBottomStandardWidth;
+            Components.visorBottom.Width = visorTopBottomStandardWidth;
+
+            Components.visorTop.Left = Components.visorPanel.Width / 2 - offsetWhenMinimized;
+            Components.visorBottom.Left = Components.visorPanel.Width / 2 - offsetWhenMinimized;
+        }
+
+        Calculator.Instance.ResumeLayout();
     }
 
     public static void ChangeOperator(string operatorr)
