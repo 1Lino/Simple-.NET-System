@@ -6,7 +6,7 @@ using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 // 2. Implementar uso de vírgula (ok)
 // 3. Operações intermediárias [sqrt, pow, %, 1/x, +-] (x) 
 // 4. Testar limites dos cálculos, procurar por erros ()
-// 5. Implementar funcionalidade de histórico de operações ()
+// 5. Implementar funcionalidade de histórico de operações (x)
 // 6. Rever nomenclaturas, principalmente onde houver comentários explicando código (x)
 // 7. Implementar keyboard, de modo que seja permitido digitar números pelo teclado numérico (x)
 
@@ -75,6 +75,10 @@ public class Components
     private static List<string> btnTxtList;
     public static IEnumerable<Button> btnList;
 
+    // será apenas uma coluna com um único header chamado "histórico". A cada nova expressão, será upado uma nova linha para 
+    // aquela coluna, contendo a expressão e seu resultado.
+    public static DataGridView operationHistory;
+
     public static void InitializeAppComponents()
     {
         InitializeAppGrid();
@@ -91,6 +95,38 @@ public class Components
         AddCalculatorBtnsToAppGrid(appGrid, btnTxtList);
 
         btnList = GetCalculatorBtns(appGrid);
+    }
+
+    public static void initializeOperationHistory()
+    {
+        operationHistory = new DataGridView
+        {
+            ColumnCount = 1,
+            RowHeadersVisible = false,
+            Width = 400,
+            Height = 640,
+            ColumnHeadersHeight = 40,
+            Text = "0",
+            Dock = DockStyle.None,
+            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            Left = 950,
+            Top = 20,
+            AllowDrop = false,
+            AllowUserToAddRows = false,
+            AllowUserToDeleteRows = false,
+            AllowUserToResizeRows = false,
+            AllowUserToResizeColumns = false,
+            ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.DisableResizing,
+            ReadOnly = true,
+            BackgroundColor = Color.FromArgb(62, 85, 85),
+        };
+        operationHistory.Columns[0].HeaderText = "Histórico";
+        operationHistory.DefaultCellStyle.BackColor = Color.FromArgb(29, 49, 49);
+        operationHistory.DefaultCellStyle.ForeColor = Color.White;
+        operationHistory.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+        operationHistory.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
+
+        Calculator.Instance.Controls.Add(operationHistory);
     }
 
     private static List<string> GetBtnTexts()
@@ -252,10 +288,18 @@ public class GUIUpdate
             visorTop.Text += operand;
         }
     }
-    public static void OnResult(Label visorBottom, Label visorTop, double result, string operatorr)
+    public static void OnResult(Label visorBottom, Label visorTop, double result, string operatorr, string history)
     {
         visorTop.Text = $"{result} {operatorr} ";
         visorBottom.Text = "0";
+        Components.operationHistory.Rows.Add(history);
+        int lastRow = Components.operationHistory.AllowUserToAddRows ? Components.operationHistory.Rows.Count - 2 : Components.operationHistory.Rows.Count - 1;
+
+        if (lastRow >= 0)
+        {
+            Components.operationHistory.CurrentCell = Components.operationHistory.Rows[lastRow].Cells[0];
+            Components.operationHistory.FirstDisplayedScrollingRowIndex = lastRow;
+        }
     }
     public static void OnOperationSet(Label visorBottom, Label visorTop, string operatorr)
     {
@@ -366,12 +410,12 @@ public class AppEvents
 
     private static void OnFormResize(Object sender, EventArgs e)
     {
+        Components.initializeOperationHistory();
+
         var percentOfCalculatorWindowWidth = 70;
         var offsetWhenMaximized = Components.visorTop.Width;
         var offsetWhenMinimized = 150;
         var visorTopBottomStandardWidth = 300;
-
-        Calculator.Instance.SuspendLayout();
 
         if (Calculator.Instance.WindowState == FormWindowState.Maximized)
         {
@@ -405,7 +449,6 @@ public class AppEvents
             Components.visorBottom.Left = Components.visorPanel.Width / 2 - offsetWhenMinimized;
         }
 
-        Calculator.Instance.ResumeLayout();
     }
 
     public static void ChangeOperator(string operatorr)
@@ -441,6 +484,8 @@ public class AppEvents
 
     private static void DispatchOperationResult()
     {
+        string expressionHistory = Components.visorTop.Text;
+
         string operand = Components.visorBottom.Text;
         Calculation.AddOperand(operand, "");
 
@@ -453,10 +498,11 @@ public class AppEvents
             Calculation.Calculate();
         }
 
+        expressionHistory += $" = {AppState.result}";
 
         AppState.canConcatOperation = false;
         AppState.canUseDot = true;
-        GUIUpdate.OnResult(Components.visorBottom, Components.visorTop, AppState.result, AppState.operatorr);
+        GUIUpdate.OnResult(Components.visorBottom, Components.visorTop, AppState.result, AppState.operatorr, expressionHistory);
     }
 
     private static void InputValidation(string operation)
