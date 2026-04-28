@@ -1,6 +1,4 @@
-using System.Drawing.Text;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
-
 
 namespace Sistema_De_Aplicativos_Simples__.NET
 {
@@ -11,6 +9,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET
         private Button mediaPlayer;
         private Button mathTable;
         private Button calculator;
+
+        private Button unitConverter;
 
         // Inicialização dos componentes no form:
         public Form1()
@@ -77,17 +77,26 @@ namespace Sistema_De_Aplicativos_Simples__.NET
                 Height = 100
             };
 
+            unitConverter = new Button()
+            {
+                Text = "Unit Converter",
+                Width = 100,
+                Height = 100
+            };
+
             // Reseta a âncora de cada componente, de modo que sejam renderizados no centro de suas respectivas células no grid.
             toDo.Anchor = AnchorStyles.None;
             mediaPlayer.Anchor = AnchorStyles.None;
             mathTable.Anchor = AnchorStyles.None;
             calculator.Anchor = AnchorStyles.None;
+            unitConverter.Anchor = AnchorStyles.None;
 
-            // Por último adiciono os componentes ao grid:
+            // Por último, adiciona os componentes ao grid:
             grid.Controls.Add(toDo);
             grid.Controls.Add(mediaPlayer);
             grid.Controls.Add(mathTable);
             grid.Controls.Add(calculator);
+            grid.Controls.Add(unitConverter);
 
             this.Controls.Add(grid); // adiciona o grid ao Form.
 
@@ -96,6 +105,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             mathTable.Click += (_, _) => OpenForm<MathTable>();
             mediaPlayer.Click += (_, _) => OpenForm<MediaPlayer>();
             toDo.Click += (_, _) => OpenForm<ToDo>();
+            unitConverter.Click += (_, _) => OpenForm<UnitConverter>();
 
         }
 

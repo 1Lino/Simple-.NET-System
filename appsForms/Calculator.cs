@@ -2,8 +2,8 @@
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 // TODO: 
-// 1. Operações básicas [+ - x /] (ok)
-// 2. Implementar uso de vírgula (ok)
+// 1. Operações básicas [+ - x /] (x)
+// 2. Implementar uso de vírgula (x)
 // 3. Operações intermediárias [sqrt, pow, %, 1/x, +-] (x) 
 // 4. Testar limites dos cálculos, procurar por erros ()
 // 5. Implementar funcionalidade de histórico de operações (x)
@@ -24,8 +24,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Components.InitializeAppComponents();
             AppState.InitializeAppState();
             AppEvents.InitializeAppEvents();
-            // tests:
-            // Calculation.CalculationTests();
         }
 
         private void InitializeForm()
@@ -83,6 +81,7 @@ public class Components
     {
         InitializeAppGrid();
         InitializeVisorPanel();
+        initializeOperationHistory();
 
         btnTxtList = GetBtnTexts();
         visorBottom = InitializeVisor(0);
@@ -266,6 +265,19 @@ public class Components
 
 public class GUIUpdate
 {
+    public static void UpdateOperationHistory(string history)
+    {
+        // atualiza o histórico e seleciona a última linha dele:
+        Components.operationHistory.Rows.Add(history);
+        int lastRow = Components.operationHistory.AllowUserToAddRows ? Components.operationHistory.Rows.Count - 2 : Components.operationHistory.Rows.Count - 1;
+
+        if (lastRow >= 0)
+        {
+            Components.operationHistory.CurrentCell = Components.operationHistory.Rows[lastRow].Cells[0];
+            Components.operationHistory.FirstDisplayedScrollingRowIndex = lastRow;
+        }
+    }
+
     public static void OnDigit(Label visorBottom, Label visorTop, string operand)
     {
         if (visorBottom.Text.Length >= 15) return; // limita quantidade de dígitos para a quantidade normal suportada por um double ~15.
@@ -288,18 +300,10 @@ public class GUIUpdate
             visorTop.Text += operand;
         }
     }
-    public static void OnResult(Label visorBottom, Label visorTop, double result, string operatorr, string history)
+    public static void OnResult(Label visorBottom, Label visorTop, double result, string operatorr)
     {
         visorTop.Text = $"{result} {operatorr} ";
         visorBottom.Text = "0";
-        Components.operationHistory.Rows.Add(history);
-        int lastRow = Components.operationHistory.AllowUserToAddRows ? Components.operationHistory.Rows.Count - 2 : Components.operationHistory.Rows.Count - 1;
-
-        if (lastRow >= 0)
-        {
-            Components.operationHistory.CurrentCell = Components.operationHistory.Rows[lastRow].Cells[0];
-            Components.operationHistory.FirstDisplayedScrollingRowIndex = lastRow;
-        }
     }
     public static void OnOperationSet(Label visorBottom, Label visorTop, string operatorr)
     {
@@ -410,8 +414,6 @@ public class AppEvents
 
     private static void OnFormResize(Object sender, EventArgs e)
     {
-        Components.initializeOperationHistory();
-
         var percentOfCalculatorWindowWidth = 70;
         var offsetWhenMaximized = Components.visorTop.Width;
         var offsetWhenMinimized = 150;
@@ -502,7 +504,8 @@ public class AppEvents
 
         AppState.canConcatOperation = false;
         AppState.canUseDot = true;
-        GUIUpdate.OnResult(Components.visorBottom, Components.visorTop, AppState.result, AppState.operatorr, expressionHistory);
+        GUIUpdate.OnResult(Components.visorBottom, Components.visorTop, AppState.result, AppState.operatorr);
+        GUIUpdate.UpdateOperationHistory(expressionHistory);
     }
 
     private static void InputValidation(string operation)
@@ -554,7 +557,9 @@ public class AppEvents
                     Calculation.AddOperand(operand, "");
                     Calculation.Sqrt();
                     Calculation.ResetOperands();
+
                     GUIUpdate.OnSqrt(Components.visorBottom, Components.visorTop, AppState.result, operand);
+                    GUIUpdate.UpdateOperationHistory($"{Components.visorTop.Text} = {Components.visorBottom.Text}");
                     break;
                 case "1/x":
                     operand = Components.visorBottom.Text;
@@ -562,6 +567,7 @@ public class AppEvents
                     Calculation.OneBy();
                     Calculation.ResetOperands();
                     GUIUpdate.OnOneBy(Components.visorBottom, Components.visorTop, AppState.result, operand);
+                    GUIUpdate.UpdateOperationHistory($"{Components.visorTop.Text} = {Components.visorBottom.Text}");
                     break;
                 case "+/-":
                     GUIUpdate.OnOperandSignalChange(Components.visorBottom, Components.visorTop);
