@@ -1,3 +1,6 @@
+// FontAwesome é uma lib interessante pra se utilizar ícones.
+// pra instalar essa lib, basta digitar no console: dotnet add package FontAwesome.Sharp
+using FontAwesome.Sharp;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -17,7 +20,7 @@ public class Components3
 {
     public static Panel appControlPanel;
     public static FlowLayoutPanel appFlowPanel;
-    public static Button addBtn;
+    public static IconButton addBtn;
     public static TextBox taskName;
     public static TextBox taskDescription;
     public static Label nameTxt;
@@ -56,7 +59,7 @@ public class Components3
 
         };
 
-        addBtn = new Button
+        addBtn = new IconButton
         {
 
         };
@@ -87,13 +90,13 @@ public class Components3
             Text = "Task description"
         };
 
-        Button taskDelBtn = new Button
+        IconButton taskDelBtn = new IconButton
         {
             Text = "Delete"
         };
 
         // basicamente, este botão faz o mesmo que
-        Button taskEditBtn = new Button
+        IconButton taskEditBtn = new IconButton
         {
             Text = "Edit"
         };

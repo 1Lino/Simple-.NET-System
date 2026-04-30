@@ -1,5 +1,3 @@
-//using Sistema_De_Aplicativos_Simples__.NET.appsForms;
-
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
