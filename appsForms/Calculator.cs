@@ -132,7 +132,7 @@ public class Components
     {
         return new List<string> {
                 "%", "CE", "C", "DEL",
-                "1/x", "x²", "²√x", "/",
+                "1/x", "xⁿ", "²√x", "/",
                 "7", "8", "9", "x",
                 "4", "5", "6", "-",
                 "1", "2", "3", "+",
@@ -511,7 +511,7 @@ public class AppEvents
     private static void InputValidation(string operation)
     {
         List<string> numbers = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
-        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "²√x", "x²", "%", "1/x", "+/-"];
+        List<string> operations = ["+", "-", "x", "/", "DEL", "C", "CE", "=", ",", "²√x", "xⁿ", "%", "1/x", "+/-"];
 
         if (Components.visorBottom.Text.Length == 20) return; // Pra pôr limite no número de caracteres no visor.
 
@@ -543,7 +543,7 @@ public class AppEvents
                     operatorr = "/";
                     DispatchOperation(operatorr);
                     break;
-                case "x²":
+                case "xⁿ":
                     operatorr = "^";
                     DispatchOperation(operatorr);
                     break;

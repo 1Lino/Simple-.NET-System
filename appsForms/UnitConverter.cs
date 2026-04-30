@@ -41,12 +41,16 @@ public class Components2
     {
         AppPanelConstructor();
         unitCategory = ComboBoxConstructor(0, 1, new string[] { "m", "cm" }, 2);
-        fromUnit = ComboBoxConstructor(2, 0, null, 2);
-        toUnit = ComboBoxConstructor(2, 2, null, 2);
+        fromUnit = ComboBoxConstructor(2, 2, new string[] { "m" }, 2);
+        toUnit = ComboBoxConstructor(2, 0, new string[] { "cm" }, 2);
+        fromNumber = TextBoxConstructor(4, 1, "box 1");
+        toNumber = TextBoxConstructor(4, 0, "box 2");
 
         appPanel.Controls.Add(unitCategory);
         appPanel.Controls.Add(fromUnit);
         appPanel.Controls.Add(toUnit);
+        appPanel.Controls.Add(fromNumber);
+        appPanel.Controls.Add(toNumber);
         UnitConverter.Instance.Controls.Add(appPanel);
     }
 
@@ -66,12 +70,17 @@ public class Components2
 
     private static ComboBox ComboBoxConstructor(int topOffset = 0, int leftOffset = 0, Array items = null, int maxItems = 1)
     {
+        // left e top offsets controlam o deslocamento dos componentes para a esquerda do painel. Quanto maior o offset
+        // maior o deslocamento à esquerda.
         var comboBox = new ComboBox
         {
             Size = new Size(100, 20),
         };
-        comboBox.Left = appPanel.Width / 2 - (100 * leftOffset) + comboBox.Width / 2;
-        comboBox.Top = appPanel.Height / 2 + (20 * topOffset) - comboBox.Height * 2;
+
+        int adjustFactor = 4; // 0 - abaixo do centro do painel; 2 - no centro do painel; 4 - acima do centro do painel; 
+        comboBox.Left = (appPanel.Width + comboBox.Width) / 2 - (comboBox.Width * leftOffset);
+        comboBox.Top = appPanel.Height / 2 + comboBox.Height * (topOffset - adjustFactor);
+
         comboBox.Items.AddRange(items != null ? items.Cast<Object>().ToArray() : new string[] { "" });
         comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         comboBox.SelectedIndex = 0;
@@ -79,4 +88,25 @@ public class Components2
 
         return comboBox;
     }
+
+    private static TextBox TextBoxConstructor(int topOffset = 0, int leftOffset = 0, string text = "")
+    {
+        var textBox = new TextBox
+        {
+            Size = new Size(150, 20),
+            Text = text
+        };
+        int adjustFactor = 4;
+        int gap = leftOffset != 0 ? 10 : -10; // 10, elemento se desloca 10 pixels à esquerda. -10 se desloca 10 pixels à direita.
+        textBox.Left = appPanel.Width / 2 - textBox.Width * leftOffset - gap;
+        textBox.Top = appPanel.Height / 2 + textBox.Height * (topOffset - adjustFactor);
+
+        return textBox;
+    }
+}
+
+
+public class Converter
+{
+
 }
