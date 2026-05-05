@@ -38,11 +38,14 @@ public class Components2
     public static void InitializeAppComponents()
     {
         AppPanelConstructor();
-        unitCategory = ComboBoxConstructor(0, 1, new string[] { "m", "cm" }, 2);
-        fromUnit = ComboBoxConstructor(2, 2, new string[] { "m" }, 2);
-        toUnit = ComboBoxConstructor(2, 0, new string[] { "cm" }, 2);
-        fromNumber = TextBoxConstructor(4, 1, "box 1");
-        toNumber = TextBoxConstructor(4, 0, "box 2");
+        unitCategory = ComboBoxConstructor(0, 1, new string[] { "Comprimento", "Volume", "Massa", "Área", "Temperatura" });
+        unitCategory.SelectedIndex = 0;
+        fromUnit = ComboBoxConstructor(2, 2, new string[] { "km", "hm", "dam", "m", "dm", "cm", "mm" });
+        toUnit = ComboBoxConstructor(2, 0, new string[] { "km", "hm", "dam", "m", "dm", "cm", "mm" });
+        fromUnit.SelectedIndex = 3;
+        toUnit.SelectedIndex = 3;
+        fromNumber = TextBoxConstructor(4, 1, "1");
+        toNumber = TextBoxConstructor(4, 0, "1");
 
         appPanel.Controls.Add(unitCategory);
         appPanel.Controls.Add(fromUnit);
@@ -66,7 +69,7 @@ public class Components2
         appPanel.Top = formWidth / 100 * 10;
     }
 
-    private static ComboBox ComboBoxConstructor(int topOffset = 0, int leftOffset = 0, Array items = null, int maxItems = 1)
+    private static ComboBox ComboBoxConstructor(int topOffset = 0, int leftOffset = 0, Array items = null)
     {
         // left e top offsets controlam o deslocamento dos componentes para a esquerda do painel. Quanto maior o offset
         // maior o deslocamento à esquerda.
@@ -82,7 +85,6 @@ public class Components2
         comboBox.Items.AddRange(items != null ? items.Cast<Object>().ToArray() : new string[] { "" });
         comboBox.DropDownStyle = ComboBoxStyle.DropDownList;
         comboBox.SelectedIndex = 0;
-        comboBox.MaxDropDownItems = maxItems;
 
         return comboBox;
     }
@@ -98,13 +100,56 @@ public class Components2
         int gap = leftOffset != 0 ? 10 : -10; // 10, elemento se desloca 10 pixels à esquerda. -10 se desloca 10 pixels à direita.
         textBox.Left = appPanel.Width / 2 - textBox.Width * leftOffset - gap;
         textBox.Top = appPanel.Height / 2 + textBox.Height * (topOffset - adjustFactor);
+        textBox.KeyPress += TextBox_KeyPress;
 
         return textBox;
+    }
+
+    private static void TextBox_KeyPress(Object sender, KeyPressEventArgs e)
+    {
+        // se o caractere não for de controle (ex.: tab, backspace, enter, etc)
+        // e não for um dígito numérico (decimal), nem for o símbolo '.', então ignora o caractere:
+        if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar) && e.KeyChar != '.')
+        {
+            e.Handled = true; // "Handled" diz se o evento foi tratado ou não. Quando true, basicamente diz que o evento já foi tratado, e que não precisa prosseguir. No caso, o que acontece é que o caractere será ignorado.
+        }
+
+        // mas se for o símbolo for '.' e na caixa de texto já houver tal símbolo, então ignora o caractere:
+        if (e.KeyChar == '.' && (sender as TextBox).Text.Contains("."))
+        {
+            e.Handled = true;
+        }
+
+        // se for enter:
+        if (e.KeyChar == (char)Keys.Enter)
+        {
+            string value = fromNumber.Text != "" ? fromNumber.Text : "0";
+            string sourceUnit = fromUnit.SelectedItem.ToString();
+            string targetUnit = toUnit.SelectedItem.ToString();
+            toNumber.Text = $"{Converter.ConvertLength(value, sourceUnit, targetUnit)}";
+            e.Handled = true; // previne o som de "beep" que ocorre ao teclar enter. Este som ocorre porque e.Handled precisa ser acionado para que se entenda que o evento terminou.
+        }
+
     }
 }
 
 
 public class Converter
 {
+    public static double ConvertLength(string input, string sourceUnit, string targetUnit)
+    {
+        string[] units = { "km", "hm", "dam", "m", "dm", "cm", "mm" };
+        if (!units.Contains(sourceUnit) || !units.Contains(targetUnit))
+        {
+            throw new Exception("One of the units provided is not supported for this conversion!");
+        }
 
+        double valueToConvert = double.Parse(input);
+        int sourceUnitIndex = units.IndexOf(sourceUnit);
+        int targetUnitIndex = units.IndexOf(targetUnit);
+        int indexDifference = targetUnitIndex - sourceUnitIndex;
+        double conversionFactor = Math.Pow(10, indexDifference);
+
+        return valueToConvert * conversionFactor;
+    }
 }
