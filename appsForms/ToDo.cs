@@ -53,7 +53,7 @@ public class Components3
             ColumnCount = 1,
             RowCount = 2,
             Dock = DockStyle.None,
-            CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
+            // CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
             Size = new Size(400, 500)
         };
 
@@ -88,28 +88,62 @@ public class Components3
         // Os componentes abaixo vão tudo pro appControlPanel:
         nameTxt = new Label
         {
-
-        };
-
-        descriptionTxt = new Label
-        {
-
+            Width = 100,
+            Text = "Task Name",
+            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+            ForeColor = Color.White,
+            Top = 5,
+            Left = 10
         };
 
         taskName = new TextBox
         {
+            Width = 200,
+            Height = 20,
+            Top = 30,
+            Left = 10
+        };
 
+        descriptionTxt = new Label
+        {
+            Width = 200,
+            Text = "Task Description",
+            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+            ForeColor = Color.White,
+            Top = appControlPanel.Height / 2 - 5,
+            Left = 10
         };
 
         taskDescription = new TextBox
         {
-
+            Multiline = true,
+            ScrollBars = ScrollBars.Vertical,
+            Width = 250,
+            Height = 40,
+            Top = appControlPanel.Height / 2 + 20,
+            Left = 10
         };
 
         addBtn = new IconButton
         {
-
+            Size = new Size(50, 50),
+            Left = appControlPanel.Width - 55,
+            Top = appControlPanel.Height - 55,
+            IconChar = IconChar.Plus,
+            IconFont = IconFont.Solid,
+            IconColor = Color.LightGreen,
+            ImageAlign = ContentAlignment.MiddleCenter,
+            ForeColor = Color.FromArgb(62, 85, 85),
+            BackColor = Color.FromArgb(62, 85, 85),
+            FlatStyle = FlatStyle.Flat,
         };
+        addBtn.FlatAppearance.BorderSize = 0;
+
+        appControlPanel.Controls.Add(nameTxt);
+        appControlPanel.Controls.Add(taskName);
+        appControlPanel.Controls.Add(descriptionTxt);
+        appControlPanel.Controls.Add(taskDescription);
+        appControlPanel.Controls.Add(addBtn);
 
     }
 
