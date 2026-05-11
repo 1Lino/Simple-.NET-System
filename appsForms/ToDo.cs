@@ -1,6 +1,7 @@
 // FontAwesome é uma lib interessante pra se utilizar ícones.
 // pra instalar essa lib, basta digitar no console: dotnet add package FontAwesome.Sharp
 using FontAwesome.Sharp;
+using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -10,7 +11,17 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         public ToDo()
         {
             Instance = this;
+            InitializeForm();
             Components3.InitializeAppComponents();
+        }
+
+        private void InitializeForm()
+        {
+            Text = "To Do List";
+            Width = 450;
+            Height = 600;
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            BackColor = Color.FromArgb(29, 49, 49);
         }
     }
 }
@@ -18,6 +29,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 // Tudo inicializado, falta só configurar cada componente:
 public class Components3
 {
+    public static TableLayoutPanel appGrid;
     public static Panel appControlPanel;
     public static FlowLayoutPanel appFlowPanel;
     public static IconButton addBtn;
@@ -28,17 +40,52 @@ public class Components3
 
     public static void InitializeAppComponents()
     {
+        InitializeAppGrid();
         InitAppControlPanel();
         InitAppFlowPanel();
+    }
+
+    private static void InitializeAppGrid()
+    {
+        // ############### APP GRID  ###############
+        appGrid = new TableLayoutPanel
+        {
+            ColumnCount = 1,
+            RowCount = 2,
+            Dock = DockStyle.None,
+            CellBorderStyle = TableLayoutPanelCellBorderStyle.Single,
+            Size = new Size(400, 500)
+        };
+
+        appGrid.RowStyles.Add(
+            new RowStyle(SizeType.Percent, 30)); // a primeira linha ocupará 30% da altura total do appGrid
+
+        appGrid.RowStyles.Add(
+            new RowStyle(SizeType.Percent, 70));
+
+        int margin = 35;
+
+        if (ToDo.Instance != null)
+        {
+            appGrid.Left = (ToDo.Instance.ClientSize.Width - appGrid.Width) / 2;
+            appGrid.Top = ToDo.Instance.ClientSize.Height - appGrid.Height - margin;
+        }
+
+        ToDo.Instance.Controls.Add(appGrid);
+        // ############### ############### ###############
     }
 
     private static void InitAppControlPanel()
     {
         appControlPanel = new Panel
         {
-
+            BackColor = Color.FromArgb(62, 85, 85),
+            Dock = DockStyle.Fill
         };
 
+        appGrid.Controls.Add(appControlPanel);
+
+        // Os componentes abaixo vão tudo pro appControlPanel:
         nameTxt = new Label
         {
 
@@ -63,14 +110,18 @@ public class Components3
         {
 
         };
+
     }
 
     private static void InitAppFlowPanel()
     {
         appFlowPanel = new FlowLayoutPanel
         {
-
+            BackColor = Color.FromArgb(62, 85, 85),
+            Dock = DockStyle.Fill
         };
+
+        appGrid.Controls.Add(appFlowPanel);
     }
 
     public static void AddTaskTo(FlowLayoutPanel flowPanel)
@@ -104,6 +155,7 @@ public class Components3
         taskContainer.Controls.Add(taskName);
         taskContainer.Controls.Add(taskDescription);
         taskContainer.Controls.Add(taskDelBtn);
+        taskContainer.Controls.Add(taskEditBtn);
 
         flowPanel.Controls.Add(taskContainer);
     }
