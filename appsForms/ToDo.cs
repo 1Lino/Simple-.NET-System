@@ -29,14 +29,57 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void OnFormResize(Object sender, EventArgs e)
         {
-            if (!IsMaximized)
+            if (!IsMaximized) // se o estado não estiver maximizado.
             {
-                Components3.appGrid.Size = new Size(800, 600);
-                IsMaximized = !IsMaximized;
+                IsMaximized = !IsMaximized; // muda o estado para maximizado.
+
+                // realiza operações em maximizado:
+
+                Components3.appGrid.Size = new Size(600, 650);
+                Components3.appGrid.Left = (ToDo.Instance.ClientSize.Width - Components3.appGrid.Width) / 2;//ToDo.Instance.Width / 2 - (Components3.appGrid.Width / 2);
+                Components3.taskDescription.Size = new Size(400, 50);
+                Components3.addBtn.Left = Components3.appControlPanel.Width - 150;
+
+                // Panel taskContainer = (Panel)Components3.appFlowPanel.Controls["taskContainer"];
+                // taskContainer.Size = new Size(585, 100);
+                Components3.taskContainerWidth = 585;
+                Components3.taskContainerHeigth = 100;
+
+                if (Components3.appFlowPanel.Controls.Count != 0) // se a lista de componentes contidos em appFlow não for 0:
+                {
+                    for (int i = 0; i < Components3.appFlowPanel.Controls.Count; i++)
+                    {
+                        Panel taskContainer = (Panel)Components3.appFlowPanel.Controls[i];
+                        taskContainer.Size = new Size(Components3.taskContainerWidth, Components3.taskContainerHeigth); // redimensiona todos eles.
+                        taskContainer.Controls["Edit"].Left = 535;
+                        taskContainer.Controls["Delete"].Left = 535;
+                    }
+                }
                 return;
             }
+
+            IsMaximized = !IsMaximized; // reverte estado.
+
+            // reverte operações:
             Components3.appGrid.Size = new Size(400, 500);
-            IsMaximized = !IsMaximized;
+            Components3.appGrid.Left = (ToDo.Instance.ClientSize.Width - Components3.appGrid.Width) / 2;
+            Components3.taskDescription.Size = new Size(250, 40);
+            Components3.addBtn.Left = Components3.appControlPanel.Width - 55;
+
+            Components3.taskContainerWidth = 385;
+            Components3.taskContainerHeigth = 100;
+
+            if (Components3.appFlowPanel.Controls.Count != 0) // se a lista de componentes contidos em appFlow não for 0:
+            {
+                for (int i = 0; i < Components3.appFlowPanel.Controls.Count; i++)
+                {
+                    Panel taskContainer = (Panel)Components3.appFlowPanel.Controls[i];
+                    taskContainer.Size = new Size(Components3.taskContainerWidth, Components3.taskContainerHeigth);
+                    taskContainer.Controls["Edit"].Left = Components3.taskContainerWidth - 45;
+                    taskContainer.Controls["Delete"].Left = Components3.taskContainerWidth - 45;
+                }
+            }
+
             return;
         }
     }
@@ -171,6 +214,8 @@ public class Components3
         if (taskName.Text.Length == 0 || taskDescription.Text.Length == 0) return;
 
         AddTaskTo(appFlowPanel, taskName.Text, taskDescription.Text);
+        taskName.Text = "";
+        taskDescription.Text = "";
     }
 
     private static void InitAppFlowPanel()
@@ -185,17 +230,22 @@ public class Components3
         appGrid.Controls.Add(appFlowPanel);
     }
 
+    public static int taskContainerWidth = 385;
+    public static int taskContainerHeigth = 100;
     public static void AddTaskTo(FlowLayoutPanel flowPanel, string taskN, string taskD)
     {
         Panel taskContainer = new Panel
         {
-            Size = new Size(385, 100),
+            Size = new Size(taskContainerWidth, taskContainerHeigth),
             BackColor = Color.FromArgb(29, 49, 49),
         };
 
+        DateTime date = DateTime.Now;
+        string formatedDate = date.ToString("dd/MM/yy");
+
         Label taskName = new Label
         {
-            Text = taskN,
+            Text = $"{formatedDate} - " + taskN,
             AutoSize = false, //pra respeitar o Width e o Height do label, e permitir quebra de linha.
             Width = 200,
             Top = 5,
@@ -221,7 +271,7 @@ public class Components3
 
         IconButton taskEditBtn = new IconButton
         {
-            // Text = "Edit",
+            Name = "Edit",
             Size = new Size(40, 40),
             Left = taskContainer.Width - 45,
             Top = 5,
@@ -229,24 +279,24 @@ public class Components3
             IconFont = IconFont.Solid,
             IconColor = Color.LightGreen,
             ImageAlign = ContentAlignment.MiddleCenter,
-            ForeColor = Color.FromArgb(62, 85, 85),
-            BackColor = Color.FromArgb(62, 85, 85),
+            ForeColor = Color.FromArgb(29, 49, 49),
+            BackColor = Color.FromArgb(29, 49, 49),
             FlatStyle = FlatStyle.Flat,
         };
         taskEditBtn.FlatAppearance.BorderSize = 0;
 
         IconButton taskDelBtn = new IconButton
         {
-            // Text = "Delete",
+            Name = "Delete",
             Size = new Size(40, 40),
             Left = taskContainer.Width - 45,
             Top = 50,
-            IconChar = IconChar.Recycle,
+            IconChar = IconChar.Trash,
             IconFont = IconFont.Solid,
-            IconColor = Color.LightGreen,
+            IconColor = Color.Red,
             ImageAlign = ContentAlignment.MiddleCenter,
-            ForeColor = Color.FromArgb(62, 85, 85),
-            BackColor = Color.FromArgb(62, 85, 85),
+            ForeColor = Color.FromArgb(29, 49, 49),
+            BackColor = Color.FromArgb(29, 49, 49),
             FlatStyle = FlatStyle.Flat,
 
         };
