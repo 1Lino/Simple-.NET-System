@@ -8,6 +8,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     public partial class ToDo : Form
     {
         public static ToDo Instance { get; private set; }
+        private bool IsMaximized = false;
+
         public ToDo()
         {
             Instance = this;
@@ -22,6 +24,20 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Height = 600;
             FormBorderStyle = FormBorderStyle.FixedSingle;
             BackColor = Color.FromArgb(29, 49, 49);
+            Instance.Resize += OnFormResize;
+        }
+
+        private void OnFormResize(Object sender, EventArgs e)
+        {
+            if (!IsMaximized)
+            {
+                Components3.appGrid.Size = new Size(800, 600);
+                IsMaximized = !IsMaximized;
+                return;
+            }
+            Components3.appGrid.Size = new Size(400, 500);
+            IsMaximized = !IsMaximized;
+            return;
         }
     }
 }
@@ -101,7 +117,8 @@ public class Components3
             Width = 200,
             Height = 20,
             Top = 30,
-            Left = 10
+            Left = 10,
+            MaxLength = 50
         };
 
         descriptionTxt = new Label
@@ -121,7 +138,8 @@ public class Components3
             Width = 250,
             Height = 40,
             Top = appControlPanel.Height / 2 + 20,
-            Left = 10
+            Left = 10,
+            MaxLength = 250 // max length of the input
         };
 
         addBtn = new IconButton
@@ -138,6 +156,7 @@ public class Components3
             FlatStyle = FlatStyle.Flat,
         };
         addBtn.FlatAppearance.BorderSize = 0;
+        addBtn.Click += HandleClick;
 
         appControlPanel.Controls.Add(nameTxt);
         appControlPanel.Controls.Add(taskName);
@@ -147,44 +166,91 @@ public class Components3
 
     }
 
+    private static void HandleClick(Object sender, EventArgs e)
+    {
+        if (taskName.Text.Length == 0 || taskDescription.Text.Length == 0) return;
+
+        AddTaskTo(appFlowPanel, taskName.Text, taskDescription.Text);
+    }
+
     private static void InitAppFlowPanel()
     {
         appFlowPanel = new FlowLayoutPanel
         {
             BackColor = Color.FromArgb(62, 85, 85),
-            Dock = DockStyle.Fill
+            Dock = DockStyle.Fill,
+            AutoScroll = true,
         };
 
         appGrid.Controls.Add(appFlowPanel);
     }
 
-    public static void AddTaskTo(FlowLayoutPanel flowPanel)
+    public static void AddTaskTo(FlowLayoutPanel flowPanel, string taskN, string taskD)
     {
         Panel taskContainer = new Panel
         {
-            Size = new Size(400, 400)
+            Size = new Size(385, 100),
+            BackColor = Color.FromArgb(29, 49, 49),
         };
 
         Label taskName = new Label
         {
-            Text = "Task 1"
+            Text = taskN,
+            AutoSize = false, //pra respeitar o Width e o Height do label, e permitir quebra de linha.
+            Width = 200,
+            Top = 5,
+            Left = 5,
+            Font = new Font("Segoe UI", 10f, FontStyle.Bold),
+            ForeColor = Color.White,
+            AutoEllipsis = true,
+
         };
 
         Label taskDescription = new Label
         {
-            Text = "Task description"
+            Text = taskD,
+            AutoSize = false,
+            Width = 260,
+            Height = 60,
+            Top = 30,
+            Left = 5,
+            Font = new Font("Segoe UI", 10f, FontStyle.Regular),
+            ForeColor = Color.White,
+            AutoEllipsis = true,
         };
+
+        IconButton taskEditBtn = new IconButton
+        {
+            // Text = "Edit",
+            Size = new Size(40, 40),
+            Left = taskContainer.Width - 45,
+            Top = 5,
+            IconChar = IconChar.Edit,
+            IconFont = IconFont.Solid,
+            IconColor = Color.LightGreen,
+            ImageAlign = ContentAlignment.MiddleCenter,
+            ForeColor = Color.FromArgb(62, 85, 85),
+            BackColor = Color.FromArgb(62, 85, 85),
+            FlatStyle = FlatStyle.Flat,
+        };
+        taskEditBtn.FlatAppearance.BorderSize = 0;
 
         IconButton taskDelBtn = new IconButton
         {
-            Text = "Delete"
-        };
+            // Text = "Delete",
+            Size = new Size(40, 40),
+            Left = taskContainer.Width - 45,
+            Top = 50,
+            IconChar = IconChar.Recycle,
+            IconFont = IconFont.Solid,
+            IconColor = Color.LightGreen,
+            ImageAlign = ContentAlignment.MiddleCenter,
+            ForeColor = Color.FromArgb(62, 85, 85),
+            BackColor = Color.FromArgb(62, 85, 85),
+            FlatStyle = FlatStyle.Flat,
 
-        // basicamente, este botão faz o mesmo que
-        IconButton taskEditBtn = new IconButton
-        {
-            Text = "Edit"
         };
+        taskDelBtn.FlatAppearance.BorderSize = 0;
 
         taskContainer.Controls.Add(taskName);
         taskContainer.Controls.Add(taskDescription);
