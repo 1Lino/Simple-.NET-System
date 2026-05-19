@@ -2,6 +2,7 @@
 // pra instalar essa lib, basta digitar no console: dotnet add package FontAwesome.Sharp
 using FontAwesome.Sharp;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
+using System.CodeDom;
 using System.ComponentModel;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
@@ -89,6 +90,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 // Tudo inicializado, falta só configurar cada componente:
 public class Components3
 {
+    // componentes relacionados ao painel e seu menu:
     public static TableLayoutPanel appGrid;
     public static Panel appControlPanel;
     public static FlowLayoutPanel appFlowPanel;
@@ -97,6 +99,16 @@ public class Components3
     public static TextBox taskDescription;
     public static Label nameTxt;
     public static Label descriptionTxt;
+
+    // componentes relacionados aos itens de task:
+    private static Panel taskContainer;
+    public static int taskContainerWidth = 385; // este componente é público pois seu valor deverá ser acessado pelo form.
+    public static int taskContainerHeigth = 100;
+    private static EditableLabel taskNameLbl;
+    private static EditableLabel taskDescriptionLbl;
+    private static IconButton taskEditBtn;
+    private static IconButton taskDelBtn;
+    public static int taskCount = 0;
 
     public static void InitializeAppComponents()
     {
@@ -231,12 +243,16 @@ public class Components3
         appGrid.Controls.Add(appFlowPanel);
     }
 
-    public static int taskContainerWidth = 385;
-    public static int taskContainerHeigth = 100;
-    public static void AddTaskTo(FlowLayoutPanel flowPanel, string taskN, string taskD)
+    private static void AddTaskTo(FlowLayoutPanel flowPanel, string taskN, string taskD)
     {
-        Panel taskContainer = new Panel
+        // toda vez que uma task for criada, taskCount deve aumentar.
+        // toda vez que uma task for destruida, taskCount deve diminuir.
+        taskCount++;
+
+        // para uma task ser modificada ou destruída, deverá ser acessada pela Tag.
+        taskContainer = new Panel
         {
+            Tag = $"{taskCount}", // id da task parte do contador, mas poderia ser algo randomico, mas se for randomico há a chance de duplicata, ainda que baixa, por isso prefiro usar o próprio contador como id.
             Size = new Size(taskContainerWidth, taskContainerHeigth),
             BackColor = Color.FromArgb(29, 49, 49),
         };
@@ -244,7 +260,7 @@ public class Components3
         DateTime date = DateTime.Now;
         string formatedDate = date.ToString("dd/MM/yy");
 
-        EditableLabel taskName = new EditableLabel
+        taskNameLbl = new EditableLabel
         {
             Text = $"{formatedDate} - " + taskN,
             AutoSize = false, //pra respeitar o Width e o Height do label, e permitir quebra de linha.
@@ -257,7 +273,7 @@ public class Components3
 
         };
 
-        EditableLabel taskDescription = new EditableLabel
+        taskDescriptionLbl = new EditableLabel
         {
             Text = taskD,
             AutoSize = false,
@@ -270,7 +286,7 @@ public class Components3
             AutoEllipsis = true,
         };
 
-        IconButton taskEditBtn = new IconButton
+        taskEditBtn = new IconButton
         {
             Name = "Edit",
             Size = new Size(40, 40),
@@ -286,7 +302,7 @@ public class Components3
         };
         taskEditBtn.FlatAppearance.BorderSize = 0;
 
-        IconButton taskDelBtn = new IconButton
+        taskDelBtn = new IconButton
         {
             Name = "Delete",
             Size = new Size(40, 40),
@@ -303,13 +319,27 @@ public class Components3
         };
         taskDelBtn.FlatAppearance.BorderSize = 0;
 
-        taskContainer.Controls.Add(taskName);
-        taskContainer.Controls.Add(taskDescription);
+        taskContainer.Controls.Add(taskNameLbl);
+        taskContainer.Controls.Add(taskDescriptionLbl);
         taskContainer.Controls.Add(taskDelBtn);
         taskContainer.Controls.Add(taskEditBtn);
 
         flowPanel.Controls.Add(taskContainer);
+
+        Console.WriteLine($"Task added!\nID: {taskContainer.Tag}\nName: {taskNameLbl.Text}\nDescription: {taskDescriptionLbl.Text}");
     }
+
+    private static void OnClickEditBnt(object sender, EventArgs e)
+    {
+        // taskNameLbl.Text;
+        // taskDescriptionLbl.Text;
+    }
+
+    private static void OnClickDelBnt(object sender, EventArgs e)
+    {
+        // TODO...
+    }
+
 }
 
 // Essa classe lidará com funções que irão se encarregar do CRUD:
