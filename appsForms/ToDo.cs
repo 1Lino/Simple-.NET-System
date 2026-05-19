@@ -106,8 +106,8 @@ public class Components3
     public static int taskContainerHeigth = 100;
     private static EditableLabel taskNameLbl;
     private static EditableLabel taskDescriptionLbl;
-    private static IconButton taskEditBtn;
-    private static IconButton taskDelBtn;
+    private static IconButton taskEditBtn; // acho que deve ser uma lista
+    private static IconButton taskDelBtn; // deve ser uma lista
     public static int taskCount = 0;
 
     public static void InitializeAppComponents()
@@ -249,10 +249,14 @@ public class Components3
         // toda vez que uma task for destruida, taskCount deve diminuir.
         taskCount++;
 
+        Random rnd = new Random();
+        int firstRnd = rnd.Next(0, 9999);
+        int secondRnd = rnd.Next(0, 9999);
+
         // para uma task ser modificada ou destruída, deverá ser acessada pela Tag.
         taskContainer = new Panel
         {
-            Tag = $"{taskCount}", // id da task parte do contador, mas poderia ser algo randomico, mas se for randomico há a chance de duplicata, ainda que baixa, por isso prefiro usar o próprio contador como id.
+            Tag = $"{taskCount}{firstRnd}{secondRnd}", // id da task parte do contador, acrescido de dois nº pseudo-randomicos.
             Size = new Size(taskContainerWidth, taskContainerHeigth),
             BackColor = Color.FromArgb(29, 49, 49),
         };
@@ -326,18 +330,45 @@ public class Components3
 
         flowPanel.Controls.Add(taskContainer);
 
+        taskEditBtn.Click += OnClickEditBnt;
+        taskDelBtn.Click += OnClickDelBnt;
+
         Console.WriteLine($"Task added!\nID: {taskContainer.Tag}\nName: {taskNameLbl.Text}\nDescription: {taskDescriptionLbl.Text}");
     }
 
     private static void OnClickEditBnt(object sender, EventArgs e)
     {
-        // taskNameLbl.Text;
-        // taskDescriptionLbl.Text;
+        Button btn = sender as Button; // captura o próprio botão clicado
+        if (btn == null) return;
+
+        // captura o parente do botão clicado, que é o container da task:
+        Panel taskContainer = btn.Parent as Panel;
+        if (taskContainer == null) return;
+
+        // itera sobre cada componente do taskContainer e verifica se tal componente é do tipo EditableLabel.
+        foreach (Control ctrl in taskContainer.Controls)
+        {
+            if (ctrl is EditableLabel lb)
+            {
+                lb.StartEdit(); // executa o StartEdit de cada EditableLabel encontrado.
+            }
+        }
+
     }
 
     private static void OnClickDelBnt(object sender, EventArgs e)
     {
-        // TODO...
+        Button btn = sender as Button;
+        if (btn == null) return;
+
+
+        Panel taskContainer = btn.Parent as Panel;
+        if (taskContainer == null) return;
+
+        appFlowPanel.Controls.Remove(taskContainer); // Remove a task do FlowLayoutPanel
+
+        // descarta recursos do panel
+        taskContainer.Dispose();
     }
 
 }
@@ -386,20 +417,6 @@ public class EditableLabel : UserControl
         set => lbl.AutoEllipsis = value;
     }
 
-    // protected override void OnFontChanged(EventArgs e)
-    // {
-    //     base.OnFontChanged(e);
-    //     lbl.Font = this.Font;
-    //     txt.Font = this.Font;
-    // }
-
-    // protected override void OnForeColorChanged(EventArgs e)
-    // {
-    //     base.OnForeColorChanged(e);
-    //     lbl.ForeColor = this.ForeColor;
-    //     txt.ForeColor = this.ForeColor;
-    // }
-
     // CONSTRUCTOR DO COMPONENTE:
     public EditableLabel()
     {
@@ -419,7 +436,7 @@ public class EditableLabel : UserControl
         txt.Visible = false;
         txt.Multiline = true;
 
-        txt.Leave += (s, e) => EndEdit(true);
+        txt.Leave += (s, e) => EndEdit(true); // ao sair do foco do componente, sai da edição.
         txt.KeyDown += Txt_KeyDown;
 
         Controls.Add(txt);
@@ -434,7 +451,7 @@ public class EditableLabel : UserControl
         txt.Text = lbl.Text;
         lbl.Visible = false;
         txt.Visible = true;
-        txt.Focus();
+        //txt.Focus(); // isto faz com que o texbox receba foco, mas não preciso disso agora.
         txt.SelectAll();
     }
 
