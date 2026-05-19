@@ -2,6 +2,7 @@
 // pra instalar essa lib, basta digitar no console: dotnet add package FontAwesome.Sharp
 using FontAwesome.Sharp;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
+using System.ComponentModel;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -243,7 +244,7 @@ public class Components3
         DateTime date = DateTime.Now;
         string formatedDate = date.ToString("dd/MM/yy");
 
-        Label taskName = new Label
+        EditableLabel taskName = new EditableLabel
         {
             Text = $"{formatedDate} - " + taskN,
             AutoSize = false, //pra respeitar o Width e o Height do label, e permitir quebra de linha.
@@ -256,7 +257,7 @@ public class Components3
 
         };
 
-        Label taskDescription = new Label
+        EditableLabel taskDescription = new EditableLabel
         {
             Text = taskD,
             AutoSize = false,
@@ -319,39 +320,84 @@ public class AppData
 
 
 // Essa classe cria um componente label editável:
+// NOTA.: UserControl possui propriedades padrão diferentes, então é necessário redefinir, no construtor
+// as propriedades padrão para este novo componente. Isto também se aplica a outros comportamentos, que devem então ser configurados
+// manualmente nesta classe.
 public class EditableLabel : UserControl
 {
     private Label lbl;
     private TextBox txt;
 
+    // EXPOSIÇÃO DE PROPRIEDADES:
+
+    // Qualquer que for o conteúdo passado como valor à propriedade Text na criação do componente, será guardado no componente.
+    // do contrário não aparece nada de texto na tela.
+    public override string Text
+    {
+        get => lbl.Text; // "captura" a propriedade Text do label.
+        set { lbl.Text = value; txt.Text = value; } // "captura" o valor e passa este valor.
+    }
+
+    public override Font Font
+    {
+        get => base.Font;
+        set
+        {
+            base.Font = value;
+            if (lbl != null) lbl.Font = value;
+            if (txt != null) txt.Font = value;
+        }
+    }
+
+    [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+    public bool AutoEllipsis
+    {
+        get => lbl.AutoEllipsis;
+        set => lbl.AutoEllipsis = value;
+    }
+
+    // protected override void OnFontChanged(EventArgs e)
+    // {
+    //     base.OnFontChanged(e);
+    //     lbl.Font = this.Font;
+    //     txt.Font = this.Font;
+    // }
+
+    // protected override void OnForeColorChanged(EventArgs e)
+    // {
+    //     base.OnForeColorChanged(e);
+    //     lbl.ForeColor = this.ForeColor;
+    //     txt.ForeColor = this.ForeColor;
+    // }
+
+    // CONSTRUCTOR DO COMPONENTE:
     public EditableLabel()
     {
         lbl = new Label();
         txt = new TextBox();
 
+        this.AutoScaleMode = AutoScaleMode.None;
+        this.AutoSize = false;
+        this.Size = new Size(100, 23); // define um tamanho padrão para o elemento.
+
         lbl.Dock = DockStyle.Fill;
-        lbl.TextAlign = ContentAlignment.MiddleLeft;
+        lbl.AutoEllipsis = true; // por padrão é "true", ou seja, os três pontos (...) serão adicionados ao final de um texto truncado.
+        lbl.AutoSize = false;
+        lbl.TextAlign = ContentAlignment.TopLeft;
 
         txt.Dock = DockStyle.Fill;
         txt.Visible = false;
+        txt.Multiline = true;
 
         txt.Leave += (s, e) => EndEdit(true);
         txt.KeyDown += Txt_KeyDown;
 
-        this.Controls.Add(txt);
-        this.Controls.Add(lbl);
+        Controls.Add(txt);
+        Controls.Add(lbl);
     }
 
-    public override string Text
-    {
-        get => lbl.Text;
-        set
-        {
-            lbl.Text = value;
-            txt.Text = value;
-        }
-    }
 
+    // MÉTODOS DE INSTÂNCIA:
     // Inicia edição
     public void StartEdit()
     {
