@@ -3,6 +3,7 @@
 using FontAwesome.Sharp;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 using System.ComponentModel;
+using System.Collections;
 using Microsoft.Data.Sqlite; // dotnet add package Microsoft.Data.Sqlite
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
@@ -115,6 +116,28 @@ public class Components3
         InitializeAppGrid();
         InitAppControlPanel();
         InitAppFlowPanel();
+        LoadItemsFromDataBase();
+    }
+
+    private static void LoadItemsFromDataBase()
+    {
+        try
+        {
+            Hashtable loadedData = TaskData.LoadData();
+
+            foreach (DictionaryEntry item in loadedData)
+            {
+                TaskData itemData = (TaskData)item.Value;
+                AddTaskTo(appFlowPanel, itemData.TaskId, itemData.TaskName, itemData.TaskDescription);
+                Console.WriteLine($"TaskId: {itemData.TaskId}\nTaskName: {itemData.TaskName}\nTaskDescription: {itemData.TaskDescription}");
+            }
+        }
+        catch (Exception NoDataBaseToLoad) // Pode ocorrer de a base de dados não existir ainda, então o bloco acima retornaria erro.
+        {
+            Console.WriteLine(NoDataBaseToLoad);
+        }
+
+
     }
 
     private static void InitializeAppGrid()
@@ -248,6 +271,7 @@ public class Components3
         string id = $"{taskCount}{firstRnd}{secondRnd}";
 
         AddTaskTo(appFlowPanel, id, taskName.Text, taskDescription.Text);
+        TaskData.SaveData((string)taskContainer.Tag, taskName.Text, taskDescription.Text);
 
         taskName.Text = "";
         taskDescription.Text = "";
@@ -267,13 +291,6 @@ public class Components3
 
     private static void AddTaskTo(FlowLayoutPanel flowPanel, string taskId, string taskN, string taskD)
     {
-
-        // taskCount++;
-
-        // Random rnd = new Random();
-        // int firstRnd = rnd.Next(0, 9999);
-        // int secondRnd = rnd.Next(0, 9999);
-
         // para uma task ser modificada ou destruída, deverá ser acessada pela Tag.
         taskContainer = new Panel
         {
@@ -347,7 +364,7 @@ public class Components3
         };
         taskDelBtn.FlatAppearance.BorderSize = 0;
 
-        AppData.SaveData((string)taskContainer.Tag, taskName.Text, taskDescription.Text);
+        // TaskData.SaveData((string)taskContainer.Tag, taskName.Text, taskDescription.Text);
 
         taskContainer.Controls.Add(taskNameLbl);
         taskContainer.Controls.Add(taskDescriptionLbl);
@@ -400,15 +417,62 @@ public class Components3
 }
 
 // Essa classe lidará com funções que irão se encarregar do CRUD:
-public class AppData
+public class TaskData
 {
     public string TaskId { get; set; }
     public string TaskName { get; set; }
     public string TaskDescription { get; set; }
 
+    // captura o caminho da pasta de dados de apps. Em windows, por exemplo, seria a:
+    // %TaskData% -> C:\Users\User\TaskData\Roaming\...
+    private static string TaskDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+    // cria um novo caminho para ToDo App no caminho TaskDataPath:
+    private static string appFolderPath = System.IO.Path.Combine(TaskDataPath, "ToDo App");
+
+    // cria um novo diretório a partir do caminho, caso já não exista:
+    static TaskData()
+    {
+        System.IO.Directory.CreateDirectory(appFolderPath);
+    }
+
+    // elabora um caminho final pro diretório:
+    private static string dbFilePath = System.IO.Path.Combine(appFolderPath, "app_data.db");
+
+    public static Hashtable LoadData()
+    {
+        Hashtable hashObject = new Hashtable();
+
+        using var connection = new SqliteConnection($"Data Source={dbFilePath}");
+        connection.Open();
+
+        // leitura do banco:
+        string sqlSelect = "SELECT * FROM tasks";
+
+        using var cmdSelect = new SqliteCommand(sqlSelect, connection);
+
+        using var reader = cmdSelect.ExecuteReader();
+
+        Console.WriteLine("------------------------------------------------------");
+        Console.WriteLine("Banco de dados: ");
+        while (reader.Read())
+        {
+            string taskId = (string)reader["taskId"];
+            string taskName = (string)reader["taskName"];
+            string taskDescription = (string)reader["taskDescription"];
+
+            // Armazena um objeto do tipo TaskData:
+            hashObject[taskId] = new TaskData { TaskId = taskId, TaskName = taskName, TaskDescription = taskDescription };
+
+            // Console.WriteLine($"TaskId: {reader["taskId"]}\nTaskName: {reader["taskName"]}\nTaskDescription: {reader["taskDescription"]}");
+        }
+
+        return hashObject;
+    }
+
     public static void SaveData(string id, string name, string description)
     {
-        AppData taskData = new AppData()
+        TaskData taskData = new TaskData()
         {
             TaskId = id,
             TaskName = name,
@@ -416,19 +480,6 @@ public class AppData
         };
 
         Console.WriteLine($"Saved data:\nId: {taskData.TaskId}\nName: {taskData.TaskName}\nDescription: {taskData.TaskDescription}");
-
-        // captura o caminho da pasta de dados de apps. Em windows, por exemplo, seria a:
-        // %AppData% -> C:\Users\User\AppData\Roaming\...
-        string AppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-
-        // cria um novo caminho para ToDo App no caminho AppDataPath:
-        string appFolderPath = Path.Combine(AppDataPath, "ToDo App");
-
-        // cria um novo diretório a partir do caminho, caso já não exista:
-        Directory.CreateDirectory(appFolderPath);
-
-        // elabora um caminho final pro diretório:
-        string dbFilePath = Path.Combine(appFolderPath, "app_data.db");
 
         using var connection = new SqliteConnection($"Data Source={dbFilePath}");
         connection.Open();
@@ -447,7 +498,7 @@ public class AppData
 
         string sqlInsert = "INSERT INTO tasks (taskId, taskName, taskDescription) VALUES (@taskId, @taskName, @taskDescription)";
 
-        using var cmdInsert = new SqliteCommand(sqlInsert, connection);
+        using var cmdInsert = new SqliteCommand(sqlInsert, connection); // "using" fecha a conexão automaticamente após tudo terminar o processo do comando.
 
         cmdInsert.Parameters.AddWithValue("@taskId", id);
         cmdInsert.Parameters.AddWithValue("@taskName", name);
