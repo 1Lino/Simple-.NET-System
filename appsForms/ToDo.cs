@@ -4,6 +4,7 @@ using FontAwesome.Sharp;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 using System.CodeDom;
 using System.ComponentModel;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -176,6 +177,7 @@ public class Components3
             Left = 10,
             MaxLength = 50
         };
+        taskName.KeyDown += HandleKeyDown;
 
         descriptionTxt = new Label
         {
@@ -197,6 +199,7 @@ public class Components3
             Left = 10,
             MaxLength = 250 // max length of the input
         };
+        taskDescription.KeyDown += HandleKeyDown;
 
         addBtn = new IconButton
         {
@@ -220,6 +223,17 @@ public class Components3
         appControlPanel.Controls.Add(taskDescription);
         appControlPanel.Controls.Add(addBtn);
 
+    }
+
+    private static void HandleKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.KeyCode == Keys.Enter)
+        {
+            e.SuppressKeyPress = true; // Stops the ding sound
+            e.Handled = true;
+
+            // Your Enter logic here
+        }
     }
 
     private static void HandleClick(Object sender, EventArgs e)
@@ -274,8 +288,10 @@ public class Components3
             Font = new Font("Segoe UI", 10f, FontStyle.Bold),
             ForeColor = Color.White,
             AutoEllipsis = true,
-
         };
+        taskNameLbl.MaxLength(50);
+        taskNameLbl.InsertTextAtStart($"{formatedDate} - ");
+        taskNameLbl.Multiline(false);
 
         taskDescriptionLbl = new EditableLabel
         {
@@ -289,6 +305,7 @@ public class Components3
             ForeColor = Color.White,
             AutoEllipsis = true,
         };
+        taskDescriptionLbl.MaxLength(250);
 
         taskEditBtn = new IconButton
         {
@@ -417,6 +434,22 @@ public class EditableLabel : UserControl
         set => lbl.AutoEllipsis = value;
     }
 
+    public void MaxLength(int length)
+    {
+        txt.MaxLength = length;
+    }
+
+    public void InsertTextAtStart(string text)
+    {
+        formatedDate = text;
+    }
+
+    public void Multiline(bool b)
+    {
+        txt.Multiline = b;
+    }
+
+    string formatedDate = "";
     // CONSTRUCTOR DO COMPONENTE:
     public EditableLabel()
     {
@@ -435,6 +468,7 @@ public class EditableLabel : UserControl
         txt.Dock = DockStyle.Fill;
         txt.Visible = false;
         txt.Multiline = true;
+        txt.MaxLength = 50;
 
         txt.Leave += (s, e) => EndEdit(true); // ao sair do foco do componente, sai da edição.
         txt.KeyDown += Txt_KeyDown;
@@ -448,7 +482,9 @@ public class EditableLabel : UserControl
     // Inicia edição
     public void StartEdit()
     {
-        txt.Text = lbl.Text;
+        // corta a data para que não apareça na edição. Sei que o final da string de data termina em ' ', na posição 10, então:
+        txt.Text = lbl.Text.Length > 10 && lbl.Text[10] == ' ' ? lbl.Text.Substring(11) : lbl.Text;
+
         lbl.Visible = false;
         txt.Visible = true;
         //txt.Focus(); // isto faz com que o texbox receba foco, mas não preciso disso agora.
@@ -456,10 +492,16 @@ public class EditableLabel : UserControl
     }
 
     // Finaliza edição
+    // TODO: criar validação que impede usuário de sair da edição se as caixas de texto estiverem vazias
     public void EndEdit(bool commit)
     {
+        // DateTime date = DateTime.Now;
+        // string now = date.ToString("dd/MM/yy");
+
         if (commit)
-            lbl.Text = txt.Text;
+        {
+            lbl.Text = formatedDate + txt.Text.Trim(); // .Trim pra remover qualquer espaço antes ou depois do texto
+        }
         else
             txt.Text = lbl.Text;
 
@@ -467,16 +509,32 @@ public class EditableLabel : UserControl
         txt.Visible = false;
     }
 
+    // TODO: criar validação que impede usuário de sair da edição se as caixas de texto estiverem vazias
+    // fazer caixa de texto ficar com bordas vermelhas, ou alguma outra forma de "required"
     private void Txt_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.KeyCode == Keys.Enter)
         {
-            EndEdit(true); // salva edição
+            e.SuppressKeyPress = true;
+            e.Handled = true;
+
+            // verifica se o campo está vazio, se estiver, retorna a mensagem:
+            if (string.IsNullOrWhiteSpace(txt.Text))
+            {
+                MessageBox.Show("O campo Nome é obrigatório.");
+
+                txt.Focus();
+                return;
+            }
+            Console.WriteLine($"The text that should show up: {txt.Text}");
+
+            EndEdit(true); // salva edição caso não esteja vazio.
             // TODO... alguma ação pra salvar em banco de dados ou coisa assim
         }
         else if (e.KeyCode == Keys.Escape)
         {
             EndEdit(false); // cancela edição
         }
+
     }
 }
