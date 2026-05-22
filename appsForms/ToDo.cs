@@ -2,9 +2,8 @@
 // pra instalar essa lib, basta digitar no console: dotnet add package FontAwesome.Sharp
 using FontAwesome.Sharp;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
-using System.CodeDom;
 using System.ComponentModel;
-using System.Security.Cryptography.X509Certificates;
+using Microsoft.Data.Sqlite; // dotnet add package Microsoft.Data.Sqlite
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -215,7 +214,7 @@ public class Components3
             FlatStyle = FlatStyle.Flat,
         };
         addBtn.FlatAppearance.BorderSize = 0;
-        addBtn.Click += HandleClick;
+        addBtn.Click += HandleAddClick;
 
         appControlPanel.Controls.Add(nameTxt);
         appControlPanel.Controls.Add(taskName);
@@ -236,11 +235,20 @@ public class Components3
         }
     }
 
-    private static void HandleClick(Object sender, EventArgs e)
+    private static void HandleAddClick(Object sender, EventArgs e)
     {
         if (taskName.Text.Length == 0 || taskDescription.Text.Length == 0) return;
 
-        AddTaskTo(appFlowPanel, taskName.Text, taskDescription.Text);
+        // toda vez que uma task for criada, taskCount deve aumentar.
+        // toda vez que uma task for destruida, taskCount deve diminuir.
+        taskCount++;
+        Random rnd = new Random();
+        int firstRnd = rnd.Next(0, 9999);
+        int secondRnd = rnd.Next(0, 9999);
+        string id = $"{taskCount}{firstRnd}{secondRnd}";
+
+        AddTaskTo(appFlowPanel, id, taskName.Text, taskDescription.Text);
+
         taskName.Text = "";
         taskDescription.Text = "";
     }
@@ -257,20 +265,19 @@ public class Components3
         appGrid.Controls.Add(appFlowPanel);
     }
 
-    private static void AddTaskTo(FlowLayoutPanel flowPanel, string taskN, string taskD)
+    private static void AddTaskTo(FlowLayoutPanel flowPanel, string taskId, string taskN, string taskD)
     {
-        // toda vez que uma task for criada, taskCount deve aumentar.
-        // toda vez que uma task for destruida, taskCount deve diminuir.
-        taskCount++;
 
-        Random rnd = new Random();
-        int firstRnd = rnd.Next(0, 9999);
-        int secondRnd = rnd.Next(0, 9999);
+        // taskCount++;
+
+        // Random rnd = new Random();
+        // int firstRnd = rnd.Next(0, 9999);
+        // int secondRnd = rnd.Next(0, 9999);
 
         // para uma task ser modificada ou destruída, deverá ser acessada pela Tag.
         taskContainer = new Panel
         {
-            Tag = $"{taskCount}{firstRnd}{secondRnd}", // id da task parte do contador, acrescido de dois nº pseudo-randomicos.
+            Tag = taskId, // id da task parte do contador, acrescido de dois nº pseudo-randomicos.
             Size = new Size(taskContainerWidth, taskContainerHeigth),
             BackColor = Color.FromArgb(29, 49, 49),
         };
@@ -340,6 +347,8 @@ public class Components3
         };
         taskDelBtn.FlatAppearance.BorderSize = 0;
 
+        AppData.SaveData((string)taskContainer.Tag, taskName.Text, taskDescription.Text);
+
         taskContainer.Controls.Add(taskNameLbl);
         taskContainer.Controls.Add(taskDescriptionLbl);
         taskContainer.Controls.Add(taskDelBtn);
@@ -350,7 +359,7 @@ public class Components3
         taskEditBtn.Click += OnClickEditBnt;
         taskDelBtn.Click += OnClickDelBnt;
 
-        Console.WriteLine($"Task added!\nID: {taskContainer.Tag}\nName: {taskNameLbl.Text}\nDescription: {taskDescriptionLbl.Text}");
+        // Console.WriteLine($"Task added!\nID: {taskContainer.Tag}\nName: {taskNameLbl.Text}\nDescription: {taskDescriptionLbl.Text}");
     }
 
     private static void OnClickEditBnt(object sender, EventArgs e)
@@ -393,7 +402,74 @@ public class Components3
 // Essa classe lidará com funções que irão se encarregar do CRUD:
 public class AppData
 {
+    public string TaskId { get; set; }
+    public string TaskName { get; set; }
+    public string TaskDescription { get; set; }
 
+    public static void SaveData(string id, string name, string description)
+    {
+        AppData taskData = new AppData()
+        {
+            TaskId = id,
+            TaskName = name,
+            TaskDescription = description
+        };
+
+        Console.WriteLine($"Saved data:\nId: {taskData.TaskId}\nName: {taskData.TaskName}\nDescription: {taskData.TaskDescription}");
+
+        // captura o caminho da pasta de dados de apps. Em windows, por exemplo, seria a:
+        // %AppData% -> C:\Users\User\AppData\Roaming\...
+        string AppDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+
+        // cria um novo caminho para ToDo App no caminho AppDataPath:
+        string appFolderPath = Path.Combine(AppDataPath, "ToDo App");
+
+        // cria um novo diretório a partir do caminho, caso já não exista:
+        Directory.CreateDirectory(appFolderPath);
+
+        // elabora um caminho final pro diretório:
+        string dbFilePath = Path.Combine(appFolderPath, "app_data.db");
+
+        using var connection = new SqliteConnection($"Data Source={dbFilePath}");
+        connection.Open();
+
+        // Cria tabela se não existir
+        string sqlCreate = @"
+                CREATE TABLE IF NOT EXISTS tasks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    taskId TEXT NOT NULL,
+                    taskName TEXT NOT NULL,
+                    taskDescription TEXT NOT NULL
+                )";
+
+        using var cmd = new SqliteCommand(sqlCreate, connection);
+        cmd.ExecuteNonQuery();
+
+        string sqlInsert = "INSERT INTO tasks (taskId, taskName, taskDescription) VALUES (@taskId, @taskName, @taskDescription)";
+
+        using var cmdInsert = new SqliteCommand(sqlInsert, connection);
+
+        cmdInsert.Parameters.AddWithValue("@taskId", id);
+        cmdInsert.Parameters.AddWithValue("@taskName", name);
+        cmdInsert.Parameters.AddWithValue("@taskDescription", description);
+
+        cmdInsert.ExecuteNonQuery();
+
+        // leitura do banco:
+        string sqlSelect = "SELECT * FROM tasks";
+
+        using var cmdSelect = new SqliteCommand(sqlSelect, connection);
+
+        using var reader = cmdSelect.ExecuteReader();
+
+        Console.WriteLine("------------------------------------------------------");
+        Console.WriteLine("Banco de dados: ");
+        while (reader.Read())
+        {
+            Console.WriteLine($"TaskId: {reader["taskId"]}\nTaskName: {reader["taskName"]}\nTaskDescription: {reader["taskDescription"]}");
+        }
+
+    }
 }
 
 
