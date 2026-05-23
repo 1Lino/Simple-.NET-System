@@ -39,7 +39,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 // realiza operações em maximizado:
 
                 Components3.appGrid.Size = new Size(600, 650);
-                Components3.appGrid.Left = (ToDo.Instance.ClientSize.Width - Components3.appGrid.Width) / 2;//ToDo.Instance.Width / 2 - (Components3.appGrid.Width / 2);
+                Components3.appGrid.Left = (Instance.ClientSize.Width - Components3.appGrid.Width) / 2;//ToDo.Instance.Width / 2 - (Components3.appGrid.Width / 2);
                 Components3.taskDescription.Size = new Size(400, 50);
                 Components3.addBtn.Left = Components3.appControlPanel.Width - 150;
 
@@ -65,7 +65,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             // reverte operações:
             Components3.appGrid.Size = new Size(400, 500);
-            Components3.appGrid.Left = (ToDo.Instance.ClientSize.Width - Components3.appGrid.Width) / 2;
+            Components3.appGrid.Left = (Instance.ClientSize.Width - Components3.appGrid.Width) / 2;
             Components3.taskDescription.Size = new Size(250, 40);
             Components3.addBtn.Left = Components3.appControlPanel.Width - 55;
 
@@ -404,9 +404,10 @@ public class Components3
         Button btn = sender as Button;
         if (btn == null) return;
 
-
         Panel taskContainer = btn.Parent as Panel;
         if (taskContainer == null) return;
+
+        TaskData.DeleteData((string)taskContainer.Tag); // remove da base de dados o item com esta tag/id.
 
         appFlowPanel.Controls.Remove(taskContainer); // Remove a task do FlowLayoutPanel
 
@@ -428,16 +429,40 @@ public class TaskData
     private static string TaskDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
     // cria um novo caminho para ToDo App no caminho TaskDataPath:
-    private static string appFolderPath = System.IO.Path.Combine(TaskDataPath, "ToDo App");
+    private static string appFolderPath = Path.Combine(TaskDataPath, "ToDo App");
 
     // cria um novo diretório a partir do caminho, caso já não exista:
     static TaskData()
     {
-        System.IO.Directory.CreateDirectory(appFolderPath);
+        Directory.CreateDirectory(appFolderPath);
     }
 
     // elabora um caminho final pro diretório:
-    private static string dbFilePath = System.IO.Path.Combine(appFolderPath, "app_data.db");
+    private static string dbFilePath = Path.Combine(appFolderPath, "app_data.db");
+
+    public static void UpdateData()
+    {
+
+    }
+    public static void DeleteData(string id)
+    {
+        using var connection = new SqliteConnection($"Data Source={dbFilePath}");
+        connection.Open();
+
+        var command = connection.CreateCommand();
+
+        command.CommandText =
+        @"
+            DELETE FROM tasks
+            WHERE taskId = $id
+        ";
+
+        command.Parameters.AddWithValue("$id", id);
+
+        int rowsDeleted = command.ExecuteNonQuery();
+
+        Console.WriteLine($"{rowsDeleted} row with the id of {id} deleted!");
+    }
 
     public static Hashtable LoadData()
     {
