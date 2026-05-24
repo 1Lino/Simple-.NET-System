@@ -102,11 +102,11 @@ public class Components3
     public static Label descriptionTxt;
 
     // componentes relacionados aos itens de task:
-    private static Panel taskContainer;
+    public static Panel taskContainer;
     public static int taskContainerWidth = 385; // este componente é público pois seu valor deverá ser acessado pelo form.
     public static int taskContainerHeigth = 100;
-    private static EditableLabel taskNameLbl;
-    private static EditableLabel taskDescriptionLbl;
+    public static EditableLabel taskNameLbl;
+    public static EditableLabel taskDescriptionLbl;
     private static IconButton taskEditBtn; // acho que deve ser uma lista
     private static IconButton taskDelBtn; // deve ser uma lista
     public static int taskCount = 0;
@@ -299,12 +299,10 @@ public class Components3
             BackColor = Color.FromArgb(29, 49, 49),
         };
 
-        DateTime date = DateTime.Now;
-        string formatedDate = date.ToString("dd/MM/yy");
-
         taskNameLbl = new EditableLabel
         {
-            Text = $"{formatedDate} - " + taskN,
+            Name = "taskNameLbl",
+            Text = taskN,
             AutoSize = false, //pra respeitar o Width e o Height do label, e permitir quebra de linha.
             Width = 200,
             Top = 5,
@@ -314,11 +312,11 @@ public class Components3
             AutoEllipsis = true,
         };
         taskNameLbl.MaxLength(50);
-        taskNameLbl.InsertTextAtStart($"{formatedDate} - ");
         taskNameLbl.Multiline(false);
 
         taskDescriptionLbl = new EditableLabel
         {
+            Name = "taskDescriptionLbl",
             Text = taskD,
             AutoSize = false,
             Width = 260,
@@ -364,8 +362,6 @@ public class Components3
         };
         taskDelBtn.FlatAppearance.BorderSize = 0;
 
-        // TaskData.SaveData((string)taskContainer.Tag, taskName.Text, taskDescription.Text);
-
         taskContainer.Controls.Add(taskNameLbl);
         taskContainer.Controls.Add(taskDescriptionLbl);
         taskContainer.Controls.Add(taskDelBtn);
@@ -375,8 +371,6 @@ public class Components3
 
         taskEditBtn.Click += OnClickEditBnt;
         taskDelBtn.Click += OnClickDelBnt;
-
-        // Console.WriteLine($"Task added!\nID: {taskContainer.Tag}\nName: {taskNameLbl.Text}\nDescription: {taskDescriptionLbl.Text}");
     }
 
     private static void OnClickEditBnt(object sender, EventArgs e)
@@ -440,10 +434,31 @@ public class TaskData
     // elabora um caminho final pro diretório:
     private static string dbFilePath = Path.Combine(appFolderPath, "app_data.db");
 
-    public static void UpdateData()
+    // NOTA: este método só deverá ser chamado quando o usuário tiver editado alguma task e teclado enter ou tab:
+    public static void UpdateData(string taskId, string newTaskName, string newTaskDescription)
     {
+        using var connection = new SqliteConnection($"Data Source={dbFilePath}");
+        connection.Open();
 
+        string updateQuery = @"
+            UPDATE tasks
+            SET 
+                taskName = @newTaskName,
+                taskDescription = @newTaskDescription
+            WHERE 
+                taskId = @taskId";
+
+        using var command = new SqliteCommand(updateQuery, connection);
+
+        command.Parameters.AddWithValue("@newTaskName", newTaskName);
+        command.Parameters.AddWithValue("@newTaskDescription", newTaskDescription);
+        command.Parameters.AddWithValue("@taskId", taskId);
+
+        int rowsAffected = command.ExecuteNonQuery();
+
+        Console.WriteLine($"{rowsAffected} row with the id of {taskId} updated!");
     }
+
     public static void DeleteData(string id)
     {
         using var connection = new SqliteConnection($"Data Source={dbFilePath}");
@@ -591,17 +606,17 @@ public class EditableLabel : UserControl
         txt.MaxLength = length;
     }
 
-    public void InsertTextAtStart(string text)
-    {
-        formatedDate = text;
-    }
+    // public void InsertTextAtStart(string text)
+    // {
+    //     formatedDate = text;
+    // }
 
     public void Multiline(bool b)
     {
         txt.Multiline = b;
     }
 
-    string formatedDate = "";
+    // string formatedDate = "";
     // CONSTRUCTOR DO COMPONENTE:
     public EditableLabel()
     {
@@ -634,8 +649,10 @@ public class EditableLabel : UserControl
     // Inicia edição
     public void StartEdit()
     {
-        // corta a data para que não apareça na edição. Sei que o final da string de data termina em ' ', na posição 10, então:
-        txt.Text = lbl.Text.Length > 10 && lbl.Text[10] == ' ' ? lbl.Text.Substring(11) : lbl.Text;
+        // Caso não queira a data no modo edição: corta-a. já que o final da string de data termina em ' ', na posição 10, então:
+        // txt.Text = lbl.Text.Length > 10 && lbl.Text[10] == ' ' ? lbl.Text.Substring(11) : lbl.Text;
+
+        txt.Text = lbl.Text;
 
         lbl.Visible = false;
         txt.Visible = true;
@@ -647,12 +664,9 @@ public class EditableLabel : UserControl
     // TODO: criar validação que impede usuário de sair da edição se as caixas de texto estiverem vazias
     public void EndEdit(bool commit)
     {
-        // DateTime date = DateTime.Now;
-        // string now = date.ToString("dd/MM/yy");
-
         if (commit)
         {
-            lbl.Text = formatedDate + txt.Text.Trim(); // .Trim pra remover qualquer espaço antes ou depois do texto
+            lbl.Text = txt.Text.Trim(); // .Trim pra remover qualquer espaço antes ou depois do texto
         }
         else
             txt.Text = lbl.Text;
@@ -681,7 +695,14 @@ public class EditableLabel : UserControl
             Console.WriteLine($"The text that should show up: {txt.Text}");
 
             EndEdit(true); // salva edição caso não esteja vazio.
-            // TODO... alguma ação pra salvar em banco de dados ou coisa assim
+
+            Panel parent = (Panel)Parent;
+            EditableLabel name = (EditableLabel)parent.Controls["taskNameLbl"];
+            EditableLabel description = (EditableLabel)parent.Controls["taskDescriptionLbl"];
+
+            Console.WriteLine($"Item Id: {(string)parent.Tag}\nUpdated Name: {name.Text}\nUpdated Description: {description.Text}");
+
+            TaskData.UpdateData((string)parent.Tag, name.Text, description.Text);
         }
         else if (e.KeyCode == Keys.Escape)
         {
