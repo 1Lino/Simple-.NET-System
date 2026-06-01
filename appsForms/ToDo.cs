@@ -6,6 +6,9 @@ using System.ComponentModel;
 using System.Collections;
 using Microsoft.Data.Sqlite; // dotnet add package Microsoft.Data.Sqlite
 
+
+// TODO: realizar todas as limpezas necessárias no código.
+
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class ToDo : Form

@@ -103,7 +103,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             //TIP: (_, _) são argumentos nulos, mas normalmente seriam "e" e "s", onde "e" é evento (click, no caso) e "s" é sender (objeto que causa o evento, no caso o botão), que fazem parte da exigência do event handler da linguagem. Mesmo não usando esses argumentos, eles têm de existir aqui só pra satisfazer essa exigência da linguagem.
             calculator.Click += (_, _) => OpenForm<Calculator>();
             mathTable.Click += (_, _) => OpenForm<MathTable>();
-            mediaPlayer.Click += (_, _) => OpenForm<MediaPlayer>();
+            mediaPlayer.Click += (_, _) => OpenForm<MediaPlayerForm>();
             toDo.Click += (_, _) => OpenForm<ToDo>();
             unitConverter.Click += (_, _) => OpenForm<UnitConverter>();
 
