@@ -3,6 +3,7 @@ using FontAwesome.Sharp;
 // As libs abaixo são do VLC open source, instaladas via comando:
 // dotnet add package LibVLCSharp.WinForms && dotnet add package VideoLAN.LibVLC.Windows
 // são necessárias por oferecer suporte moderno a reprodução de mídias, melhor do que o nativo Windows Media Player.
+using FontAwesome.Sharp;
 using LibVLCSharp.Shared;
 using LibVLCSharp.WinForms;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
@@ -12,11 +13,66 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     public partial class MediaPlayerForm : Form
     {
         public static MediaPlayerForm Instance { get; private set; }
+
+        private System.Windows.Forms.Timer inactivityTimer;
+
+        private const int PollInterval = 100;
+
+        private Point _lastMousePos;
+        private DateTime _lastActivityTime = DateTime.Now;
+        private bool _controlsVisible = true;
+
         public MediaPlayerForm()
         {
             Instance = this;
+
             InitiateMediaPlayer();
             Components4.InitializeAppComponents();
+
+            this.FormClosed += OnFormClosed;
+
+            inactivityTimer = new System.Windows.Forms.Timer();
+            inactivityTimer.Interval = PollInterval;
+            inactivityTimer.Tick += InactivityTimer_Tick;
+            inactivityTimer.Start();
+
+            _lastMousePos = Cursor.Position;
+        }
+
+        private void InactivityTimer_Tick(object sender, EventArgs e)
+        {
+            if (Components4.videoViewer == null)
+                return;
+
+            Point current = Cursor.Position;
+
+            Rectangle videoRect = Components4.videoViewer.RectangleToScreen(Components4.videoViewer.ClientRectangle);
+
+            bool mouseOverVideo = videoRect.Contains(current);
+
+            if (current != _lastMousePos)
+            {
+                _lastMousePos = current;
+
+                if (mouseOverVideo)
+                {
+                    _lastActivityTime = DateTime.Now;
+
+                    if (!_controlsVisible)
+                    {
+                        Components4.appControlPanel.Visible = true;
+                        Components4.appControlPanel.BringToFront();
+
+                        _controlsVisible = true;
+                    }
+                }
+            }
+
+            if (_controlsVisible && DateTime.Now - _lastActivityTime > TimeSpan.FromSeconds(2))
+            {
+                Components4.appControlPanel.Visible = false;
+                _controlsVisible = false;
+            }
         }
 
         private void InitiateMediaPlayer()
@@ -25,52 +81,118 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Size = new Size(600, 400);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             BackColor = Color.FromArgb(62, 85, 85);
-            // Instance.Resize += OnFormResize; // configurar as dimensões dos componentes ao dar resize.
+        }
+
+        private static void OnFormClosed(object sender, EventArgs e)
+        {
+            Components4.mediaPlayer?.Stop();
+            Components4.mediaPlayer?.Dispose();
         }
     }
 }
 
 public class Components4
 {
-    public static Panel appControlPanel; // OK
-    public static IconButton menuBtn;
-    public static IconButton playBtn; // OK
-    public static IconButton nextBtn; // OK
-    public static IconButton previousBtn; // OK
-    public static IconButton openFileBtn; // OK
-    public static IconButton mediaList; // na verdade, este botão deve abrir uma "bandeja" com uma lista dos itens a vizualizar.
-
-    // pictureViewer e videoViewer ficarão contido em panelViewer, que, por sua vez, ficará contido em appControlPanel 
-    public static Panel panelViewer;
-
+    private static System.Windows.Forms.Timer hideControlsTimer;
+    public static TrackBar seekBar;
+    public static Label timeLabel;
+    private static System.Windows.Forms.Timer mediaTimer;
+    public static Panel appControlPanel;
+    // public static IconButton menuBtn;
+    public static IconButton playBtn;
+    public static IconButton nextBtn;
+    public static IconButton previousBtn;
+    public static IconButton openFileBtn;
+    // public static IconButton mediaList;
+    public static IconButton volumeBtn;
+    public static TrackBar volumeBar;
+    private static int previousVolume = 50;
+    // public static Panel panelViewer;
     public static LibVLC libVLC;
     public static MediaPlayer mediaPlayer;
     public static VideoView videoViewer;
 
-
     public static void InitializeAppComponents()
     {
         Core.Initialize();
-        libVLC = new LibVLC();
-        mediaPlayer = new MediaPlayer(libVLC);
 
-        InitVideoPanel();
+        libVLC = new LibVLC();
+
+        mediaPlayer = new MediaPlayer(libVLC)
+        {
+            Volume = 50
+        };
+
+        // InitVideoPanel();
         InitVideoView();
         InitControlPanel();
+        InitMediaTimer();
+
+        MediaPlayerForm.Instance.MouseClick += AnyMouseActivity;
+
         appControlPanel.BringToFront();
+        timeLabel.BringToFront();
+
+        mediaPlayer.EndReached += MediaPlayer_EndReached;
     }
 
-    private static void InitVideoPanel()
+    private static void ShowControls()
     {
-        panelViewer = new Panel
+        appControlPanel.Visible = true;
+    }
+
+    private static void AnyMouseActivity(object sender, EventArgs e)
+    {
+        ShowControls();
+    }
+
+    // private static void InitVideoPanel()
+    // {
+    //     panelViewer = new Panel
+    //     {
+    //         Dock = DockStyle.Fill,
+    //         BackColor = Color.Black
+    //     };
+
+    //     panelViewer.MouseClick += AnyMouseActivity;
+
+    //     MediaPlayerForm.Instance.Controls.Add(panelViewer);
+    // }
+
+    private static void InitVideoView()
+    {
+        videoViewer = new VideoView
         {
-            Size = new Size(600, 400),
+            MediaPlayer = mediaPlayer,
             Dock = DockStyle.Fill,
             BackColor = Color.Black
         };
 
-        MediaPlayerForm.Instance.Controls.Add(panelViewer);
+        videoViewer.MouseClick += AnyMouseActivity;
+
+        MediaPlayerForm.Instance.Controls.Add(videoViewer);
+        videoViewer.BringToFront();
     }
+
+    private static void MediaPlayer_EndReached(object sender, EventArgs e)
+    {
+        MediaPlayerForm.Instance.BeginInvoke(() =>
+        {
+            mediaPlayer.Position = 0;
+            mediaPlayer.Stop();
+
+            playBtn.IconChar = IconChar.Play;
+        });
+    }
+
+    private static void InitMediaTimer()
+    {
+        mediaTimer = new System.Windows.Forms.Timer();
+        mediaTimer.Interval = 500;
+        mediaTimer.Tick += MediaTimer_Tick;
+        mediaTimer.Start();
+    }
+
 
     private static void InitControlPanel()
     {
@@ -82,6 +204,26 @@ public class Components4
             BackColor = Color.FromArgb(29, 49, 49)
         };
 
+        seekBar = new TrackBar
+        {
+            Width = appControlPanel.Width - 20,
+            Left = 10,
+            Top = -10,
+            Minimum = 0,
+            Maximum = 1000,
+            TickStyle = TickStyle.None
+        };
+
+        timeLabel = new Label
+        {
+            AutoSize = true,
+            ForeColor = Color.White,
+            Text = "00:00 / 00:00",
+            Left = 60,
+            Top = appControlPanel.Height - 35,
+            BackColor = Color.Transparent
+        };
+
         openFileBtn = new IconButton
         {
             Size = new Size(40, 40),
@@ -90,10 +232,9 @@ public class Components4
             IconChar = IconChar.Folder,
             IconFont = IconFont.Solid,
             IconColor = Color.FromArgb(62, 85, 85),
-            ImageAlign = ContentAlignment.MiddleCenter,
             ForeColor = Color.FromArgb(29, 49, 49),
             BackColor = Color.FromArgb(29, 49, 49),
-            FlatStyle = FlatStyle.Flat,
+            FlatStyle = FlatStyle.Flat
         };
 
         playBtn = new IconButton
@@ -104,10 +245,9 @@ public class Components4
             IconChar = IconChar.Play,
             IconFont = IconFont.Solid,
             IconColor = Color.FromArgb(62, 85, 85),
-            ImageAlign = ContentAlignment.MiddleCenter,
             ForeColor = Color.FromArgb(29, 49, 49),
             BackColor = Color.FromArgb(29, 49, 49),
-            FlatStyle = FlatStyle.Flat,
+            FlatStyle = FlatStyle.Flat
         };
 
         nextBtn = new IconButton
@@ -118,10 +258,9 @@ public class Components4
             IconChar = IconChar.CaretRight,
             IconFont = IconFont.Solid,
             IconColor = Color.FromArgb(62, 85, 85),
-            ImageAlign = ContentAlignment.MiddleCenter,
             ForeColor = Color.FromArgb(29, 49, 49),
             BackColor = Color.FromArgb(29, 49, 49),
-            FlatStyle = FlatStyle.Flat,
+            FlatStyle = FlatStyle.Flat
         };
 
         previousBtn = new IconButton
@@ -132,10 +271,38 @@ public class Components4
             IconChar = IconChar.CaretLeft,
             IconFont = IconFont.Solid,
             IconColor = Color.FromArgb(62, 85, 85),
-            ImageAlign = ContentAlignment.MiddleCenter,
             ForeColor = Color.FromArgb(29, 49, 49),
             BackColor = Color.FromArgb(29, 49, 49),
-            FlatStyle = FlatStyle.Flat,
+            FlatStyle = FlatStyle.Flat
+        };
+
+        volumeBtn = new IconButton
+        {
+            Size = new Size(40, 40),
+            Left = appControlPanel.Width - 170,
+            Top = appControlPanel.Height / 2 - 20,
+
+            IconChar = IconChar.VolumeHigh,
+            IconFont = IconFont.Solid,
+            IconColor = Color.FromArgb(62, 85, 85),
+
+            ForeColor = Color.FromArgb(29, 49, 49),
+            BackColor = Color.FromArgb(29, 49, 49),
+
+            FlatStyle = FlatStyle.Flat
+        };
+        volumeBtn.FlatAppearance.BorderSize = 0;
+
+        volumeBar = new TrackBar
+        {
+            Width = 120,
+            Height = 30,
+            Left = appControlPanel.Width - 125,
+            Top = appControlPanel.Height / 2 - 15,
+            Minimum = 0,
+            Maximum = 100,
+            Value = 50,
+            TickStyle = TickStyle.None
         };
 
         appControlPanel.Controls.Add(openFileBtn);
@@ -143,48 +310,120 @@ public class Components4
         appControlPanel.Controls.Add(nextBtn);
         appControlPanel.Controls.Add(previousBtn);
 
-        openFileBtn.Click += OpenFileBtn_Click;
+        appControlPanel.Controls.Add(volumeBtn);
+        appControlPanel.Controls.Add(volumeBar);
+        appControlPanel.Controls.Add(seekBar);
+        appControlPanel.Controls.Add(timeLabel);
 
+        openFileBtn.Click += OpenFileBtn_Click;
+        playBtn.Click += PlayBtn_Click;
+        volumeBtn.Click += VolumeBtn_Click;
+        volumeBar.Scroll += VolumeBar_Scroll;
+        seekBar.MouseUp += SeekBar_MouseUp;
 
         MediaPlayerForm.Instance.Controls.Add(appControlPanel);
     }
 
-    private static void InitVideoView()
+    private static void SeekBar_MouseUp(object sender, MouseEventArgs e)
     {
-        videoViewer = new VideoView
-        {
-            MediaPlayer = mediaPlayer,
-            Size = new Size(600, 300),
-            BackColor = Color.Black
-        };
+        if (mediaPlayer == null) return;
 
-        MediaPlayerForm.Instance.Controls.Add(videoViewer);
-        videoViewer.BringToFront();
+        mediaPlayer.Position = seekBar.Value / 1000f;
+    }
+
+    private static void MediaTimer_Tick(object sender, EventArgs e)
+    {
+        if (mediaPlayer == null) return;
+
+        if (mediaPlayer.Length <= 0) return;
+
+        seekBar.Value = (int)(mediaPlayer.Position * 1000);
+
+        TimeSpan current = TimeSpan.FromMilliseconds(mediaPlayer.Time);
+
+        TimeSpan total = TimeSpan.FromMilliseconds(mediaPlayer.Length);
+
+        timeLabel.Text = $"{current:mm\\:ss} / {total:mm\\:ss}";
+    }
+
+
+
+    private static void PlayBtn_Click(object sender, EventArgs e)
+    {
+        if (mediaPlayer.Media == null) return;
+
+        if (mediaPlayer.IsPlaying)
+        {
+            mediaPlayer.Pause();
+            playBtn.IconChar = IconChar.Play;
+        }
+        else
+        {
+            mediaPlayer.Play();
+            playBtn.IconChar = IconChar.Pause;
+        }
+    }
+
+    private static void VolumeBar_Scroll(object sender, EventArgs e)
+    {
+        mediaPlayer.Volume = volumeBar.Value;
+        UpdateVolumeIcon();
+    }
+
+    private static void VolumeBtn_Click(object sender, EventArgs e)
+    {
+        if (volumeBar.Value > 0)
+        {
+            previousVolume = volumeBar.Value;
+            volumeBar.Value = 0;
+            mediaPlayer.Volume = 0;
+        }
+        else
+        {
+            volumeBar.Value = previousVolume;
+            mediaPlayer.Volume = previousVolume;
+        }
+
+        UpdateVolumeIcon();
+    }
+
+    private static void UpdateVolumeIcon()
+    {
+        int volume = volumeBar.Value;
+
+        if (volume == 0)
+            volumeBtn.IconChar = IconChar.VolumeMute;
+        else if (volume < 40)
+            volumeBtn.IconChar = IconChar.VolumeLow;
+        else
+            volumeBtn.IconChar = IconChar.VolumeHigh;
     }
 
     private static void OpenFileBtn_Click(object sender, EventArgs e)
     {
-        Environment.SpecialFolder myInitialDirectory = Environment.SpecialFolder.MyDocuments;
-
-        // TODO: já que VLC suporta imagens, basta adicionar aqui no filtro também.
         using var dialog = new OpenFileDialog
         {
-            Filter = "Video Files|*.mp4;*.avi;*.mkv|Audio Files|*.mp3;*.wav;*.flac|All Files|*.*",
-            InitialDirectory = Environment.GetFolderPath(myInitialDirectory),
+            Filter = "Video Files|*.mp4;*.avi;*.mkv|Audio Files|*.mp3;*.wav;*.flac|Image Files|*.jpeg;*.png;*.jpg|All Files|*.*",
+            InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
             Title = "Select a file to open",
             CheckFileExists = true,
             CheckPathExists = true,
-            Multiselect = false, // se for true, seria interessante permitir selecionar vários arquivos e adicionar numa playlist local na memória.
-            RestoreDirectory = true,
+            Multiselect = false,
+            RestoreDirectory = true
         };
 
-        // TODO: tem que arrumar bug que faz o VLC continuar rodando mesmo após fechar tela do MediaPlayer.
-        // TODO: tem que adicionar botão de volume ao vídeo.
         if (dialog.ShowDialog() == DialogResult.OK)
         {
             var media = new Media(libVLC, new Uri(dialog.FileName));
+
+            volumeBar.Value = 50;
             mediaPlayer.Volume = 50;
+
+            UpdateVolumeIcon();
+
             mediaPlayer.Play(media);
+
+            playBtn.IconChar = IconChar.Pause;
         }
     }
 }
