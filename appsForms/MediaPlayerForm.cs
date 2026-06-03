@@ -1,5 +1,3 @@
-using FontAwesome.Sharp;
-
 // As libs abaixo são do VLC open source, instaladas via comando:
 // dotnet add package LibVLCSharp.WinForms && dotnet add package VideoLAN.LibVLC.Windows
 // são necessárias por oferecer suporte moderno a reprodução de mídias, melhor do que o nativo Windows Media Player.
@@ -13,14 +11,12 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     public partial class MediaPlayerForm : Form
     {
         public static MediaPlayerForm Instance { get; private set; }
-
         private System.Windows.Forms.Timer inactivityTimer;
-
         private const int PollInterval = 100;
-
         private Point _lastMousePos;
         private DateTime _lastActivityTime = DateTime.Now;
         private bool _controlsVisible = true;
+        private bool IsMaximized = false;
 
         public MediaPlayerForm()
         {
@@ -30,6 +26,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             Components4.InitializeAppComponents();
 
             this.FormClosed += OnFormClosed;
+            this.Resize += OnFormResize;
 
             inactivityTimer = new System.Windows.Forms.Timer();
             inactivityTimer.Interval = PollInterval;
@@ -37,6 +34,36 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             inactivityTimer.Start();
 
             _lastMousePos = Cursor.Position;
+        }
+
+        private void OnFormResize(object sender, EventArgs e)
+        {
+            if (!IsMaximized)
+            {
+                IsMaximized = !IsMaximized;
+                ResizeComponents(new Size(800, 60), MediaPlayerForm.Instance.Width / 2 - 400);
+
+                return;
+            }
+
+            IsMaximized = !IsMaximized;
+            ResizeComponents(new Size(500, 60), MediaPlayerForm.Instance.Width / 2 - 255);
+
+            return;
+        }
+
+        private static void ResizeComponents(Size panelSize, int panelLeft)
+        {
+            Components4.appControlPanel.Size = panelSize;
+            Components4.appControlPanel.Left = panelLeft;
+            Components4.appControlPanel.Top = MediaPlayerForm.Instance.Height - 110;
+
+            Components4.seekBar.Left = Components4.appControlPanel.Width / 2 - (Components4.seekBar.Width / 2);
+            Components4.previousBtn.Left = (Components4.appControlPanel.Width / 2 - 30) - 40;
+            Components4.playBtn.Left = Components4.appControlPanel.Width / 2 - 15;
+            Components4.nextBtn.Left = (Components4.appControlPanel.Width / 2 - 15) + 50;
+            Components4.volumeBtn.Left = Components4.appControlPanel.Width - 160;
+            Components4.volumeBar.Left = Components4.appControlPanel.Width - 115;
         }
 
         private void InactivityTimer_Tick(object sender, EventArgs e)
@@ -93,21 +120,18 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
 public class Components4
 {
-    private static System.Windows.Forms.Timer hideControlsTimer;
+    // public static IconButton mediaList;
     public static TrackBar seekBar;
     public static Label timeLabel;
     private static System.Windows.Forms.Timer mediaTimer;
     public static Panel appControlPanel;
-    // public static IconButton menuBtn;
     public static IconButton playBtn;
     public static IconButton nextBtn;
     public static IconButton previousBtn;
     public static IconButton openFileBtn;
-    // public static IconButton mediaList;
     public static IconButton volumeBtn;
     public static TrackBar volumeBar;
     private static int previousVolume = 50;
-    // public static Panel panelViewer;
     public static LibVLC libVLC;
     public static MediaPlayer mediaPlayer;
     public static VideoView videoViewer;
@@ -123,41 +147,15 @@ public class Components4
             Volume = 50
         };
 
-        // InitVideoPanel();
         InitVideoView();
         InitControlPanel();
-        InitMediaTimer();
-
-        MediaPlayerForm.Instance.MouseClick += AnyMouseActivity;
+        InitMediaTimer(); // timer do track de vídeo
 
         appControlPanel.BringToFront();
         timeLabel.BringToFront();
 
         mediaPlayer.EndReached += MediaPlayer_EndReached;
     }
-
-    private static void ShowControls()
-    {
-        appControlPanel.Visible = true;
-    }
-
-    private static void AnyMouseActivity(object sender, EventArgs e)
-    {
-        ShowControls();
-    }
-
-    // private static void InitVideoPanel()
-    // {
-    //     panelViewer = new Panel
-    //     {
-    //         Dock = DockStyle.Fill,
-    //         BackColor = Color.Black
-    //     };
-
-    //     panelViewer.MouseClick += AnyMouseActivity;
-
-    //     MediaPlayerForm.Instance.Controls.Add(panelViewer);
-    // }
 
     private static void InitVideoView()
     {
@@ -167,8 +165,6 @@ public class Components4
             Dock = DockStyle.Fill,
             BackColor = Color.Black
         };
-
-        videoViewer.MouseClick += AnyMouseActivity;
 
         MediaPlayerForm.Instance.Controls.Add(videoViewer);
         videoViewer.BringToFront();
@@ -192,7 +188,6 @@ public class Components4
         mediaTimer.Tick += MediaTimer_Tick;
         mediaTimer.Start();
     }
-
 
     private static void InitControlPanel()
     {
@@ -224,75 +219,6 @@ public class Components4
             BackColor = Color.Transparent
         };
 
-        openFileBtn = new IconButton
-        {
-            Size = new Size(40, 40),
-            Left = 10,
-            Top = appControlPanel.Height / 2 - 20,
-            IconChar = IconChar.Folder,
-            IconFont = IconFont.Solid,
-            IconColor = Color.FromArgb(62, 85, 85),
-            ForeColor = Color.FromArgb(29, 49, 49),
-            BackColor = Color.FromArgb(29, 49, 49),
-            FlatStyle = FlatStyle.Flat
-        };
-
-        playBtn = new IconButton
-        {
-            Size = new Size(50, 50),
-            Left = appControlPanel.Width / 2 - 25,
-            Top = appControlPanel.Height / 2 - 25,
-            IconChar = IconChar.Play,
-            IconFont = IconFont.Solid,
-            IconColor = Color.FromArgb(62, 85, 85),
-            ForeColor = Color.FromArgb(29, 49, 49),
-            BackColor = Color.FromArgb(29, 49, 49),
-            FlatStyle = FlatStyle.Flat
-        };
-
-        nextBtn = new IconButton
-        {
-            Size = new Size(50, 50),
-            Left = (appControlPanel.Width / 2 - 25) + 50,
-            Top = appControlPanel.Height / 2 - 25,
-            IconChar = IconChar.CaretRight,
-            IconFont = IconFont.Solid,
-            IconColor = Color.FromArgb(62, 85, 85),
-            ForeColor = Color.FromArgb(29, 49, 49),
-            BackColor = Color.FromArgb(29, 49, 49),
-            FlatStyle = FlatStyle.Flat
-        };
-
-        previousBtn = new IconButton
-        {
-            Size = new Size(50, 50),
-            Left = (appControlPanel.Width / 2 - 30) - 50,
-            Top = appControlPanel.Height / 2 - 25,
-            IconChar = IconChar.CaretLeft,
-            IconFont = IconFont.Solid,
-            IconColor = Color.FromArgb(62, 85, 85),
-            ForeColor = Color.FromArgb(29, 49, 49),
-            BackColor = Color.FromArgb(29, 49, 49),
-            FlatStyle = FlatStyle.Flat
-        };
-
-        volumeBtn = new IconButton
-        {
-            Size = new Size(40, 40),
-            Left = appControlPanel.Width - 170,
-            Top = appControlPanel.Height / 2 - 20,
-
-            IconChar = IconChar.VolumeHigh,
-            IconFont = IconFont.Solid,
-            IconColor = Color.FromArgb(62, 85, 85),
-
-            ForeColor = Color.FromArgb(29, 49, 49),
-            BackColor = Color.FromArgb(29, 49, 49),
-
-            FlatStyle = FlatStyle.Flat
-        };
-        volumeBtn.FlatAppearance.BorderSize = 0;
-
         volumeBar = new TrackBar
         {
             Width = 120,
@@ -304,6 +230,22 @@ public class Components4
             Value = 50,
             TickStyle = TickStyle.None
         };
+
+        openFileBtn = new IconButton();
+        SetIconBtnProps(openFileBtn, new Size(40, 40), 10, appControlPanel.Height / 2 - 20, IconChar.Folder);
+
+        playBtn = new IconButton();
+        SetIconBtnProps(playBtn, new Size(50, 50), appControlPanel.Width / 2 - 25, appControlPanel.Height / 2 - 25, IconChar.Play);
+
+        nextBtn = new IconButton();
+        SetIconBtnProps(nextBtn, new Size(50, 50), (appControlPanel.Width / 2 - 25) + 50, appControlPanel.Height / 2 - 25, IconChar.CaretRight);
+
+        previousBtn = new IconButton();
+        SetIconBtnProps(previousBtn, new Size(50, 50), (appControlPanel.Width / 2 - 30) - 50, appControlPanel.Height / 2 - 25, IconChar.CaretLeft);
+
+        volumeBtn = new IconButton();
+        SetIconBtnProps(volumeBtn, new Size(40, 40), appControlPanel.Width - 170, appControlPanel.Height / 2 - 20, IconChar.VolumeHigh);
+        volumeBtn.FlatAppearance.BorderSize = 0;
 
         appControlPanel.Controls.Add(openFileBtn);
         appControlPanel.Controls.Add(playBtn);
@@ -322,6 +264,19 @@ public class Components4
         seekBar.MouseUp += SeekBar_MouseUp;
 
         MediaPlayerForm.Instance.Controls.Add(appControlPanel);
+    }
+
+    private static void SetIconBtnProps(IconButton IconBtn, Size size, int left, int top, IconChar iconChar)
+    {
+        IconBtn.Size = size;
+        IconBtn.Left = left;
+        IconBtn.Top = top;
+        IconBtn.IconChar = iconChar;
+        IconBtn.IconFont = IconFont.Solid;
+        IconBtn.IconColor = Color.FromArgb(62, 85, 85);
+        IconBtn.ForeColor = Color.FromArgb(29, 49, 49);
+        IconBtn.BackColor = Color.FromArgb(29, 49, 49);
+        IconBtn.FlatStyle = FlatStyle.Flat;
     }
 
     private static void SeekBar_MouseUp(object sender, MouseEventArgs e)
@@ -345,8 +300,6 @@ public class Components4
 
         timeLabel.Text = $"{current:mm\\:ss} / {total:mm\\:ss}";
     }
-
-
 
     private static void PlayBtn_Click(object sender, EventArgs e)
     {

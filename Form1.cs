@@ -58,7 +58,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
 
             mediaPlayer = new Button()
             {
-                Text = "Images",
+                Text = "Media",
                 Width = 100,
                 Height = 100
             };
