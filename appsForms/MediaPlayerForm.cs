@@ -1,3 +1,11 @@
+// Media player simples está em estado funcional, porém,
+// possíveis funcionalidades adicionais podem ser implementadas, para se tornar mais completo:
+
+// 1 - Adicionar menu com lista de itens de mídia selecionados (playlist), com possibilidade de reorganização manual, similar ao do YouTube.
+// 2 - Tornar funcionais os ícones de next e previous (no contexto da playlist).
+// 3 - Criar botão de repetir execução de mídia.
+// 4 - Criar botão de pausar ou continuar execução de playlist. Se estiver On, executará o próximo item da playlist, mas se o botão de repetir execução estiver On, nada faz até que este último esteja Off. A execução da playlist poderá ser contínua (do começo ao final), ou em ciclo (repetir tudo de novo após o último item). Com isso, o app ficaria bastante completo, no que há de essencial em um reprodutor de mídia.
+
 // As libs abaixo são do VLC open source, instaladas via comando:
 // dotnet add package LibVLCSharp.WinForms && dotnet add package VideoLAN.LibVLC.Windows
 // são necessárias por oferecer suporte moderno a reprodução de mídias, melhor do que o nativo Windows Media Player.

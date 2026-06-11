@@ -9,8 +9,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET
         private Button mediaPlayer;
         private Button mathTable;
         private Button calculator;
-
         private Button unitConverter;
+        private Button consultorio;
 
         // Inicialização dos componentes no form:
         public Form1()
@@ -23,7 +23,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
         // Configuração dos componentes do Form:
         private void InitializeMainWindow()
         {
-            this.Text = "Simple System";
+            this.Text = "Simple .NET System";
             this.Width = 600;
             this.Height = 400;
 
@@ -49,37 +49,44 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             }
 
             // Configuração individual dos componentes que farão parte do grid:
-            toDo = new Button()
+            toDo = new Button
             {
-                Text = "To Do",
+                Text = "Check List",
                 Width = 100,
                 Height = 100
             };
 
-            mediaPlayer = new Button()
+            mediaPlayer = new Button
             {
-                Text = "Media",
+                Text = "Media Player",
                 Width = 100,
                 Height = 100
             };
 
-            mathTable = new Button()
+            mathTable = new Button
             {
-                Text = "Math Table",
+                Text = "Tabela Matemática",
                 Width = 100,
                 Height = 100
             };
 
-            calculator = new Button()
+            calculator = new Button
             {
-                Text = "Calculator",
+                Text = "Calculadora",
                 Width = 100,
                 Height = 100
             };
 
-            unitConverter = new Button()
+            unitConverter = new Button
             {
-                Text = "Unit Converter",
+                Text = "Conversor",
+                Width = 100,
+                Height = 100
+            };
+
+            consultorio = new Button
+            {
+                Text = "Consultório",
                 Width = 100,
                 Height = 100
             };
@@ -90,6 +97,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             mathTable.Anchor = AnchorStyles.None;
             calculator.Anchor = AnchorStyles.None;
             unitConverter.Anchor = AnchorStyles.None;
+            consultorio.Anchor = AnchorStyles.None;
 
             // Por último, adiciona os componentes ao grid:
             grid.Controls.Add(toDo);
@@ -97,15 +105,17 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             grid.Controls.Add(mathTable);
             grid.Controls.Add(calculator);
             grid.Controls.Add(unitConverter);
+            grid.Controls.Add(consultorio);
 
             this.Controls.Add(grid); // adiciona o grid ao Form.
 
-            //TIP: (_, _) são argumentos nulos, mas normalmente seriam "e" e "s", onde "e" é evento (click, no caso) e "s" é sender (objeto que causa o evento, no caso o botão), que fazem parte da exigência do event handler da linguagem. Mesmo não usando esses argumentos, eles têm de existir aqui só pra satisfazer essa exigência da linguagem.
+            //TIP: (_, _) são argumentos nulos, mas normalmente seriam "e" e "s", onde "e" é evento (click, no caso) e "s" é sender (objeto que causa o evento, no caso o botão), que fazem parte da exigência do event handler da linguagem. Mesmo que não usemos esses argumentos explicitamente, eles têm de existir aqui só pra satisfazer essa exigência da linguagem.
             calculator.Click += (_, _) => OpenForm<Calculator>();
             mathTable.Click += (_, _) => OpenForm<MathTable>();
             mediaPlayer.Click += (_, _) => OpenForm<MediaPlayerForm>();
             toDo.Click += (_, _) => OpenForm<ToDo>();
             unitConverter.Click += (_, _) => OpenForm<UnitConverter>();
+            consultorio.Click += (_, _) => OpenForm<Consultorio>();
 
         }
 

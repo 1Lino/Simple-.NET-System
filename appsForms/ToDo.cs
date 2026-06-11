@@ -25,7 +25,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void InitializeForm()
         {
-            Text = "To Do List";
+            Text = "Check List";
             Width = 450;
             Height = 600;
             FormBorderStyle = FormBorderStyle.FixedSingle;

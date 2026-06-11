@@ -28,7 +28,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void InitializeForm()
         {
-            Text = "Standard Calculator";
+            Text = "Calculadora";
             Width = 450;
             Height = 550;
             BackColor = Color.FromArgb(29, 49, 49);

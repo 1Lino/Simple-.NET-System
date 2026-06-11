@@ -15,7 +15,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void InitializeForm()
         {
-            Text = "Math Table";
+            Text = "Tabela Matemática";
             Width = 450;
             Height = 550;
             BackColor = Color.FromArgb(62, 85, 85);

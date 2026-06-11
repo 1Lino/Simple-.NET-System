@@ -15,7 +15,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void InitializeForm()
         {
-            Text = "Unit Converteer";
+            Text = "Conversor de Unidades";
             Width = 600;
             Height = 400;
             BackColor = Color.FromArgb(29, 49, 49);
