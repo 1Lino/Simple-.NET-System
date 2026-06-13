@@ -54,6 +54,8 @@ O sistema é composto por vários módulos:
 ### Sistema de Login Simples
 
 - Cadastro e autenticação básica de usuários
+- Senhas hash
+- Token JWT
 
 ### Consumidor de API Pública
 

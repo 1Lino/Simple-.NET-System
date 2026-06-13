@@ -2,12 +2,12 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Consultorio : Form
     {
-        public static Consultorio Instance { get; private set; }
+        // public static Consultorio Instance { get; private set; }
         private TabControl tabControl;
 
         public Consultorio()
         {
-            Instance = this;
+            // Instance = this;
             InitiateConsultorio();
             InitializeTabControl();
             AddDataGridViewToTab("consultas");
@@ -23,6 +23,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             BackColor = Color.FromArgb(62, 85, 85);
         }
 
+        // TODO: Esse método pode ser subdividido em vários, pra melhor manuntenção.
+        // Idealmente, este método é pra inicializar somente o TabControl e suas tabs.
+        // O resto deve ser adicionado via outro método.
         private void InitializeTabControl()
         {
             tabControl = new TabControl
@@ -35,23 +38,48 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab1.Text = "Consultas";
             tab1.BackColor = Color.White;
 
-            GroupBox grp1 = NewGroupBox("grp_consultas", "Pesquisar Consultas");
+            // TODO: grp1 deve ser grp_consulta
+            GroupBox grp1 = NewGroupBox("grp_consultas", "Buscar Consulta");
             Label lbl_consulta = NewLabel("Nº Consulta", 40);
             Label lbl_medico = NewLabel("Nome Médico", 80);
             Label lbl_paciente = NewLabel("Nome Paciente", 120);
-            Label lbl_data = NewLabel("Data: 10/09/2022", 160);
-            Label lbl_horario = NewLabel("Horário: 10:30", 160, 200);
-            CheckBox chk_retorno = new CheckBox { Text = "Retorno", Top = 160 - 5, Left = 350 };
+            Label lbl_data = NewLabel("Data", 160);
+            lbl_data.Width = 50;
+            Label lbl_horario = NewLabel("Horário:", 160, 200);
+            lbl_horario.Width = 50;
+            CheckBox chk_retorno = new CheckBox { Text = "Retorno", Top = 160 - 5, Left = 400 };
             TextBox txt_consulta = NewTextBox("box_consulta", 100, 40);
             TextBox txt_medico = NewTextBox("box_medico", 200, 80);
             TextBox txt_paciente = NewTextBox("box_paciente", 200, 120);
 
+            DateTimePicker dtp_data = new DateTimePicker
+            {
+                Width = 80,
+                Top = 160 - 5, // 5 é apenas um pequeno offset pra alinhar verticalmente com o texto dos labels.
+                Left = 60,
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = "dd/MM/yyyy",
+                MinDate = new DateTime(2026, 1, 1),
+                MaxDate = new DateTime(2026, 12, 31)
+            };
+
+            DateTimePicker dtp_time = new DateTimePicker
+            {
+                Width = 80,
+                Top = 160 - 5,
+                Left = 260,
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = "HH:mm",
+                ShowUpDown = true
+            };
 
             grp1.Controls.Add(lbl_consulta);
             grp1.Controls.Add(lbl_medico);
             grp1.Controls.Add(lbl_paciente);
             grp1.Controls.Add(lbl_data);
+            grp1.Controls.Add(dtp_data);
             grp1.Controls.Add(lbl_horario);
+            grp1.Controls.Add(dtp_time);
             grp1.Controls.Add(chk_retorno);
             grp1.Controls.Add(txt_consulta);
             grp1.Controls.Add(txt_medico);
@@ -63,14 +91,17 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab2.Text = "Médicos";
             tab2.BackColor = Color.White;
 
-            GroupBox grp2 = NewGroupBox("grp_medicos", "Encontrar Médicos");
-            // Label lbl_consulta2 = NewLabel("Nº Consulta", 40);
-            // Label lbl_medico2 = NewLabel("Nome Médico", 80);
-            // Label lbl_paciente2 = NewLabel("Nome Paciente", 120);
+            // TODO: grp2 deve ser grp_medico
+            GroupBox grp2 = NewGroupBox("grp_medicos", "Buscar Médico");
+            Label lbl_medico_id = NewLabel("Nº Médico", 40);
+            Label lbl_medico_nome = NewLabel("Nome Médico", 80);
+            TextBox txt_medico_id = NewTextBox("box_medico_id", 100, 40);
+            TextBox txt_medico_nome = NewTextBox("box_medico_nome", 200, 80);
 
-            // grp2.Controls.Add(lbl_consulta2);
-            // grp2.Controls.Add(lbl_medico2);
-            // grp2.Controls.Add(lbl_paciente2);
+            grp2.Controls.Add(lbl_medico_id);
+            grp2.Controls.Add(lbl_medico_nome);
+            grp2.Controls.Add(txt_medico_id);
+            grp2.Controls.Add(txt_medico_nome);
             tab2.Controls.Add(grp2);
 
             TabPage tab3 = new TabPage();
@@ -78,14 +109,17 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab3.Text = "Pacientes";
             tab3.BackColor = Color.White;
 
-            GroupBox grp3 = NewGroupBox("grp_pacientes", "Encontrar Pacientes");
-            // Label lbl_consulta3 = NewLabel("Nº Consulta", 40);
-            // Label lbl_medico3 = NewLabel("Nome Médico", 80);
-            // Label lbl_paciente3 = NewLabel("Nome Paciente", 120);
+            // TODO: grp3 deve ser grp_paciente
+            GroupBox grp3 = NewGroupBox("grp_pacientes", "Buscar Paciente");
+            Label lbl_paciente_id = NewLabel("Nº Paciente", 40);
+            Label lbl_paciente_nome = NewLabel("Nome Paciente", 80);
+            TextBox txt_paciente_id = NewTextBox("box_paciente_id", 100, 40);
+            TextBox txt_paciente_nome = NewTextBox("box_paciente_nome", 200, 80);
 
-            // grp3.Controls.Add(lbl_consulta3);
-            // grp3.Controls.Add(lbl_medico3);
-            // grp3.Controls.Add(lbl_paciente3);
+            grp3.Controls.Add(lbl_paciente_id);
+            grp3.Controls.Add(lbl_paciente_nome);
+            grp3.Controls.Add(txt_paciente_id);
+            grp3.Controls.Add(txt_paciente_nome);
             tab3.Controls.Add(grp3);
 
             tabControl.TabPages.Add(tab1);
