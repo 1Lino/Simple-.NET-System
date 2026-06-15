@@ -14,6 +14,12 @@
     <PackageReference Include="LibVLCSharp.WinForms" Version="3.9.7.1" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.8" />
     <PackageReference Include="VideoLAN.LibVLC.Windows" Version="3.0.23.1" />
+    
+    <!--Este include abaixo é necessário para que o sistema entenda o caminho dos arquivos de ícone png em Runtime,
+        que deve ser bin/debug/net10.0-windows/appsForms/icons/* (é aqui que o app irá buscar o arquivo quando estiver executando/runtime)-->
+    <Content Include="appsForms\icons\*.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>
