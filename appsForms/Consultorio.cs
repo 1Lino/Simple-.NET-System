@@ -2,20 +2,22 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Consultorio : Form
     {
-        // public static Consultorio Instance { get; private set; }
         private TabControl tabControl;
+        private TabPage tab_consultas;
+        private TabPage tab_medicos;
+        private TabPage tab_pacientes;
 
         public Consultorio()
         {
-            // Instance = this;
-            InitiateConsultorio();
+            InitializeConsultorio();
             InitializeTabControl();
-            AddDataGridViewToTab("consultas");
-            AddDataGridViewToTab("medicos");
-            AddDataGridViewToTab("pacientes");
+            InitializeTabComponents();
+            AddDataGridViewToTab(tab_consultas);
+            AddDataGridViewToTab(tab_medicos);
+            AddDataGridViewToTab(tab_pacientes);
         }
 
-        private void InitiateConsultorio()
+        private void InitializeConsultorio()
         {
             Text = "Consultório";
             Size = new Size(600, 400);
@@ -23,9 +25,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             BackColor = Color.FromArgb(29, 49, 49);
         }
 
-        // TODO: Esse método pode ser subdividido em vários, pra melhor manuntenção.
-        // Idealmente, este método é pra inicializar somente o TabControl e suas tabs.
-        // O resto deve ser adicionado via outro método.
         private void InitializeTabControl()
         {
             tabControl = new TabControl
@@ -33,19 +32,28 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 Dock = DockStyle.Fill
             };
 
-            TabPage tab_consultas = new TabPage();
-            tab_consultas.Name = "consultas";
-            tab_consultas.Text = "Consultas";
-            tab_consultas.BackColor = Color.White;
+            tab_consultas = NewTab("consultas", "Consultas");
+            tab_medicos = NewTab("medicos", "Médicos");
+            tab_pacientes = NewTab("pacientes", "Pacientes");
 
+            tabControl.TabPages.Add(tab_consultas);
+            tabControl.TabPages.Add(tab_medicos);
+            tabControl.TabPages.Add(tab_pacientes);
+
+            this.Controls.Add(tabControl);
+        }
+
+        private void InitializeTabComponents()
+        {
+            // ## Aba consultas ##
             GroupBox grp_consultas = NewGroupBox("grp_consultas", "Buscar Consulta");
 
             Label lbl_consulta = NewLabel("Nº Consulta", 40);
             Label lbl_medico = NewLabel("Nome Médico", 80);
             Label lbl_paciente = NewLabel("Nome Paciente", 120);
             Label lbl_data = NewLabel("Data", 160);
-            lbl_data.Width = 50;
             Label lbl_horario = NewLabel("Horário:", 160, 200);
+            lbl_data.Width = 50;
             lbl_horario.Width = 50;
 
             CheckBox chk_retorno = new CheckBox { Text = "Retorno", Top = 160 - 5, Left = 400 };
@@ -54,34 +62,36 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             TextBox txt_medico = NewTextBox("box_medico", 200, 80);
             TextBox txt_paciente = NewTextBox("box_paciente", 200, 120);
 
-            DateTimePicker dtp_data = new DateTimePicker
-            {
-                Width = 80,
-                Top = 160 - 5, // 5 é apenas um pequeno offset pra alinhar verticalmente com o texto dos labels.
-                Left = 60,
-                Format = DateTimePickerFormat.Custom,
-                CustomFormat = "dd/MM/yyyy",
-                MinDate = new DateTime(2026, 1, 1),
-                MaxDate = new DateTime(2026, 12, 31)
-            };
+            DateTimePicker dtp_data = NewDateTimePicker(160, 60, "dd/MM/yyyy");
+            DateTimePicker dtp_time = NewDateTimePicker(160, 260, "HH:mm");
+            dtp_data.MinDate = new DateTime(2026, 1, 1);
+            dtp_data.MaxDate = new DateTime(2026, 12, 31);
+            dtp_time.ShowUpDown = true;
 
-            DateTimePicker dtp_time = new DateTimePicker
-            {
-                Width = 80,
-                Top = 160 - 5,
-                Left = 260,
-                Format = DateTimePickerFormat.Custom,
-                CustomFormat = "HH:mm",
-                ShowUpDown = true
-            };
+            // ## aba médicos ##
+            GroupBox grp_medicos = NewGroupBox("grp_medicos", "Buscar Médico");
 
+            Label lbl_medico_id = NewLabel("Nº Médico", 40);
+            Label lbl_medico_nome = NewLabel("Nome Médico", 80);
+            TextBox txt_medico_id = NewTextBox("box_medico_id", 100, 40);
+            TextBox txt_medico_nome = NewTextBox("box_medico_nome", 200, 80);
+
+            // ## Aba pacientes ##
+            GroupBox grp_pacientes = NewGroupBox("grp_pacientes", "Buscar Paciente");
+
+            Label lbl_paciente_id = NewLabel("Nº Paciente", 40);
+            Label lbl_paciente_nome = NewLabel("Nome Paciente", 80);
+            TextBox txt_paciente_id = NewTextBox("box_paciente_id", 100, 40);
+            TextBox txt_paciente_nome = NewTextBox("box_paciente_nome", 200, 80);
+
+            // botões de controle para cada aba:
             var crud_consultas = new CrudButtonsControl();
+            var crud_medicos = new CrudButtonsControl();
+            var crud_pacientes = new CrudButtonsControl();
 
-            crud_consultas.AddClicked += (s, e) => MessageBox.Show("Criar item");
-            crud_consultas.EditClicked += (s, e) => MessageBox.Show("Editar item");
-            crud_consultas.DeleteClicked += (s, e) => MessageBox.Show("Deletar item");
-
-            tab_consultas.Controls.Add(crud_consultas);
+            InitializeBtnEvents(crud_consultas);
+            InitializeBtnEvents(crud_medicos);
+            InitializeBtnEvents(crud_pacientes);
 
             grp_consultas.Controls.Add(lbl_consulta);
             grp_consultas.Controls.Add(lbl_medico);
@@ -94,111 +104,87 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             grp_consultas.Controls.Add(txt_consulta);
             grp_consultas.Controls.Add(txt_medico);
             grp_consultas.Controls.Add(txt_paciente);
-            tab_consultas.Controls.Add(grp_consultas);
-
-            TabPage tab_medicos = new TabPage();
-            tab_medicos.Name = "medicos";
-            tab_medicos.Text = "Médicos";
-            tab_medicos.BackColor = Color.White;
-
-            GroupBox grp_medicos = NewGroupBox("grp_medicos", "Buscar Médico");
-            Label lbl_medico_id = NewLabel("Nº Médico", 40);
-            Label lbl_medico_nome = NewLabel("Nome Médico", 80);
-            TextBox txt_medico_id = NewTextBox("box_medico_id", 100, 40);
-            TextBox txt_medico_nome = NewTextBox("box_medico_nome", 200, 80);
-
-            var crud_medicos = new CrudButtonsControl();
-
-            crud_medicos.AddClicked += (s, e) => MessageBox.Show("Criar item");
-            crud_medicos.EditClicked += (s, e) => MessageBox.Show("Editar item");
-            crud_medicos.DeleteClicked += (s, e) => MessageBox.Show("Deletar item");
-
-            tab_medicos.Controls.Add(crud_medicos);
+            grp_consultas.Controls.Add(crud_consultas);
 
             grp_medicos.Controls.Add(lbl_medico_id);
             grp_medicos.Controls.Add(lbl_medico_nome);
             grp_medicos.Controls.Add(txt_medico_id);
             grp_medicos.Controls.Add(txt_medico_nome);
-            tab_medicos.Controls.Add(grp_medicos);
-
-            TabPage tab_pacientes = new TabPage();
-            tab_pacientes.Name = "pacientes";
-            tab_pacientes.Text = "Pacientes";
-            tab_pacientes.BackColor = Color.White;
-
-            GroupBox grp_pacientes = NewGroupBox("grp_pacientes", "Buscar Paciente");
-            Label lbl_paciente_id = NewLabel("Nº Paciente", 40);
-            Label lbl_paciente_nome = NewLabel("Nome Paciente", 80);
-            TextBox txt_paciente_id = NewTextBox("box_paciente_id", 100, 40);
-            TextBox txt_paciente_nome = NewTextBox("box_paciente_nome", 200, 80);
-
-            var crud_pacientes = new CrudButtonsControl();
-
-            crud_pacientes.AddClicked += (s, e) => MessageBox.Show("Criar item");
-            crud_pacientes.EditClicked += (s, e) => MessageBox.Show("Editar item");
-            crud_pacientes.DeleteClicked += (s, e) => MessageBox.Show("Deletar item");
-
-            tab_pacientes.Controls.Add(crud_pacientes);
+            grp_medicos.Controls.Add(crud_medicos);
 
             grp_pacientes.Controls.Add(lbl_paciente_id);
             grp_pacientes.Controls.Add(lbl_paciente_nome);
             grp_pacientes.Controls.Add(txt_paciente_id);
             grp_pacientes.Controls.Add(txt_paciente_nome);
+            grp_pacientes.Controls.Add(crud_pacientes);
+
+            tab_consultas.Controls.Add(grp_consultas);
+            tab_medicos.Controls.Add(grp_medicos);
             tab_pacientes.Controls.Add(grp_pacientes);
-
-
-            tabControl.TabPages.Add(tab_consultas);
-            tabControl.TabPages.Add(tab_medicos);
-            tabControl.TabPages.Add(tab_pacientes);
-
-            // tabControl.TabPages["pacientes"].Controls.Add(grp_pacientes);
-
-            this.Controls.Add(tabControl);
         }
 
-        private void InitializeTabComponents()
+        private void InitializeBtnEvents(CrudButtonsControl btn)
         {
+            btn.AddClicked += (s, e) => MessageBox.Show("Criar item");
+            btn.EditClicked += (s, e) => MessageBox.Show("Editar item");
+            btn.DeleteClicked += (s, e) => MessageBox.Show("Deletar item");
+        }
 
+        private DateTimePicker NewDateTimePicker(int top, int left, string format)
+        {
+            return new DateTimePicker
+            {
+                Width = 80,
+                Top = top - 5, // 5 é apenas um pequeno offset pra alinhar verticalmente com o texto dos labels.
+                Left = left,
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = format,
+            };
+        }
+
+        private TabPage NewTab(string name, string txt)
+        {
+            return new TabPage
+            {
+                Name = name,
+                Text = txt,
+                BackColor = Color.White
+            };
         }
 
         private Label NewLabel(string text, int top, int left = 10)
         {
-            Label lbl = new Label
+            return new Label
             {
                 Text = text,
                 Top = top,
                 Left = left
             };
-
-            return lbl;
         }
 
         private TextBox NewTextBox(string name, int width, int top)
         {
-            TextBox txtBox = new TextBox
+            return new TextBox
             {
                 Name = name,
                 Width = width,
                 Top = top - 5,
                 Left = 120
             };
-            return txtBox;
         }
 
         private GroupBox NewGroupBox(string name, string text)
         {
-            GroupBox groupBox = new GroupBox
+            return new GroupBox
             {
                 Name = name,
                 Text = text,
                 Size = new Size(555, 190),
                 Location = new Point(10, 10)
             };
-
-            return groupBox;
         }
 
-        private void AddDataGridViewToTab(string tabName)
+        private void AddDataGridViewToTab(TabPage tab)
         {
             DataGridView table = new DataGridView
             {
@@ -221,7 +207,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             table.Columns.Add("horario", "Horário");
             table.Columns.Add("retorno", "Retorno");
 
-            tabControl.Controls[tabName].Controls.Add(table);
+            tab.Controls.Add(table);
         }
     }
 }
@@ -246,9 +232,9 @@ public class CrudButtonsControl : UserControl
     private void InitializeComponents()
     {
         this.Height = 40;
-        // this.Dock = DockStyle.Top;
-        this.Top = 40;
-        this.Left = 400;
+        this.Width = 130;
+        this.Top = 10;
+        this.Left = 420;
 
         btnAdd = new Button();
         btnEdit = new Button();
