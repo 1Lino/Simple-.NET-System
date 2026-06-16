@@ -89,9 +89,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             var crud_medicos = new CrudButtonsControl();
             var crud_pacientes = new CrudButtonsControl();
 
-            InitializeBtnEvents(crud_consultas);
-            InitializeBtnEvents(crud_medicos);
-            InitializeBtnEvents(crud_pacientes);
+            InitializeBtnEvents(crud_consultas, "consulta");
+            InitializeBtnEvents(crud_medicos, "médico");
+            InitializeBtnEvents(crud_pacientes, "paciente");
 
             grp_consultas.Controls.Add(lbl_consulta);
             grp_consultas.Controls.Add(lbl_medico);
@@ -121,13 +121,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_consultas.Controls.Add(grp_consultas);
             tab_medicos.Controls.Add(grp_medicos);
             tab_pacientes.Controls.Add(grp_pacientes);
-        }
-
-        private void InitializeBtnEvents(CrudButtonsControl btn)
-        {
-            btn.AddClicked += (s, e) => MessageBox.Show("Criar item");
-            btn.EditClicked += (s, e) => MessageBox.Show("Editar item");
-            btn.DeleteClicked += (s, e) => MessageBox.Show("Deletar item");
         }
 
         private DateTimePicker NewDateTimePicker(int top, int left, string format)
@@ -200,6 +193,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             };
             table.AllowUserToAddRows = false;
 
+            //TODO: ver se existe uma forma de se implementar um spread operator para que o método 
+            // aceite o tanto de colunas quanto forem passadas.
             table.Columns.Add("id_consulta", "Nº Consulta");
             table.Columns.Add("id_medico", "Médico");
             table.Columns.Add("id_paciente", "Paciente");
@@ -208,6 +203,141 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             table.Columns.Add("retorno", "Retorno");
 
             tab.Controls.Add(table);
+        }
+
+        private void InitializeBtnEvents(CrudButtonsControl btn, string subject)
+        {
+            btn.AddClicked += (s, e) => InvokeDialog("Adicionar", subject);
+            btn.EditClicked += (s, e) => InvokeDialog("Editar", subject);
+            btn.DeleteClicked += (s, e) => InvokeDialog("Deletar", subject);
+        }
+
+        // TODO: na lógica de negócio deve haver uma validação que confere se o paciente e o médico existem no cadastro/base de dados, e se, caso existam, se a data e horários selecionados estão disponíveis, para evitar conflitos. 
+        private void InvokeDialog(string actionType, string subject)
+        {
+            switch (actionType, subject)
+            {
+                case ("Adicionar", "consulta"):
+                    AddConsulta(actionType, subject);
+                    break;
+                case ("Adicionar", "médico"):
+                    break;
+                case ("Adicionar", "paciente"):
+                    break;
+                case ("Editar", "consulta"):
+                    break;
+                case ("Editar", "médico"):
+                    break;
+                case ("Editar", "paciente"):
+                    break;
+                case ("Deletar", "consulta"):
+                    break;
+                case ("Deletar", "médico"):
+                    break;
+                case ("Deletar", "paciente"):
+                    break;
+            }
+        }
+
+        private void AddConsulta(string actionType, string subject)
+        {
+            var form = new Form
+            {
+                Text = actionType + " " + subject, // ex.: adicionar + consulta = Adicionar consulta.
+                FormBorderStyle = FormBorderStyle.FixedSingle,
+                StartPosition = FormStartPosition.CenterScreen,
+                Width = 400,
+                Height = 250,
+                MaximizeBox = false
+            };
+
+            var lblNomePaciente = new Label
+            {
+                Width = 55,
+                Text = "Paciente",
+                Left = 10,
+                Top = 15
+            };
+
+            var lblNomeMedico = new Label
+            {
+                Width = 55,
+                Text = "Médico",
+                Left = 10,
+                Top = 45
+            };
+
+            var lblData = new Label
+            {
+                Width = 55,
+                Text = "Data",
+                Left = 10,
+                Top = 75
+            };
+
+            var lblHorario = new Label
+            {
+                Width = 55,
+                Text = "Horário",
+                Left = 200,
+                Top = 75
+            };
+
+            var txtNomePaciente = new TextBox
+            {
+                Left = 80,
+                Top = 10,
+                Width = 250
+            };
+
+            var txtNomeMedico = new TextBox
+            {
+                Left = 80,
+                Top = 40,
+                Width = 250
+            };
+
+            var dtpData = NewDateTimePicker(75, 80, "dd/MM/yyyy");
+            dtpData.MinDate = new DateTime(2026, 1, 1);
+            dtpData.MaxDate = new DateTime(2026, 12, 31);
+
+            var dtpTime = NewDateTimePicker(75, 260, "HH:mm");
+            dtpTime.Width = 60;
+            dtpTime.ShowUpDown = true;
+
+            var btnOk = new Button
+            {
+                Text = "OK",
+                Left = 90,
+                Top = 150,
+                DialogResult = DialogResult.OK
+            };
+
+            var btnCancel = new Button
+            {
+                Text = "Cancel",
+                Left = 230,
+                Top = 150,
+                DialogResult = DialogResult.OK
+            };
+
+            form.Controls.Add(lblNomePaciente);
+            form.Controls.Add(lblNomeMedico);
+            form.Controls.Add(lblData);
+            form.Controls.Add(lblHorario);
+            form.Controls.Add(txtNomePaciente);
+            form.Controls.Add(txtNomeMedico);
+            form.Controls.Add(dtpData);
+            form.Controls.Add(dtpTime);
+            form.Controls.Add(btnOk);
+            form.Controls.Add(btnCancel);
+            form.AcceptButton = btnOk;
+            form.CancelButton = btnCancel;
+
+            if (form.ShowDialog() == DialogResult.OK)
+            {
+                // string nome = txtNome.Text;
+            }
         }
     }
 }
