@@ -14,9 +14,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             InitializeConsultorio();
             InitializeTabControl();
             InitializeTabComponents();
-            AddDataGridViewToTab(tab_consultas);
-            AddDataGridViewToTab(tab_medicos);
-            AddDataGridViewToTab(tab_pacientes);
+            Builder.AddDataGridViewToTab(tab_consultas);
+            Builder.AddDataGridViewToTab(tab_medicos);
+            Builder.AddDataGridViewToTab(tab_pacientes);
         }
 
         private void InitializeConsultorio()
@@ -34,9 +34,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 Dock = DockStyle.Fill
             };
 
-            tab_consultas = NewTab("consultas", "Consultas");
-            tab_medicos = NewTab("medicos", "Médicos");
-            tab_pacientes = NewTab("pacientes", "Pacientes");
+            tab_consultas = Builder.NewTab("consultas", "Consultas");
+            tab_medicos = Builder.NewTab("medicos", "Médicos");
+            tab_pacientes = Builder.NewTab("pacientes", "Pacientes");
 
             tabControl.TabPages.Add(tab_consultas);
             tabControl.TabPages.Add(tab_medicos);
@@ -48,43 +48,43 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         private void InitializeTabComponents()
         {
             // ## Aba consultas ##
-            GroupBox grp_consultas = NewGroupBox("grp_consultas", "Buscar Consulta");
+            GroupBox grp_consultas = Builder.NewGroupBox("grp_consultas", "Buscar Consulta");
 
-            Label lbl_consulta = NewLabel("Nº Consulta", 40);
-            Label lbl_medico = NewLabel("Nome Médico", 80);
-            Label lbl_paciente = NewLabel("Nome Paciente", 120);
-            Label lbl_data = NewLabel("Data", 160);
-            Label lbl_horario = NewLabel("Horário:", 160, 200);
+            var lbl_consulta = Builder.NewLabel("Nº Consulta", 100, 10, 40);
+            var lbl_medico = Builder.NewLabel("Nome Médico", 100, 10, 80);
+            var lbl_paciente = Builder.NewLabel("Nome Paciente", 100, 10, 120);
+            var lbl_data = Builder.NewLabel("Data", 40, 10, 160 - 5);
+            var lbl_horario = Builder.NewLabel("Horário", 100, 200, 160 - 5);
             lbl_data.Width = 50;
             lbl_horario.Width = 50;
 
             CheckBox chk_retorno = new CheckBox { Text = "Retorno", Top = 160 - 5, Left = 400 };
 
-            TextBox txt_consulta = NewTextBox("box_consulta", 100, 40);
-            TextBox txt_medico = NewTextBox("box_medico", 200, 80);
-            TextBox txt_paciente = NewTextBox("box_paciente", 200, 120);
+            var txt_consulta = Builder.NewTextBox("box_consulta_id", 100, 120, 40);
+            var txt_medico = Builder.NewTextBox("box_medico", 200, 120, 80);
+            var txt_paciente = Builder.NewTextBox("box_paciente", 200, 120, 120);
 
-            DateTimePicker dtp_data = NewDateTimePicker(160, 60, "dd/MM/yyyy");
-            DateTimePicker dtp_time = NewDateTimePicker(160, 260, "HH:mm");
+            DateTimePicker dtp_data = Builder.NewDateTimePicker(160, 60, "dd/MM/yyyy");
+            DateTimePicker dtp_time = Builder.NewDateTimePicker(160, 260, "HH:mm");
             dtp_data.MinDate = new DateTime(2026, 1, 1);
             dtp_data.MaxDate = new DateTime(2026, 12, 31);
             dtp_time.ShowUpDown = true;
 
             // ## aba médicos ##
-            GroupBox grp_medicos = NewGroupBox("grp_medicos", "Buscar Médico");
+            GroupBox grp_medicos = Builder.NewGroupBox("grp_medicos", "Buscar Médico");
 
-            Label lbl_medico_id = NewLabel("Nº Médico", 40);
-            Label lbl_medico_nome = NewLabel("Nome Médico", 80);
-            TextBox txt_medico_id = NewTextBox("box_medico_id", 100, 40);
-            TextBox txt_medico_nome = NewTextBox("box_medico_nome", 200, 80);
+            var lbl_medico_id = Builder.NewLabel("Nº Médico", 100, 10, 40);
+            var lbl_medico_nome = Builder.NewLabel("Nome Médico", 100, 10, 80);
+            var txt_medico_id = Builder.NewTextBox("box_medico_id", 100, 120, 40);
+            var txt_medico_nome = Builder.NewTextBox("box_medico_nome", 200, 120, 80);
 
             // ## Aba pacientes ##
-            GroupBox grp_pacientes = NewGroupBox("grp_pacientes", "Buscar Paciente");
+            GroupBox grp_pacientes = Builder.NewGroupBox("grp_pacientes", "Buscar Paciente");
 
-            Label lbl_paciente_id = NewLabel("Nº Paciente", 40);
-            Label lbl_paciente_nome = NewLabel("Nome Paciente", 80);
-            TextBox txt_paciente_id = NewTextBox("box_paciente_id", 100, 40);
-            TextBox txt_paciente_nome = NewTextBox("box_paciente_nome", 200, 80);
+            var lbl_paciente_id = Builder.NewLabel("Nº Paciente", 100, 10, 40);
+            var lbl_paciente_nome = Builder.NewLabel("Nome Paciente", 100, 10, 80);
+            var txt_paciente_id = Builder.NewTextBox("box_paciente_id", 100, 120, 40);
+            var txt_paciente_nome = Builder.NewTextBox("box_paciente_nome", 200, 120, 80);
 
             // botões de controle para cada aba:
             var crud_consultas = new CrudButtonsControl();
@@ -123,89 +123,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_consultas.Controls.Add(grp_consultas);
             tab_medicos.Controls.Add(grp_medicos);
             tab_pacientes.Controls.Add(grp_pacientes);
-        }
-
-        public static DateTimePicker NewDateTimePicker(int top, int left, string format)
-        {
-            return new DateTimePicker
-            {
-                Width = 80,
-                Top = top - 5, // 5 é apenas um pequeno offset pra alinhar verticalmente com o texto dos labels.
-                Left = left,
-                Format = DateTimePickerFormat.Custom,
-                CustomFormat = format,
-            };
-        }
-
-        private TabPage NewTab(string name, string txt)
-        {
-            return new TabPage
-            {
-                Name = name,
-                Text = txt,
-                BackColor = Color.White
-            };
-        }
-
-        private Label NewLabel(string text, int top, int left = 10)
-        {
-            return new Label
-            {
-                Text = text,
-                Top = top,
-                Left = left,
-                TextAlign = ContentAlignment.TopRight
-            };
-        }
-
-        private TextBox NewTextBox(string name, int width, int top)
-        {
-            return new TextBox
-            {
-                Name = name,
-                Width = width,
-                Top = top - 5,
-                Left = 120
-            };
-        }
-
-        private GroupBox NewGroupBox(string name, string text)
-        {
-            return new GroupBox
-            {
-                Name = name,
-                Text = text,
-                Size = new Size(555, 190),
-                Location = new Point(10, 10)
-            };
-        }
-
-        private void AddDataGridViewToTab(TabPage tab)
-        {
-            DataGridView table = new DataGridView
-            {
-                Size = new Size(575, 200),
-                Top = 210,
-                Dock = DockStyle.None,
-                RowHeadersVisible = false,
-                ColumnHeadersVisible = true,
-                ReadOnly = true,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                AllowUserToResizeRows = false,
-                AllowUserToResizeColumns = false,
-            };
-            table.AllowUserToAddRows = false;
-
-            //TODO: ver se existe uma forma de se implementar um spread operator para que o método 
-            // aceite o tanto de colunas quanto forem passadas.
-            table.Columns.Add("id_consulta", "Nº Consulta");
-            table.Columns.Add("id_medico", "Médico");
-            table.Columns.Add("id_paciente", "Paciente");
-            table.Columns.Add("data", "Data");
-            table.Columns.Add("horario", "Horário");
-            table.Columns.Add("retorno", "Retorno");
-
-            tab.Controls.Add(table);
         }
 
         // subject: consulta, médico ou paciente.
@@ -265,24 +182,24 @@ public class Dialog
         formDialog.Text = actionType + " " + subject;
         formDialog.Height = 250;
 
-        var lblNomePaciente = AddLabel("Paciente", 55, 10, 10);
-        var lblNomeMedico = AddLabel("Médico", 55, 10, 40);
-        var lblData = AddLabel("Data", 55, 10, 70);
-        var lblHorario = AddLabel("Horário", 55, 200, 70);
+        var lblNomePaciente = Builder.NewLabel("Paciente", 55, 10, 10);
+        var lblNomeMedico = Builder.NewLabel("Médico", 55, 10, 40);
+        var lblData = Builder.NewLabel("Data", 55, 10, 70);
+        var lblHorario = Builder.NewLabel("Horário", 55, 200, 70);
 
-        var txtNomePaciente = AddTextBox(250, 80, 10);
-        var txtNomeMedico = AddTextBox(250, 80, 40);
+        var txtNomePaciente = Builder.NewTextBox("consulta_nome_paciente", 250, 80, 10);
+        var txtNomeMedico = Builder.NewTextBox("consulta_nome_medico", 250, 80, 40);
 
-        var dtpData = Consultorio.NewDateTimePicker(75, 80, "dd/MM/yyyy");
+        var dtpData = Builder.NewDateTimePicker(75, 80, "dd/MM/yyyy");
         dtpData.MinDate = new DateTime(2026, 1, 1);
         dtpData.MaxDate = new DateTime(2026, 12, 31);
 
-        var dtpTime = Consultorio.NewDateTimePicker(75, 260, "HH:mm");
+        var dtpTime = Builder.NewDateTimePicker(75, 260, "HH:mm");
         dtpTime.Width = 60;
         dtpTime.ShowUpDown = true;
 
-        var btnOk = AddButton("Salvar", 90, 150);
-        var btnCancel = AddButton("Cancelar", 230, 150);
+        var btnOk = Builder.AddButton("Salvar", 90, 150);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 150);
 
         formDialog.Controls.Clear(); // esta limpeza deve ser feita a cada chamada, pois o formDialog é apenas um único componente reutilizado em todas as situações.
 
@@ -310,16 +227,16 @@ public class Dialog
         formDialog.Text = actionType + " " + subject;
         formDialog.Height = 250;
 
-        var lblNomeMedico = AddLabel("Nome", 80, 10, 10);
-        var lblTelefone = AddLabel("Telefone", 80, 10, 40);
-        var lblValorConsulta = AddLabel("Consulta (R$)", 80, 10, 70);
+        var lblNomeMedico = Builder.NewLabel("Nome", 80, 10, 10);
+        var lblTelefone = Builder.NewLabel("Telefone", 80, 10, 40);
+        var lblValorConsulta = Builder.NewLabel("Consulta (R$)", 80, 10, 70);
 
-        var txtNomeMedico = AddTextBox(250, 100, 10);
-        var txtTelefone = AddTextBox(150, 100, 40);
-        var txtValorConsulta = AddTextBox(150, 100, 70);
+        var txtNomeMedico = Builder.NewTextBox("medico_nome", 250, 100, 10);
+        var txtTelefone = Builder.NewTextBox("medico_telefone", 150, 100, 40);
+        var txtValorConsulta = Builder.NewTextBox("medico_valor_consulta", 150, 100, 70);
 
-        var btnOk = AddButton("Salvar", 90, 150);
-        var btnCancel = AddButton("Cancelar", 230, 150);
+        var btnOk = Builder.AddButton("Salvar", 90, 150);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 150);
 
         formDialog.Controls.Clear();
 
@@ -345,31 +262,31 @@ public class Dialog
         formDialog.Text = actionType + " " + subject;
         formDialog.Height = 350;
 
-        var lblNomePaciente = AddLabel("Nome", 80, 10, 10);
-        var lblEndereco = AddLabel("Endereço", 80, 10, 40);
-        var lblNumero = AddLabel("Número", 80, 10, 70);
-        var lblBairro = AddLabel("Bairro", 60, 150, 70);
-        var lblCidade = AddLabel("Cidade", 80, 10, 100);
-        var lblCep = AddLabel("CEP", 30, 220, 100);
-        var lblSexo = AddLabel("Sexo", 80, 10, 130);
-        var lblTelefone = AddLabel("Telefone", 80, 10, 160);
-        var lblCelular = AddLabel("Celular", 80, 10, 190);
+        var lblNomePaciente = Builder.NewLabel("Nome", 80, 10, 10);
+        var lblEndereco = Builder.NewLabel("Endereço", 80, 10, 40);
+        var lblNumero = Builder.NewLabel("Número", 80, 10, 70);
+        var lblBairro = Builder.NewLabel("Bairro", 60, 150, 70);
+        var lblCidade = Builder.NewLabel("Cidade", 80, 10, 100);
+        var lblCep = Builder.NewLabel("CEP", 30, 220, 100);
+        var lblSexo = Builder.NewLabel("Sexo", 80, 10, 130);
+        var lblTelefone = Builder.NewLabel("Telefone", 80, 10, 160);
+        var lblCelular = Builder.NewLabel("Celular", 80, 10, 190);
 
-        var txtNomePaciente = AddTextBox(250, 100, 10);
-        var txtEndereco = AddTextBox(250, 100, 40);
-        var txtNumero = AddTextBox(50, 100, 70);
-        var txtBairro = AddTextBox(130, 220, 70);
-        var txtCidade = AddTextBox(100, 100, 100);
-        var txtCep = AddTextBox(90, 260, 100);
+        var txtNomePaciente = Builder.NewTextBox("paciente_nome", 250, 100, 10);
+        var txtEndereco = Builder.NewTextBox("paciente_endereco", 250, 100, 40);
+        var txtNumero = Builder.NewTextBox("paciente_numero", 50, 100, 70);
+        var txtBairro = Builder.NewTextBox("paciente_bairro", 130, 220, 70);
+        var txtCidade = Builder.NewTextBox("paciente_cidade", 100, 100, 100);
+        var txtCep = Builder.NewTextBox("paciente_cep", 90, 260, 100);
 
-        var radioMasculino = AddRadio("Masculino", 90, 100, 130);
-        var radioFeminino = AddRadio("Feminino", 90, 200, 130);
+        var radioMasculino = Builder.AddRadio("Masculino", 90, 100, 130);
+        var radioFeminino = Builder.AddRadio("Feminino", 90, 200, 130);
 
-        var txtTelefone = AddTextBox(150, 100, 160);
-        var txtCelular = AddTextBox(150, 100, 190);
+        var txtTelefone = Builder.NewTextBox("paciente_telefone", 150, 100, 160);
+        var txtCelular = Builder.NewTextBox("paciente_celular", 150, 100, 190);
 
-        var btnOk = AddButton("Salvar", 90, 250);
-        var btnCancel = AddButton("Cancelar", 230, 250);
+        var btnOk = Builder.AddButton("Salvar", 90, 250);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 250);
 
         formDialog.Controls.Clear(); // remove todos os componentes que estiverem no form.
 
@@ -403,7 +320,11 @@ public class Dialog
         }
     }
 
-    private static Label AddLabel(string text, int width, int left, int top)
+}
+
+public class Builder
+{
+    public static Label NewLabel(string text, int width, int left, int top)
     {
         return new Label
         {
@@ -415,17 +336,18 @@ public class Dialog
         };
     }
 
-    private static TextBox AddTextBox(int width, int left, int top)
+    public static TextBox NewTextBox(string name, int width, int left, int top)
     {
         return new TextBox
         {
+            Name = name,
             Width = width,
             Left = left,
             Top = top
         };
     }
 
-    private static Button AddButton(string text, int left, int top)
+    public static Button AddButton(string text, int left, int top)
     {
         return new Button
         {
@@ -436,7 +358,7 @@ public class Dialog
         };
     }
 
-    private static RadioButton AddRadio(string text, int width, int left, int top)
+    public static RadioButton AddRadio(string text, int width, int left, int top)
     {
         return new RadioButton
         {
@@ -445,6 +367,67 @@ public class Dialog
             Left = left,
             Top = top
         };
+    }
+
+    public static DateTimePicker NewDateTimePicker(int top, int left, string format)
+    {
+        return new DateTimePicker
+        {
+            Width = 80,
+            Top = top - 5, // 5 é apenas um pequeno offset pra alinhar verticalmente com o texto dos labels.
+            Left = left,
+            Format = DateTimePickerFormat.Custom,
+            CustomFormat = format,
+        };
+    }
+
+    public static TabPage NewTab(string name, string txt)
+    {
+        return new TabPage
+        {
+            Name = name,
+            Text = txt,
+            BackColor = Color.White
+        };
+    }
+
+    public static GroupBox NewGroupBox(string name, string text)
+    {
+        return new GroupBox
+        {
+            Name = name,
+            Text = text,
+            Size = new Size(555, 190),
+            Location = new Point(10, 10)
+        };
+    }
+
+    public static void AddDataGridViewToTab(TabPage tab)
+    {
+        DataGridView table = new DataGridView
+        {
+            Size = new Size(575, 200),
+            Top = 210,
+            Dock = DockStyle.None,
+            RowHeadersVisible = false,
+            ColumnHeadersVisible = true,
+            ReadOnly = true,
+            AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
+            AllowUserToResizeRows = false,
+            AllowUserToResizeColumns = false,
+        };
+        table.AllowUserToAddRows = false;
+
+        //TODO: ver se existe uma forma de se implementar um spread operator para que o método 
+        // aceite o tanto de colunas quanto forem passadas.
+        table.Columns.Add("id_consulta", "Nº Consulta");
+        table.Columns.Add("id_medico", "Médico");
+        table.Columns.Add("id_paciente", "Paciente");
+        table.Columns.Add("data", "Data");
+        table.Columns.Add("horario", "Horário");
+        table.Columns.Add("retorno", "Retorno");
+
+        tab.Controls.Add(table);
     }
 }
 
