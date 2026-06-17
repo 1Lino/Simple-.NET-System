@@ -1,3 +1,5 @@
+using Sistema_De_Aplicativos_Simples__.NET.appsForms;
+
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Consultorio : Form
@@ -123,7 +125,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_pacientes.Controls.Add(grp_pacientes);
         }
 
-        private DateTimePicker NewDateTimePicker(int top, int left, string format)
+        public static DateTimePicker NewDateTimePicker(int top, int left, string format)
         {
             return new DateTimePicker
             {
@@ -151,7 +153,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             {
                 Text = text,
                 Top = top,
-                Left = left
+                Left = left,
+                TextAlign = ContentAlignment.TopRight
             };
         }
 
@@ -205,139 +208,454 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab.Controls.Add(table);
         }
 
+        // subject: consulta, médico ou paciente.
         private void InitializeBtnEvents(CrudButtonsControl btn, string subject)
         {
-            btn.AddClicked += (s, e) => InvokeDialog("Adicionar", subject);
-            btn.EditClicked += (s, e) => InvokeDialog("Editar", subject);
-            btn.DeleteClicked += (s, e) => InvokeDialog("Deletar", subject);
+            btn.AddClicked += (s, e) => Dialog.InvokeDialog("Cadastrar", subject);
+            btn.EditClicked += (s, e) => Dialog.InvokeDialog("Editar", subject);
+            btn.DeleteClicked += (s, e) => Dialog.InvokeDialog("Deletar", subject);
         }
 
-        // TODO: na lógica de negócio deve haver uma validação que confere se o paciente e o médico existem no cadastro/base de dados, e se, caso existam, se a data e horários selecionados estão disponíveis, para evitar conflitos. 
-        private void InvokeDialog(string actionType, string subject)
+    }
+}
+
+public class Dialog
+{
+    // TODO: na lógica de negócio deve haver uma validação que confere se o paciente e o médico existem no cadastro/base de dados, e se, caso existam, se a data e horários selecionados estão disponíveis, para evitar conflitos. 
+    public static void InvokeDialog(string actionType, string subject)
+    {
+        switch (actionType, subject)
         {
-            switch (actionType, subject)
-            {
-                case ("Adicionar", "consulta"):
-                    AddConsulta(actionType, subject);
-                    break;
-                case ("Adicionar", "médico"):
-                    break;
-                case ("Adicionar", "paciente"):
-                    break;
-                case ("Editar", "consulta"):
-                    break;
-                case ("Editar", "médico"):
-                    break;
-                case ("Editar", "paciente"):
-                    break;
-                case ("Deletar", "consulta"):
-                    break;
-                case ("Deletar", "médico"):
-                    break;
-                case ("Deletar", "paciente"):
-                    break;
-            }
+            case ("Cadastrar", "consulta"):
+                AddConsulta(actionType, subject);
+                break;
+            case ("Cadastrar", "médico"):
+                AddMedico(actionType, subject);
+                break;
+            case ("Cadastrar", "paciente"):
+                AddPaciente(actionType, subject);
+                break;
+            case ("Editar", "consulta"):
+                break;
+            case ("Editar", "médico"):
+                break;
+            case ("Editar", "paciente"):
+                break;
+            case ("Deletar", "consulta"):
+                break;
+            case ("Deletar", "médico"):
+                break;
+            case ("Deletar", "paciente"):
+                break;
         }
+    }
 
-        private void AddConsulta(string actionType, string subject)
+    private static void AddConsulta(string actionType, string subject)
+    {
+        var form = new Form
         {
-            var form = new Form
-            {
-                Text = actionType + " " + subject, // ex.: adicionar + consulta = Adicionar consulta.
-                FormBorderStyle = FormBorderStyle.FixedSingle,
-                StartPosition = FormStartPosition.CenterScreen,
-                Width = 400,
-                Height = 250,
-                MaximizeBox = false
-            };
+            Text = actionType + " " + subject, // ex.: adicionar + consulta = Adicionar consulta.
+            FormBorderStyle = FormBorderStyle.FixedSingle,
+            StartPosition = FormStartPosition.CenterScreen,
+            Width = 400,
+            Height = 250,
+            MaximizeBox = false
+        };
 
-            var lblNomePaciente = new Label
-            {
-                Width = 55,
-                Text = "Paciente",
-                Left = 10,
-                Top = 15
-            };
+        var lblNomePaciente = new Label
+        {
+            Width = 55,
+            Text = "Paciente",
+            Left = 10,
+            Top = 10,
+            TextAlign = ContentAlignment.MiddleRight
+        };
 
-            var lblNomeMedico = new Label
-            {
-                Width = 55,
-                Text = "Médico",
-                Left = 10,
-                Top = 45
-            };
+        var lblNomeMedico = new Label
+        {
+            Width = 55,
+            Text = "Médico",
+            Left = 10,
+            Top = 40,
+            TextAlign = ContentAlignment.MiddleRight
+        };
 
-            var lblData = new Label
-            {
-                Width = 55,
-                Text = "Data",
-                Left = 10,
-                Top = 75
-            };
+        var lblData = new Label
+        {
+            Width = 55,
+            Text = "Data",
+            Left = 10,
+            Top = 70,
+            TextAlign = ContentAlignment.MiddleRight
+        };
 
-            var lblHorario = new Label
-            {
-                Width = 55,
-                Text = "Horário",
-                Left = 200,
-                Top = 75
-            };
+        var lblHorario = new Label
+        {
+            Width = 55,
+            Text = "Horário",
+            Left = 200,
+            Top = 70,
+            TextAlign = ContentAlignment.MiddleRight
+        };
 
-            var txtNomePaciente = new TextBox
-            {
-                Left = 80,
-                Top = 10,
-                Width = 250
-            };
+        var txtNomePaciente = new TextBox
+        {
+            Left = 80,
+            Top = 10,
+            Width = 250
+        };
 
-            var txtNomeMedico = new TextBox
-            {
-                Left = 80,
-                Top = 40,
-                Width = 250
-            };
+        var txtNomeMedico = new TextBox
+        {
+            Left = 80,
+            Top = 40,
+            Width = 250
+        };
 
-            var dtpData = NewDateTimePicker(75, 80, "dd/MM/yyyy");
-            dtpData.MinDate = new DateTime(2026, 1, 1);
-            dtpData.MaxDate = new DateTime(2026, 12, 31);
+        var dtpData = Consultorio.NewDateTimePicker(75, 80, "dd/MM/yyyy");
+        dtpData.MinDate = new DateTime(2026, 1, 1);
+        dtpData.MaxDate = new DateTime(2026, 12, 31);
 
-            var dtpTime = NewDateTimePicker(75, 260, "HH:mm");
-            dtpTime.Width = 60;
-            dtpTime.ShowUpDown = true;
+        var dtpTime = Consultorio.NewDateTimePicker(75, 260, "HH:mm");
+        dtpTime.Width = 60;
+        dtpTime.ShowUpDown = true;
 
-            var btnOk = new Button
-            {
-                Text = "OK",
-                Left = 90,
-                Top = 150,
-                DialogResult = DialogResult.OK
-            };
+        var btnOk = new Button
+        {
+            Text = "OK",
+            Left = 90,
+            Top = 150,
+            DialogResult = DialogResult.OK
+        };
 
-            var btnCancel = new Button
-            {
-                Text = "Cancel",
-                Left = 230,
-                Top = 150,
-                DialogResult = DialogResult.OK
-            };
+        var btnCancel = new Button
+        {
+            Text = "Cancel",
+            Left = 230,
+            Top = 150,
+            DialogResult = DialogResult.OK
+        };
 
-            form.Controls.Add(lblNomePaciente);
-            form.Controls.Add(lblNomeMedico);
-            form.Controls.Add(lblData);
-            form.Controls.Add(lblHorario);
-            form.Controls.Add(txtNomePaciente);
-            form.Controls.Add(txtNomeMedico);
-            form.Controls.Add(dtpData);
-            form.Controls.Add(dtpTime);
-            form.Controls.Add(btnOk);
-            form.Controls.Add(btnCancel);
-            form.AcceptButton = btnOk;
-            form.CancelButton = btnCancel;
+        form.Controls.Add(lblNomePaciente);
+        form.Controls.Add(lblNomeMedico);
+        form.Controls.Add(lblData);
+        form.Controls.Add(lblHorario);
+        form.Controls.Add(txtNomePaciente);
+        form.Controls.Add(txtNomeMedico);
+        form.Controls.Add(dtpData);
+        form.Controls.Add(dtpTime);
+        form.Controls.Add(btnOk);
+        form.Controls.Add(btnCancel);
+        form.AcceptButton = btnOk;
+        form.CancelButton = btnCancel;
 
-            if (form.ShowDialog() == DialogResult.OK)
-            {
-                // string nome = txtNome.Text;
-            }
+        if (form.ShowDialog() == DialogResult.OK)
+        {
+            // string nome = txtNome.Text;
+        }
+    }
+
+    private static void AddMedico(string actionType, string subject)
+    {
+        var form = new Form
+        {
+            Text = actionType + " " + subject, // ex.: adicionar + consulta = Adicionar consulta.
+            FormBorderStyle = FormBorderStyle.FixedSingle,
+            StartPosition = FormStartPosition.CenterScreen,
+            Width = 400,
+            Height = 250,
+            MaximizeBox = false
+        };
+
+        var lblNomeMedico = new Label
+        {
+            Width = 80,
+            Text = "Nome",
+            Left = 10,
+            Top = 10,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblTelefone = new Label
+        {
+            Width = 80,
+            Text = "Telefone",
+            Left = 10,
+            Top = 40,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblValorConsulta = new Label
+        {
+            Width = 80,
+            Text = "Consulta (R$)",
+            Left = 10,
+            Top = 70,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var txtNomeMedico = new TextBox
+        {
+            Left = 100,
+            Top = 10,
+            Width = 250
+        };
+
+        var txtTelefone = new TextBox
+        {
+            Left = 100,
+            Top = 40,
+            Width = 150
+        };
+
+        var txtValorConsulta = new TextBox
+        {
+            Left = 100,
+            Top = 70,
+            Width = 150
+        };
+
+        var btnOk = new Button
+        {
+            Text = "OK",
+            Left = 90,
+            Top = 150,
+            DialogResult = DialogResult.OK
+        };
+
+        var btnCancel = new Button
+        {
+            Text = "Cancel",
+            Left = 230,
+            Top = 150,
+            DialogResult = DialogResult.OK
+        };
+
+        form.Controls.Add(lblNomeMedico);
+        form.Controls.Add(lblTelefone);
+        form.Controls.Add(lblValorConsulta);
+        form.Controls.Add(txtNomeMedico);
+        form.Controls.Add(txtTelefone);
+        form.Controls.Add(txtValorConsulta);
+        form.Controls.Add(btnOk);
+        form.Controls.Add(btnCancel);
+        form.AcceptButton = btnOk;
+        form.CancelButton = btnCancel;
+
+        if (form.ShowDialog() == DialogResult.OK)
+        {
+            // string nome = txtNome.Text;
+        }
+    }
+
+    private static void AddPaciente(string actionType, string subject)
+    {
+        var form = new Form
+        {
+            Text = actionType + " " + subject, // ex.: adicionar + consulta = Adicionar consulta.
+            FormBorderStyle = FormBorderStyle.FixedSingle,
+            StartPosition = FormStartPosition.CenterScreen,
+            Width = 400,
+            Height = 350,
+            MaximizeBox = false
+        };
+
+        var lblNomePaciente = new Label
+        {
+            Width = 80,
+            Text = "Nome",
+            Left = 10,
+            Top = 10,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblEndereco = new Label
+        {
+            Width = 80,
+            Text = "Endereço",
+            Left = 10,
+            Top = 40,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblNumero = new Label
+        {
+            Width = 80,
+            Text = "Número",
+            Left = 10,
+            Top = 70,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblBairro = new Label
+        {
+            Width = 60,
+            Text = "Bairro",
+            Left = 150,
+            Top = 70,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblCidade = new Label
+        {
+            Width = 80,
+            Text = "Cidade",
+            Left = 10,
+            Top = 100,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblCep = new Label
+        {
+            Width = 30,
+            Text = "CEP",
+            Left = 220,
+            Top = 100,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblSexo = new Label
+        {
+            Width = 80,
+            Text = "Sexo",
+            Left = 10,
+            Top = 130,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblTelefone = new Label
+        {
+            Width = 80,
+            Text = "Telefone",
+            Left = 10,
+            Top = 160,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var lblCelular = new Label
+        {
+            Width = 80,
+            Text = "Celular",
+            Left = 10,
+            Top = 190,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+
+        var txtNomePaciente = new TextBox
+        {
+            Left = 100,
+            Top = 10,
+            Width = 250
+        };
+
+        var txtEndereco = new TextBox
+        {
+            Left = 100,
+            Top = 40,
+            Width = 250
+        };
+
+        var txtNumero = new TextBox
+        {
+            Left = 100,
+            Top = 70,
+            Width = 50
+        };
+
+        var txtBairro = new TextBox
+        {
+            Left = 220,
+            Top = 70,
+            Width = 130
+        };
+
+        var txtCidade = new TextBox
+        {
+            Left = 100,
+            Top = 100,
+            Width = 100
+        };
+
+        var txtCep = new TextBox
+        {
+            Left = 260,
+            Top = 100,
+            Width = 90
+        };
+
+        var radioMasculino = new RadioButton
+        {
+            Width = 90,
+            Text = "Masculino",
+            Left = 100,
+            Top = 130
+        };
+
+        var radioFeminino = new RadioButton
+        {
+            Width = 90,
+            Text = "Feminino",
+            Left = 200,
+            Top = 130
+        };
+
+        var txtTelefone = new TextBox
+        {
+            Left = 100,
+            Top = 160,
+            Width = 150
+        };
+
+        var txtCelular = new TextBox
+        {
+            Left = 100,
+            Top = 190,
+            Width = 150
+        };
+
+        var btnOk = new Button
+        {
+            Text = "OK",
+            Left = 90,
+            Top = 250,
+            DialogResult = DialogResult.OK
+        };
+
+        var btnCancel = new Button
+        {
+            Text = "Cancel",
+            Left = 230,
+            Top = 250,
+            DialogResult = DialogResult.OK
+        };
+
+        form.Controls.Add(lblNomePaciente);
+        form.Controls.Add(lblEndereco);
+        form.Controls.Add(lblNumero);
+        form.Controls.Add(lblBairro);
+        form.Controls.Add(lblCidade);
+        form.Controls.Add(lblCep);
+        form.Controls.Add(lblSexo);
+        form.Controls.Add(lblTelefone);
+        form.Controls.Add(lblCelular);
+        form.Controls.Add(txtNomePaciente);
+        form.Controls.Add(txtEndereco);
+        form.Controls.Add(txtNumero);
+        form.Controls.Add(txtBairro);
+        form.Controls.Add(txtCidade);
+        form.Controls.Add(txtCep);
+        form.Controls.Add(txtTelefone);
+        form.Controls.Add(txtCelular);
+        form.Controls.Add(radioMasculino);
+        form.Controls.Add(radioFeminino);
+        form.Controls.Add(btnOk);
+        form.Controls.Add(btnCancel);
+        form.AcceptButton = btnOk;
+        form.CancelButton = btnCancel;
+
+        if (form.ShowDialog() == DialogResult.OK)
+        {
+            // string nome = txtNome.Text;
         }
     }
 }
