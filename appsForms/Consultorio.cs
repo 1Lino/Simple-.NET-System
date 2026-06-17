@@ -221,6 +221,16 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
 public class Dialog
 {
+
+    private static Form formDialog = new Form
+    {
+        FormBorderStyle = FormBorderStyle.FixedSingle,
+        StartPosition = FormStartPosition.CenterScreen,
+        Width = 400,
+        Height = 250,
+        MaximizeBox = false
+    };
+
     // TODO: na lógica de negócio deve haver uma validação que confere se o paciente e o médico existem no cadastro/base de dados, e se, caso existam, se a data e horários selecionados estão disponíveis, para evitar conflitos. 
     public static void InvokeDialog(string actionType, string subject)
     {
@@ -252,65 +262,16 @@ public class Dialog
 
     private static void AddConsulta(string actionType, string subject)
     {
-        var form = new Form
-        {
-            Text = actionType + " " + subject, // ex.: adicionar + consulta = Adicionar consulta.
-            FormBorderStyle = FormBorderStyle.FixedSingle,
-            StartPosition = FormStartPosition.CenterScreen,
-            Width = 400,
-            Height = 250,
-            MaximizeBox = false
-        };
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 250;
 
-        var lblNomePaciente = new Label
-        {
-            Width = 55,
-            Text = "Paciente",
-            Left = 10,
-            Top = 10,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var lblNomePaciente = AddLabel("Paciente", 55, 10, 10);
+        var lblNomeMedico = AddLabel("Médico", 55, 10, 40);
+        var lblData = AddLabel("Data", 55, 10, 70);
+        var lblHorario = AddLabel("Horário", 55, 200, 70);
 
-        var lblNomeMedico = new Label
-        {
-            Width = 55,
-            Text = "Médico",
-            Left = 10,
-            Top = 40,
-            TextAlign = ContentAlignment.MiddleRight
-        };
-
-        var lblData = new Label
-        {
-            Width = 55,
-            Text = "Data",
-            Left = 10,
-            Top = 70,
-            TextAlign = ContentAlignment.MiddleRight
-        };
-
-        var lblHorario = new Label
-        {
-            Width = 55,
-            Text = "Horário",
-            Left = 200,
-            Top = 70,
-            TextAlign = ContentAlignment.MiddleRight
-        };
-
-        var txtNomePaciente = new TextBox
-        {
-            Left = 80,
-            Top = 10,
-            Width = 250
-        };
-
-        var txtNomeMedico = new TextBox
-        {
-            Left = 80,
-            Top = 40,
-            Width = 250
-        };
+        var txtNomePaciente = AddTextBox(250, 80, 10);
+        var txtNomeMedico = AddTextBox(250, 80, 40);
 
         var dtpData = Consultorio.NewDateTimePicker(75, 80, "dd/MM/yyyy");
         dtpData.MinDate = new DateTime(2026, 1, 1);
@@ -320,36 +281,25 @@ public class Dialog
         dtpTime.Width = 60;
         dtpTime.ShowUpDown = true;
 
-        var btnOk = new Button
-        {
-            Text = "OK",
-            Left = 90,
-            Top = 150,
-            DialogResult = DialogResult.OK
-        };
+        var btnOk = AddButton("Salvar", 90, 150);
+        var btnCancel = AddButton("Cancelar", 230, 150);
 
-        var btnCancel = new Button
-        {
-            Text = "Cancel",
-            Left = 230,
-            Top = 150,
-            DialogResult = DialogResult.OK
-        };
+        formDialog.Controls.Clear(); // esta limpeza deve ser feita a cada chamada, pois o formDialog é apenas um único componente reutilizado em todas as situações.
 
-        form.Controls.Add(lblNomePaciente);
-        form.Controls.Add(lblNomeMedico);
-        form.Controls.Add(lblData);
-        form.Controls.Add(lblHorario);
-        form.Controls.Add(txtNomePaciente);
-        form.Controls.Add(txtNomeMedico);
-        form.Controls.Add(dtpData);
-        form.Controls.Add(dtpTime);
-        form.Controls.Add(btnOk);
-        form.Controls.Add(btnCancel);
-        form.AcceptButton = btnOk;
-        form.CancelButton = btnCancel;
+        formDialog.Controls.Add(lblNomePaciente);
+        formDialog.Controls.Add(lblNomeMedico);
+        formDialog.Controls.Add(lblData);
+        formDialog.Controls.Add(lblHorario);
+        formDialog.Controls.Add(txtNomePaciente);
+        formDialog.Controls.Add(txtNomeMedico);
+        formDialog.Controls.Add(dtpData);
+        formDialog.Controls.Add(dtpTime);
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
 
-        if (form.ShowDialog() == DialogResult.OK)
+        if (formDialog.ShowDialog() == DialogResult.OK)
         {
             // string nome = txtNome.Text;
         }
@@ -357,92 +307,34 @@ public class Dialog
 
     private static void AddMedico(string actionType, string subject)
     {
-        var form = new Form
-        {
-            Text = actionType + " " + subject, // ex.: adicionar + consulta = Adicionar consulta.
-            FormBorderStyle = FormBorderStyle.FixedSingle,
-            StartPosition = FormStartPosition.CenterScreen,
-            Width = 400,
-            Height = 250,
-            MaximizeBox = false
-        };
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 250;
 
-        var lblNomeMedico = new Label
-        {
-            Width = 80,
-            Text = "Nome",
-            Left = 10,
-            Top = 10,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var lblNomeMedico = AddLabel("Nome", 80, 10, 10);
+        var lblTelefone = AddLabel("Telefone", 80, 10, 40);
+        var lblValorConsulta = AddLabel("Consulta (R$)", 80, 10, 70);
 
-        var lblTelefone = new Label
-        {
-            Width = 80,
-            Text = "Telefone",
-            Left = 10,
-            Top = 40,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var txtNomeMedico = AddTextBox(250, 100, 10);
+        var txtTelefone = AddTextBox(150, 100, 40);
+        var txtValorConsulta = AddTextBox(150, 100, 70);
 
-        var lblValorConsulta = new Label
-        {
-            Width = 80,
-            Text = "Consulta (R$)",
-            Left = 10,
-            Top = 70,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var btnOk = AddButton("Salvar", 90, 150);
+        var btnCancel = AddButton("Cancelar", 230, 150);
 
-        var txtNomeMedico = new TextBox
-        {
-            Left = 100,
-            Top = 10,
-            Width = 250
-        };
+        formDialog.Controls.Clear();
 
-        var txtTelefone = new TextBox
-        {
-            Left = 100,
-            Top = 40,
-            Width = 150
-        };
+        formDialog.Controls.Add(lblNomeMedico);
+        formDialog.Controls.Add(lblTelefone);
+        formDialog.Controls.Add(lblValorConsulta);
+        formDialog.Controls.Add(txtNomeMedico);
+        formDialog.Controls.Add(txtTelefone);
+        formDialog.Controls.Add(txtValorConsulta);
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
 
-        var txtValorConsulta = new TextBox
-        {
-            Left = 100,
-            Top = 70,
-            Width = 150
-        };
-
-        var btnOk = new Button
-        {
-            Text = "OK",
-            Left = 90,
-            Top = 150,
-            DialogResult = DialogResult.OK
-        };
-
-        var btnCancel = new Button
-        {
-            Text = "Cancel",
-            Left = 230,
-            Top = 150,
-            DialogResult = DialogResult.OK
-        };
-
-        form.Controls.Add(lblNomeMedico);
-        form.Controls.Add(lblTelefone);
-        form.Controls.Add(lblValorConsulta);
-        form.Controls.Add(txtNomeMedico);
-        form.Controls.Add(txtTelefone);
-        form.Controls.Add(txtValorConsulta);
-        form.Controls.Add(btnOk);
-        form.Controls.Add(btnCancel);
-        form.AcceptButton = btnOk;
-        form.CancelButton = btnCancel;
-
-        if (form.ShowDialog() == DialogResult.OK)
+        if (formDialog.ShowDialog() == DialogResult.OK)
         {
             // string nome = txtNome.Text;
         }
@@ -450,213 +342,109 @@ public class Dialog
 
     private static void AddPaciente(string actionType, string subject)
     {
-        var form = new Form
-        {
-            Text = actionType + " " + subject, // ex.: adicionar + consulta = Adicionar consulta.
-            FormBorderStyle = FormBorderStyle.FixedSingle,
-            StartPosition = FormStartPosition.CenterScreen,
-            Width = 400,
-            Height = 350,
-            MaximizeBox = false
-        };
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 350;
 
-        var lblNomePaciente = new Label
-        {
-            Width = 80,
-            Text = "Nome",
-            Left = 10,
-            Top = 10,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var lblNomePaciente = AddLabel("Nome", 80, 10, 10);
+        var lblEndereco = AddLabel("Endereço", 80, 10, 40);
+        var lblNumero = AddLabel("Número", 80, 10, 70);
+        var lblBairro = AddLabel("Bairro", 60, 150, 70);
+        var lblCidade = AddLabel("Cidade", 80, 10, 100);
+        var lblCep = AddLabel("CEP", 30, 220, 100);
+        var lblSexo = AddLabel("Sexo", 80, 10, 130);
+        var lblTelefone = AddLabel("Telefone", 80, 10, 160);
+        var lblCelular = AddLabel("Celular", 80, 10, 190);
 
-        var lblEndereco = new Label
-        {
-            Width = 80,
-            Text = "Endereço",
-            Left = 10,
-            Top = 40,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var txtNomePaciente = AddTextBox(250, 100, 10);
+        var txtEndereco = AddTextBox(250, 100, 40);
+        var txtNumero = AddTextBox(50, 100, 70);
+        var txtBairro = AddTextBox(130, 220, 70);
+        var txtCidade = AddTextBox(100, 100, 100);
+        var txtCep = AddTextBox(90, 260, 100);
 
-        var lblNumero = new Label
-        {
-            Width = 80,
-            Text = "Número",
-            Left = 10,
-            Top = 70,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var radioMasculino = AddRadio("Masculino", 90, 100, 130);
+        var radioFeminino = AddRadio("Feminino", 90, 200, 130);
 
-        var lblBairro = new Label
-        {
-            Width = 60,
-            Text = "Bairro",
-            Left = 150,
-            Top = 70,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var txtTelefone = AddTextBox(150, 100, 160);
+        var txtCelular = AddTextBox(150, 100, 190);
 
-        var lblCidade = new Label
-        {
-            Width = 80,
-            Text = "Cidade",
-            Left = 10,
-            Top = 100,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        var btnOk = AddButton("Salvar", 90, 250);
+        var btnCancel = AddButton("Cancelar", 230, 250);
 
-        var lblCep = new Label
-        {
-            Width = 30,
-            Text = "CEP",
-            Left = 220,
-            Top = 100,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        formDialog.Controls.Clear(); // remove todos os componentes que estiverem no form.
 
-        var lblSexo = new Label
-        {
-            Width = 80,
-            Text = "Sexo",
-            Left = 10,
-            Top = 130,
-            TextAlign = ContentAlignment.MiddleRight
-        };
+        formDialog.Controls.Add(lblNomePaciente);
+        formDialog.Controls.Add(lblEndereco);
+        formDialog.Controls.Add(lblNumero);
+        formDialog.Controls.Add(lblBairro);
+        formDialog.Controls.Add(lblCidade);
+        formDialog.Controls.Add(lblCep);
+        formDialog.Controls.Add(lblSexo);
+        formDialog.Controls.Add(lblTelefone);
+        formDialog.Controls.Add(lblCelular);
+        formDialog.Controls.Add(txtNomePaciente);
+        formDialog.Controls.Add(txtEndereco);
+        formDialog.Controls.Add(txtNumero);
+        formDialog.Controls.Add(txtBairro);
+        formDialog.Controls.Add(txtCidade);
+        formDialog.Controls.Add(txtCep);
+        formDialog.Controls.Add(txtTelefone);
+        formDialog.Controls.Add(txtCelular);
+        formDialog.Controls.Add(radioMasculino);
+        formDialog.Controls.Add(radioFeminino);
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
 
-        var lblTelefone = new Label
-        {
-            Width = 80,
-            Text = "Telefone",
-            Left = 10,
-            Top = 160,
-            TextAlign = ContentAlignment.MiddleRight
-        };
-
-        var lblCelular = new Label
-        {
-            Width = 80,
-            Text = "Celular",
-            Left = 10,
-            Top = 190,
-            TextAlign = ContentAlignment.MiddleRight
-        };
-
-        var txtNomePaciente = new TextBox
-        {
-            Left = 100,
-            Top = 10,
-            Width = 250
-        };
-
-        var txtEndereco = new TextBox
-        {
-            Left = 100,
-            Top = 40,
-            Width = 250
-        };
-
-        var txtNumero = new TextBox
-        {
-            Left = 100,
-            Top = 70,
-            Width = 50
-        };
-
-        var txtBairro = new TextBox
-        {
-            Left = 220,
-            Top = 70,
-            Width = 130
-        };
-
-        var txtCidade = new TextBox
-        {
-            Left = 100,
-            Top = 100,
-            Width = 100
-        };
-
-        var txtCep = new TextBox
-        {
-            Left = 260,
-            Top = 100,
-            Width = 90
-        };
-
-        var radioMasculino = new RadioButton
-        {
-            Width = 90,
-            Text = "Masculino",
-            Left = 100,
-            Top = 130
-        };
-
-        var radioFeminino = new RadioButton
-        {
-            Width = 90,
-            Text = "Feminino",
-            Left = 200,
-            Top = 130
-        };
-
-        var txtTelefone = new TextBox
-        {
-            Left = 100,
-            Top = 160,
-            Width = 150
-        };
-
-        var txtCelular = new TextBox
-        {
-            Left = 100,
-            Top = 190,
-            Width = 150
-        };
-
-        var btnOk = new Button
-        {
-            Text = "OK",
-            Left = 90,
-            Top = 250,
-            DialogResult = DialogResult.OK
-        };
-
-        var btnCancel = new Button
-        {
-            Text = "Cancel",
-            Left = 230,
-            Top = 250,
-            DialogResult = DialogResult.OK
-        };
-
-        form.Controls.Add(lblNomePaciente);
-        form.Controls.Add(lblEndereco);
-        form.Controls.Add(lblNumero);
-        form.Controls.Add(lblBairro);
-        form.Controls.Add(lblCidade);
-        form.Controls.Add(lblCep);
-        form.Controls.Add(lblSexo);
-        form.Controls.Add(lblTelefone);
-        form.Controls.Add(lblCelular);
-        form.Controls.Add(txtNomePaciente);
-        form.Controls.Add(txtEndereco);
-        form.Controls.Add(txtNumero);
-        form.Controls.Add(txtBairro);
-        form.Controls.Add(txtCidade);
-        form.Controls.Add(txtCep);
-        form.Controls.Add(txtTelefone);
-        form.Controls.Add(txtCelular);
-        form.Controls.Add(radioMasculino);
-        form.Controls.Add(radioFeminino);
-        form.Controls.Add(btnOk);
-        form.Controls.Add(btnCancel);
-        form.AcceptButton = btnOk;
-        form.CancelButton = btnCancel;
-
-        if (form.ShowDialog() == DialogResult.OK)
+        if (formDialog.ShowDialog() == DialogResult.OK)
         {
             // string nome = txtNome.Text;
         }
+    }
+
+    private static Label AddLabel(string text, int width, int left, int top)
+    {
+        return new Label
+        {
+            Text = text,
+            Width = width,
+            Left = left,
+            Top = top,
+            TextAlign = ContentAlignment.MiddleRight
+        };
+    }
+
+    private static TextBox AddTextBox(int width, int left, int top)
+    {
+        return new TextBox
+        {
+            Width = width,
+            Left = left,
+            Top = top
+        };
+    }
+
+    private static Button AddButton(string text, int left, int top)
+    {
+        return new Button
+        {
+            Text = text,
+            Left = left,
+            Top = top,
+            DialogResult = DialogResult.OK
+        };
+    }
+
+    private static RadioButton AddRadio(string text, int width, int left, int top)
+    {
+        return new RadioButton
+        {
+            Text = "Text",
+            Width = width,
+            Left = left,
+            Top = top
+        };
     }
 }
 
