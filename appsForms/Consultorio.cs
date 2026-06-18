@@ -138,7 +138,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
 public class Dialog
 {
-
+    // TODO: para todos os componentes que se repetem entre os forms, ver se dá pra reutilizar, ao invés de fazer redeclarações.
     private static Form formDialog = new Form
     {
         FormBorderStyle = FormBorderStyle.FixedSingle,
@@ -163,16 +163,22 @@ public class Dialog
                 AddPaciente(actionType, subject);
                 break;
             case ("Editar", "consulta"):
+                EditConsulta(actionType, subject);
                 break;
             case ("Editar", "médico"):
+                EditMedico(actionType, subject);
                 break;
             case ("Editar", "paciente"):
+                EditPaciente(actionType, subject);
                 break;
             case ("Deletar", "consulta"):
+                DeleteConsulta(actionType, subject);
                 break;
             case ("Deletar", "médico"):
+                DeleteMedico(actionType, subject);
                 break;
             case ("Deletar", "paciente"):
+                DeletePaciente(actionType, subject);
                 break;
         }
     }
@@ -316,10 +322,231 @@ public class Dialog
 
         if (formDialog.ShowDialog() == DialogResult.OK)
         {
-            // string nome = txtNome.Text;
+            // TODO...
         }
     }
 
+    //OBS.: todos estes formulários de edição devem puxar a entrada de registro atualmente selecionada.
+    private static void EditConsulta(string actionType, string subject)
+    {
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 250;
+
+        var lblNomePaciente = Builder.NewLabel("Paciente", 55, 10, 10);
+        var lblNomeMedico = Builder.NewLabel("Médico", 55, 10, 40);
+        var lblData = Builder.NewLabel("Data", 55, 10, 70);
+        var lblHorario = Builder.NewLabel("Horário", 55, 200, 70);
+
+        var txtNomePaciente = Builder.NewTextBox("consulta_nome_paciente", 250, 80, 10);
+        var txtNomeMedico = Builder.NewTextBox("consulta_nome_medico", 250, 80, 40);
+
+        var dtpData = Builder.NewDateTimePicker(75, 80, "dd/MM/yyyy");
+        dtpData.MinDate = new DateTime(2026, 1, 1);
+        dtpData.MaxDate = new DateTime(2026, 12, 31);
+
+        var dtpTime = Builder.NewDateTimePicker(75, 260, "HH:mm");
+        dtpTime.Width = 60;
+        dtpTime.ShowUpDown = true;
+
+        var btnOk = Builder.AddButton("Salvar", 90, 150);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 150);
+
+        formDialog.Controls.Clear();
+
+        formDialog.Controls.Add(lblNomePaciente);
+        formDialog.Controls.Add(lblNomeMedico);
+        formDialog.Controls.Add(lblData);
+        formDialog.Controls.Add(lblHorario);
+        formDialog.Controls.Add(txtNomePaciente);
+        formDialog.Controls.Add(txtNomeMedico);
+        formDialog.Controls.Add(dtpData);
+        formDialog.Controls.Add(dtpTime);
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
+
+        if (formDialog.ShowDialog() == DialogResult.OK)
+        {
+            // TODO...
+        }
+    }
+
+    private static void EditMedico(string actionType, string subject)
+    {
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 250;
+
+        var lblNomeMedico = Builder.NewLabel("Nome", 80, 10, 10);
+        var lblTelefone = Builder.NewLabel("Telefone", 80, 10, 40);
+        var lblValorConsulta = Builder.NewLabel("Consulta (R$)", 80, 10, 70);
+
+        var txtNomeMedico = Builder.NewTextBox("medico_nome", 250, 100, 10);
+        var txtTelefone = Builder.NewTextBox("medico_telefone", 150, 100, 40);
+        var txtValorConsulta = Builder.NewTextBox("medico_valor_consulta", 150, 100, 70);
+
+        var btnOk = Builder.AddButton("Salvar", 90, 150);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 150);
+
+        formDialog.Controls.Clear();
+
+        formDialog.Controls.Add(lblNomeMedico);
+        formDialog.Controls.Add(lblTelefone);
+        formDialog.Controls.Add(lblValorConsulta);
+        formDialog.Controls.Add(txtNomeMedico);
+        formDialog.Controls.Add(txtTelefone);
+        formDialog.Controls.Add(txtValorConsulta);
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
+
+        if (formDialog.ShowDialog() == DialogResult.OK)
+        {
+            // TODO...
+        }
+    }
+
+    private static void EditPaciente(string actionType, string subject)
+    {
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 350;
+
+        var lblNomePaciente = Builder.NewLabel("Nome", 80, 10, 10);
+        var lblEndereco = Builder.NewLabel("Endereço", 80, 10, 40);
+        var lblNumero = Builder.NewLabel("Número", 80, 10, 70);
+        var lblBairro = Builder.NewLabel("Bairro", 60, 150, 70);
+        var lblCidade = Builder.NewLabel("Cidade", 80, 10, 100);
+        var lblCep = Builder.NewLabel("CEP", 30, 220, 100);
+        var lblSexo = Builder.NewLabel("Sexo", 80, 10, 130);
+        var lblTelefone = Builder.NewLabel("Telefone", 80, 10, 160);
+        var lblCelular = Builder.NewLabel("Celular", 80, 10, 190);
+
+        var txtNomePaciente = Builder.NewTextBox("paciente_nome", 250, 100, 10);
+        var txtEndereco = Builder.NewTextBox("paciente_endereco", 250, 100, 40);
+        var txtNumero = Builder.NewTextBox("paciente_numero", 50, 100, 70);
+        var txtBairro = Builder.NewTextBox("paciente_bairro", 130, 220, 70);
+        var txtCidade = Builder.NewTextBox("paciente_cidade", 100, 100, 100);
+        var txtCep = Builder.NewTextBox("paciente_cep", 90, 260, 100);
+
+        var radioMasculino = Builder.AddRadio("Masculino", 90, 100, 130);
+        var radioFeminino = Builder.AddRadio("Feminino", 90, 200, 130);
+
+        var txtTelefone = Builder.NewTextBox("paciente_telefone", 150, 100, 160);
+        var txtCelular = Builder.NewTextBox("paciente_celular", 150, 100, 190);
+
+        var btnOk = Builder.AddButton("Salvar", 90, 250);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 250);
+
+        formDialog.Controls.Clear();
+
+        formDialog.Controls.Add(lblNomePaciente);
+        formDialog.Controls.Add(lblEndereco);
+        formDialog.Controls.Add(lblNumero);
+        formDialog.Controls.Add(lblBairro);
+        formDialog.Controls.Add(lblCidade);
+        formDialog.Controls.Add(lblCep);
+        formDialog.Controls.Add(lblSexo);
+        formDialog.Controls.Add(lblTelefone);
+        formDialog.Controls.Add(lblCelular);
+        formDialog.Controls.Add(txtNomePaciente);
+        formDialog.Controls.Add(txtEndereco);
+        formDialog.Controls.Add(txtNumero);
+        formDialog.Controls.Add(txtBairro);
+        formDialog.Controls.Add(txtCidade);
+        formDialog.Controls.Add(txtCep);
+        formDialog.Controls.Add(txtTelefone);
+        formDialog.Controls.Add(txtCelular);
+        formDialog.Controls.Add(radioMasculino);
+        formDialog.Controls.Add(radioFeminino);
+
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
+
+        if (formDialog.ShowDialog() == DialogResult.OK)
+        {
+            // TODO...
+        }
+    }
+
+
+    // OBS.: Qualquer exclusão de entradas no registro deve seguir esta lógica: na tentativa de deletar um médico do cadastro, primeiramente deve-se verificar se há consultas para ele/ela, se houver, a exclusão não pode ocorrer até que as consultas sejam editadas. No caso, o usuário terá de pesquisar consultas por médico e substituir o médico a ser excluido do registro por outro, só então poderá ser excluido. Já no caso de pacientes, a lógica é a mesma. Isto tudo é para que não haja tabelas na base de dados com informações desatualizadas.
+    private static void DeleteConsulta(string actionType, string subject)
+    {
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 150;
+
+        var lblConfirmDelete = Builder.NewLabel("Confirmar exclusão de consulta do registro?", 300, 10, 20);
+
+        var btnOk = Builder.AddButton("Excluir", 90, 70);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 70);
+
+        formDialog.Controls.Clear();
+
+        formDialog.Controls.Add(lblConfirmDelete);
+
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
+
+        if (formDialog.ShowDialog() == DialogResult.OK)
+        {
+            // TODO...
+        }
+    }
+
+    private static void DeleteMedico(string actionType, string subject)
+    {
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 150;
+
+        var lblConfirmDelete = Builder.NewLabel("Confirmar exclusão de médico do cadastro?", 300, 10, 20);
+
+        var btnOk = Builder.AddButton("Confirmar", 90, 70);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 70);
+
+        formDialog.Controls.Clear();
+
+        formDialog.Controls.Add(lblConfirmDelete);
+
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
+
+        if (formDialog.ShowDialog() == DialogResult.OK)
+        {
+            // TODO...
+        }
+    }
+
+    private static void DeletePaciente(string actionType, string subject)
+    {
+        formDialog.Text = actionType + " " + subject;
+        formDialog.Height = 150;
+
+        var lblConfirmDelete = Builder.NewLabel("Confirmar exclusão de paciente do cadastro?", 300, 10, 20);
+
+        var btnOk = Builder.AddButton("Confirmar", 90, 70);
+        var btnCancel = Builder.AddButton("Cancelar", 230, 70);
+
+        formDialog.Controls.Clear();
+
+        formDialog.Controls.Add(lblConfirmDelete);
+
+        formDialog.Controls.Add(btnOk);
+        formDialog.Controls.Add(btnCancel);
+        formDialog.AcceptButton = btnOk;
+        formDialog.CancelButton = btnCancel;
+
+        if (formDialog.ShowDialog() == DialogResult.OK)
+        {
+            // TODO...
+        }
+    }
 }
 
 public class Builder
