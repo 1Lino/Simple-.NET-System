@@ -14,9 +14,35 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             InitializeConsultorio();
             InitializeTabControl();
             InitializeTabComponents();
-            Builder.AddDataGridViewToTab(tab_consultas);
-            Builder.AddDataGridViewToTab(tab_medicos);
-            Builder.AddDataGridViewToTab(tab_pacientes);
+
+            // tc = tabela consultas; tm = tabela medicos; tp = tabela pacientes
+            Builder.AddDataGridViewToTab(tab_consultas, [
+                ("tc_id", "Código"),
+                ("tc_medico_id", "Médico"),
+                ("tc_paciente_id", "Paciente"),
+                ("tc_data", "Data"),
+                ("tc_horario", "Horário"),
+                ("tc_retorno", "Retorno")
+                ]);
+
+            Builder.AddDataGridViewToTab(tab_medicos, [
+                ("tm_id", "Código"),
+                ("tm_nome", "Nome"),
+                ("tm_telefone", "Telefone"),
+                ("tm_valor_consulta", "Valor Consulta")
+                ]);
+            Builder.AddDataGridViewToTab(tab_pacientes, [
+                ("tp_id", "Código"),
+                ("tp_nome", "Nome"),
+                ("tp_endereco", "Endereço"),
+                ("tp_numero", "Número"),
+                ("tp_bairro", "Bairro"),
+                ("tp_cidade", "Cidade"),
+                ("tp_cep", "CEP"),
+                ("tp_sexo", "Sexo"),
+                ("tp_telefone", "Telefone"),
+                ("tp_celular", "Celulare"),
+                ]);
         }
 
         private void InitializeConsultorio()
@@ -629,7 +655,8 @@ public class Builder
         };
     }
 
-    public static void AddDataGridViewToTab(TabPage tab)
+    // o primeiro item da tupla se refere ao nome de identificação da coluna, já o segundo se refere ao texto do header.
+    public static void AddDataGridViewToTab(TabPage tab, List<(string, string)> colunas)
     {
         DataGridView table = new DataGridView
         {
@@ -645,14 +672,11 @@ public class Builder
         };
         table.AllowUserToAddRows = false;
 
-        //TODO: ver se existe uma forma de se implementar um spread operator para que o método 
-        // aceite o tanto de colunas quanto forem passadas.
-        table.Columns.Add("id_consulta", "Nº Consulta");
-        table.Columns.Add("id_medico", "Médico");
-        table.Columns.Add("id_paciente", "Paciente");
-        table.Columns.Add("data", "Data");
-        table.Columns.Add("horario", "Horário");
-        table.Columns.Add("retorno", "Retorno");
+        // para cada name e header em colunas:
+        foreach (var (name, header) in colunas)
+        {
+            table.Columns.Add(name, header);
+        }
 
         tab.Controls.Add(table);
     }
