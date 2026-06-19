@@ -17,22 +17,22 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             // tc = tabela consultas; tm = tabela medicos; tp = tabela pacientes
             Builder.AddDataGridViewToTab(tab_consultas, [
-                ("tc_id", "Código"),
-                ("tc_medico_id", "Médico"),
-                ("tc_paciente_id", "Paciente"),
+                ("tc_id", "Nº"),
+                ("tc_medico_nome", "Médico"),
+                ("tc_paciente_nome", "Paciente"),
                 ("tc_data", "Data"),
                 ("tc_horario", "Horário"),
                 ("tc_retorno", "Retorno")
                 ]);
 
             Builder.AddDataGridViewToTab(tab_medicos, [
-                ("tm_id", "Código"),
+                ("tm_id", "Nº"),
                 ("tm_nome", "Nome"),
                 ("tm_telefone", "Telefone"),
                 ("tm_valor_consulta", "Valor Consulta")
                 ]);
             Builder.AddDataGridViewToTab(tab_pacientes, [
-                ("tp_id", "Código"),
+                ("tp_id", "Nº"),
                 ("tp_nome", "Nome"),
                 ("tp_endereco", "Endereço"),
                 ("tp_numero", "Número"),
@@ -41,8 +41,11 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 ("tp_cep", "CEP"),
                 ("tp_sexo", "Sexo"),
                 ("tp_telefone", "Telefone"),
-                ("tp_celular", "Celulare"),
+                ("tp_celular", "Celular"),
                 ]);
+
+            // carrega informações da base nas tabelas:
+            DBTest.LoadConsultas((DataGridView)tab_consultas.Controls[$"table_{tab_consultas.Name}"], DBTest.dadosConsulta);
         }
 
         private void InitializeConsultorio()
@@ -615,7 +618,7 @@ public class Builder
     {
         return new RadioButton
         {
-            Text = "Text",
+            Text = text,
             Width = width,
             Left = left,
             Top = top
@@ -660,6 +663,7 @@ public class Builder
     {
         DataGridView table = new DataGridView
         {
+            Name = "table_" + tab.Name,
             Size = new Size(575, 200),
             Top = 210,
             Dock = DockStyle.None,
@@ -671,6 +675,9 @@ public class Builder
             AllowUserToResizeColumns = false,
         };
         table.AllowUserToAddRows = false;
+        table.SelectionMode = DataGridViewSelectionMode.FullRowSelect; // seleciona visualmente toda a linha.
+        table.MultiSelect = false;
+        table.DefaultCellStyle.SelectionBackColor = Color.SteelBlue;
 
         // para cada name e header em colunas:
         foreach (var (name, header) in colunas)
@@ -678,7 +685,54 @@ public class Builder
             table.Columns.Add(name, header);
         }
 
+        // Teste: seleciona, da lista de tuplas "colunas", os segundos itens das tuplas, e converte em objeto, e então de objeto converte em array, pois Add pode iterar arrays. Então, adiciona conteúdo a cada célula da linha dinamicamente conforme as colunas, já que utilizam a mesma lista "colunas". Isto aqui é só pra fim de testes, já que a base de dados não foi ainda implementada.
+        //TODO: deve ser criada um método LoadDB na classe DBTest para fazer isso aqui.
+        // table.Rows.Add(colunas.Select(t => t.Item2).Cast<object>().ToArray());
+        // table.Rows.Add(colunas.Select(t => t.Item2).Cast<object>().ToArray());
+
+        table.CellClick += Events.dataGridView_CellClick;
+
         tab.Controls.Add(table);
+    }
+}
+
+// record é basicamente uma classe, só que simplificada para contexto de dados.
+// Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
+public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateTime data, DateTime horario, bool retorno);
+
+public class DBTest
+{
+    // Objeto do tipo "RegistroConsulta". Isso aqui é só um teste:
+    public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
+    {
+        new(1029,  "Marcela Andrade", "João da Silva",  DateTime.Parse("2026-07-14"), DateTime.Parse("2026-07-14 14:30:00"), true),
+        new(1030,  "Pedro Alcantara", "Maria Cruz",  DateTime.Parse("2026-07-15"), DateTime.Parse("2026-07-15 15:30:00"), false),
+        new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  DateTime.Parse("2026-07-18"), DateTime.Parse("2026-07-18 16:30:00"), true)
+    };
+
+    public static void LoadConsultas(DataGridView table, List<RegistroConsulta> dados)
+    {
+        for (int i = 0; i < dados.Count; i++)
+        {
+            table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].nomePaciente, dados[i].data, dados[i].horario, dados[i].retorno);
+        }
+    }
+}
+
+public class Events
+{
+    public static void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0) return; // evita erro de (índice -1) ao clicar no cabeçalho
+
+        DataGridView dgv = (DataGridView)sender;
+        DataGridViewRow row = dgv.Rows[e.RowIndex]; // captura a linha da tabela retornada pelo evento
+
+        // teste operações:
+        string id1 = row.Cells["tc_medico_nome"].Value?.ToString();
+        string id2 = row.Cells["tc_paciente_nome"].Value?.ToString();
+
+        MessageBox.Show($"Nome médico: {id1}\nNome paciente: {id2}");
     }
 }
 
