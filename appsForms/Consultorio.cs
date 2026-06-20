@@ -1,4 +1,3 @@
-using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -45,7 +44,11 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 ]);
 
             // carrega informações da base nas tabelas:
-            DBTest.LoadConsultas((DataGridView)tab_consultas.Controls[$"table_{tab_consultas.Name}"], DBTest.dadosConsulta);
+            DBTest.LoadConsultasToTable((DataGridView)tab_consultas.Controls[$"table_{tab_consultas.Name}"], DBTest.dadosConsulta);
+
+            DBTest.LoadMedicosToTable((DataGridView)tab_medicos.Controls[$"table_{tab_medicos.Name}"], DBTest.dadosMedico);
+
+            DBTest.LoadPacientesToTable((DataGridView)tab_pacientes.Controls[$"table_{tab_pacientes.Name}"], DBTest.dadosPaciente);
         }
 
         private void InitializeConsultorio()
@@ -686,8 +689,6 @@ public class Builder
         }
 
         // Teste: seleciona, da lista de tuplas "colunas", os segundos itens das tuplas, e converte em objeto, e então de objeto converte em array, pois Add pode iterar arrays. Então, adiciona conteúdo a cada célula da linha dinamicamente conforme as colunas, já que utilizam a mesma lista "colunas". Isto aqui é só pra fim de testes, já que a base de dados não foi ainda implementada.
-        //TODO: deve ser criada um método LoadDB na classe DBTest para fazer isso aqui.
-        // table.Rows.Add(colunas.Select(t => t.Item2).Cast<object>().ToArray());
         // table.Rows.Add(colunas.Select(t => t.Item2).Cast<object>().ToArray());
 
         table.CellClick += Events.dataGridView_CellClick;
@@ -700,9 +701,16 @@ public class Builder
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
 public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateTime data, DateTime horario, bool retorno);
 
+public record RegistroMedico(int codigo, string nome, string telefone, double valorConsulta);
+
+public record RegistroPaciente(int codigo, string nome, string endereco, int numero, string bairro, string cidade, double cep, string sexo, string telefone, string celular);
+
+
+//TODO: seria interessante simular situações assícronas (async) como delays de carga, etc, pra ver como o sistema reage a isso.
+//DBTest poderá se tornar uma interface de serviço: ou seja, é esta camada que deverá conectar-se ao banco e fazer a ponte entre front e dados (front não acessa dados diretamente).
 public class DBTest
 {
-    // Objeto do tipo "RegistroConsulta". Isso aqui é só um teste:
+    // Objetos do tipo "RegistroConsulta", "RegistroMedico" e "RegistroPaciente". Estes valores são apenas teste (hardcoded), mas o que deve ocorrer de verdade é que um carregamento deve ser feito da base de dados para cá, para isso deve haver um método para cada tipo de objeto.
     public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
     {
         new(1029,  "Marcela Andrade", "João da Silva",  DateTime.Parse("2026-07-14"), DateTime.Parse("2026-07-14 14:30:00"), true),
@@ -710,11 +718,46 @@ public class DBTest
         new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  DateTime.Parse("2026-07-18"), DateTime.Parse("2026-07-18 16:30:00"), true)
     };
 
-    public static void LoadConsultas(DataGridView table, List<RegistroConsulta> dados)
+    public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
+    {
+        new(1,  "Marcela Andrade", "0800-9090", 170),
+        new(2,  "Pedro Alcantara", "0500-9092", 250),
+        new(3,  "Marcos Almeida", "0400-9095", 180)
+    };
+
+    public static List<RegistroPaciente> dadosPaciente = new List<RegistroPaciente>
+    {
+        new(40, "João da Silva", "R. Terra das Dores", 157, "Jabuti", "Vilalopolis", 12300000, "Masculino", "-", "(65) 99345-7657"),
+        new(45, "Maria Cruz", "R. Francisco Polo", 161, "Mapuio", "Areias", 17800000, "Feminino", "0500-0880", "(85) 97385-1359"),
+        new(49, "Jacinta Ribeiro", "R. Ivo de Almeida", 240, "Jangada", "Verdes Prados", 19500000, "Feminino", "-", "(50) 98445-2656")
+    };
+
+    // protótipos das funções de carregamento da base:
+    private static void LoadConsultasFromDB() { }
+    private static void LoadMedicosFromDB() { }
+    private static void LoadPacientesFromDB() { }
+
+    public static void LoadConsultasToTable(DataGridView table, List<RegistroConsulta> dados)
     {
         for (int i = 0; i < dados.Count; i++)
         {
             table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].nomePaciente, dados[i].data, dados[i].horario, dados[i].retorno);
+        }
+    }
+
+    public static void LoadMedicosToTable(DataGridView table, List<RegistroMedico> dados)
+    {
+        for (int i = 0; i < dados.Count; i++)
+        {
+            table.Rows.Add(dados[i].codigo, dados[i].nome, dados[i].telefone, dados[i].valorConsulta);
+        }
+    }
+
+    public static void LoadPacientesToTable(DataGridView table, List<RegistroPaciente> dados)
+    {
+        for (int i = 0; i < dados.Count; i++)
+        {
+            table.Rows.Add(dados[i].codigo, dados[i].nome, dados[i].endereco, dados[i].numero, dados[i].bairro, dados[i].cidade, dados[i].cep, dados[i].sexo, dados[i].telefone, dados[i].celular);
         }
     }
 }
@@ -729,10 +772,11 @@ public class Events
         DataGridViewRow row = dgv.Rows[e.RowIndex]; // captura a linha da tabela retornada pelo evento
 
         // teste operações:
-        string id1 = row.Cells["tc_medico_nome"].Value?.ToString();
-        string id2 = row.Cells["tc_paciente_nome"].Value?.ToString();
+        // string id1 = row.Cells["tc_medico_nome"].Value?.ToString();
+        // string id2 = row.Cells["tc_paciente_nome"].Value?.ToString();
 
-        MessageBox.Show($"Nome médico: {id1}\nNome paciente: {id2}");
+        // MessageBox.Show($"Nome médico: {id1}\nNome paciente: {id2}");
+        Console.WriteLine($"Linha de índice {e.RowIndex} selecionada!");
     }
 }
 
