@@ -1,4 +1,5 @@
 
+
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Consultorio : Form
@@ -16,7 +17,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             // tc = tabela consultas; tm = tabela medicos; tp = tabela pacientes
             Builder.AddDataGridViewToTab(tab_consultas, [
-                ("tc_id", "Nº"),
+                ("tc_id", "ID"),
                 ("tc_medico_nome", "Médico"),
                 ("tc_paciente_nome", "Paciente"),
                 ("tc_data", "Data"),
@@ -25,13 +26,13 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 ]);
 
             Builder.AddDataGridViewToTab(tab_medicos, [
-                ("tm_id", "Nº"),
+                ("tm_id", "ID"),
                 ("tm_nome", "Nome"),
                 ("tm_telefone", "Telefone"),
                 ("tm_valor_consulta", "Valor Consulta")
                 ]);
             Builder.AddDataGridViewToTab(tab_pacientes, [
-                ("tp_id", "Nº"),
+                ("tp_id", "ID"),
                 ("tp_nome", "Nome"),
                 ("tp_endereco", "Endereço"),
                 ("tp_numero", "Número"),
@@ -82,7 +83,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             // ## Aba consultas ##
             GroupBox grp_consultas = Builder.NewGroupBox("grp_consultas", "Buscar Consulta");
 
-            var lbl_consulta = Builder.NewLabel("Nº Consulta", 100, 10, 40);
+            var lbl_consulta = Builder.NewLabel("ID Consulta", 100, 10, 40);
             var lbl_medico = Builder.NewLabel("Nome Médico", 100, 10, 80);
             var lbl_paciente = Builder.NewLabel("Nome Paciente", 100, 10, 120);
             var lbl_data = Builder.NewLabel("Data", 40, 10, 160 - 5);
@@ -105,7 +106,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             // ## aba médicos ##
             GroupBox grp_medicos = Builder.NewGroupBox("grp_medicos", "Buscar Médico");
 
-            var lbl_medico_id = Builder.NewLabel("Nº Médico", 100, 10, 40);
+            var lbl_medico_id = Builder.NewLabel("ID Médico", 100, 10, 40);
             var lbl_medico_nome = Builder.NewLabel("Nome Médico", 100, 10, 80);
             var txt_medico_id = Builder.NewTextBox("box_medico_id", 100, 120, 40);
             var txt_medico_nome = Builder.NewTextBox("box_medico_nome", 200, 120, 80);
@@ -113,7 +114,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             // ## Aba pacientes ##
             GroupBox grp_pacientes = Builder.NewGroupBox("grp_pacientes", "Buscar Paciente");
 
-            var lbl_paciente_id = Builder.NewLabel("Nº Paciente", 100, 10, 40);
+            var lbl_paciente_id = Builder.NewLabel("ID Paciente", 100, 10, 40);
             var lbl_paciente_nome = Builder.NewLabel("Nome Paciente", 100, 10, 80);
             var txt_paciente_id = Builder.NewTextBox("box_paciente_id", 100, 120, 40);
             var txt_paciente_nome = Builder.NewTextBox("box_paciente_nome", 200, 120, 80);
@@ -699,7 +700,7 @@ public class Builder
 
 // record é basicamente uma classe, só que simplificada para contexto de dados.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
-public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateTime data, DateTime horario, bool retorno);
+public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno);
 
 public record RegistroMedico(int codigo, string nome, string telefone, double valorConsulta);
 
@@ -713,9 +714,9 @@ public class DBTest
     // Objetos do tipo "RegistroConsulta", "RegistroMedico" e "RegistroPaciente". Estes valores são apenas teste (hardcoded), mas o que deve ocorrer de verdade é que um carregamento deve ser feito da base de dados para cá, para isso deve haver um método para cada tipo de objeto.
     public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
     {
-        new(1029,  "Marcela Andrade", "João da Silva",  DateTime.Parse("2026-07-14"), DateTime.Parse("2026-07-14 14:30:00"), true),
-        new(1030,  "Pedro Alcantara", "Maria Cruz",  DateTime.Parse("2026-07-15"), DateTime.Parse("2026-07-15 15:30:00"), false),
-        new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  DateTime.Parse("2026-07-18"), DateTime.Parse("2026-07-18 16:30:00"), true)
+        new(1029,  "Marcela Andrade", "João da Silva",  DateOnly.Parse("2026-07-14"), TimeSpan.Parse("14:30"), true),
+        new(1030,  "Pedro Alcantara", "Maria Cruz",  DateOnly.Parse("2026-07-15"), TimeSpan.Parse("15:30"), false),
+        new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  DateOnly.Parse("2026-07-18"), TimeSpan.Parse("16:30"), true)
     };
 
     public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
@@ -764,6 +765,8 @@ public class DBTest
 
 public class Events
 {
+    private static List<string> InterfaceInfo = [];
+
     public static void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0) return; // evita erro de (índice -1) ao clicar no cabeçalho
@@ -771,12 +774,22 @@ public class Events
         DataGridView dgv = (DataGridView)sender;
         DataGridViewRow row = dgv.Rows[e.RowIndex]; // captura a linha da tabela retornada pelo evento
 
-        // teste operações:
-        // string id1 = row.Cells["tc_medico_nome"].Value?.ToString();
-        // string id2 = row.Cells["tc_paciente_nome"].Value?.ToString();
+        InterfaceInfo.Clear();
+        foreach (DataGridViewCell cell in row.Cells)
+        {
+            InterfaceInfo.Add(cell.Value?.ToString());
+        }
 
-        // MessageBox.Show($"Nome médico: {id1}\nNome paciente: {id2}");
-        Console.WriteLine($"Linha de índice {e.RowIndex} selecionada!");
+        foreach (string info in InterfaceInfo)
+        {
+            Console.Write(info + " ");
+        }
+        Console.WriteLine("");
+    }
+
+    public static List<string> CopyEditInfo()
+    {
+        return InterfaceInfo;
     }
 }
 
