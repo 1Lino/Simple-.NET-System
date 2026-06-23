@@ -169,6 +169,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     }
 }
 
+// classe que lida com formulários de Criação, Edição e Remoção de cadastros:
 public class Dialog
 {
     // TODO: para todos os componentes que se repetem entre os forms, ver se dá pra reutilizar, ao invés de fazer redeclarações.
@@ -765,7 +766,8 @@ public class DBTest
 
 public class Events
 {
-    private static List<string> InterfaceInfo = [];
+    // private static List<string> InterfaceInfo = [];
+    private static int CodigoEntrada;
 
     public static void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
     {
@@ -774,23 +776,34 @@ public class Events
         DataGridView dgv = (DataGridView)sender;
         DataGridViewRow row = dgv.Rows[e.RowIndex]; // captura a linha da tabela retornada pelo evento
 
-        InterfaceInfo.Clear();
-        foreach (DataGridViewCell cell in row.Cells)
-        {
-            InterfaceInfo.Add(cell.Value?.ToString());
-        }
+        // O comando abaixo puxa o código do cadastro, que fica na célula de índice 0 de toda linha.
+        // esse código deve ser usado para acessar o conteúdo de código correspondente na base. Por padrão, já que sabemos que a primeira linha de cada datagridview é selecionada por padrão, a variável de código inicial de cada um deve ser aquela linha (isto é, antes que o usuário clique qualquer linha pra puxar novo código).
+        //deve ser criado um método que faz isso, que possa ser usado aqui e na atualização dos formulários
+        SetCodigoEntrada((int)row.Cells[0].Value);
+        Console.WriteLine(CodigoEntrada);
 
-        foreach (string info in InterfaceInfo)
-        {
-            Console.Write(info + " ");
-        }
-        Console.WriteLine("");
+        // InterfaceInfo.Clear();
+        // foreach (DataGridViewCell cell in row.Cells)
+        // {
+        //     InterfaceInfo.Add(cell.Value?.ToString());
+        // }
+
+        // foreach (string info in InterfaceInfo)
+        // {
+        //     Console.Write(info + " ");
+        // }
+        // Console.WriteLine("");
     }
 
-    public static List<string> CopyEditInfo()
+    public static void SetCodigoEntrada(int codigo)
     {
-        return InterfaceInfo;
+        CodigoEntrada = codigo;
     }
+
+    // public static List<string> CopyEditInfo()
+    // {
+    //     return InterfaceInfo;
+    // }
 }
 
 // componente customizado, que engloba três botões, de modo que só precisemos implementar estes botões todos uma só vez por tab.
