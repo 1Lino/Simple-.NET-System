@@ -1,5 +1,3 @@
-
-
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Consultorio : Form
@@ -24,7 +22,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 ("tc_horario", "Horário"),
                 ("tc_retorno", "Retorno")
                 ]);
-
             Builder.AddDataGridViewToTab(tab_medicos, [
                 ("tm_id", "ID"),
                 ("tm_nome", "Nome"),
@@ -46,9 +43,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             // carrega informações da base nas tabelas:
             DBTest.LoadConsultasToTable((DataGridView)tab_consultas.Controls[$"table_{tab_consultas.Name}"], DBTest.dadosConsulta);
-
             DBTest.LoadMedicosToTable((DataGridView)tab_medicos.Controls[$"table_{tab_medicos.Name}"], DBTest.dadosMedico);
-
             DBTest.LoadPacientesToTable((DataGridView)tab_pacientes.Controls[$"table_{tab_pacientes.Name}"], DBTest.dadosPaciente);
         }
 
@@ -71,11 +66,21 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_medicos = Builder.NewTab("medicos", "Médicos");
             tab_pacientes = Builder.NewTab("pacientes", "Pacientes");
 
+            tab_consultas.Enter += (_, _) => ChangeParameters();
+            tab_medicos.Enter += (_, _) => ChangeParameters();
+            tab_pacientes.Enter += (_, _) => ChangeParameters();
+
             tabControl.TabPages.Add(tab_consultas);
             tabControl.TabPages.Add(tab_medicos);
             tabControl.TabPages.Add(tab_pacientes);
 
             this.Controls.Add(tabControl);
+        }
+
+        // TODO: mudar parametros da interface toda vez que mudar de tab.
+        private void ChangeParameters()
+        {
+            Eventos.ResetSelectedRowId(); // TODO: ResetSelectedRowId deve ser capaz de resetar o id da linha da tabela para o que está selecionado atualmente, ao invés de simplesmente zerar a id. Basta puxar a propriedade selectedRow do DGV e passar como argumento pra essa função.
         }
 
         private void InitializeTabComponents()
@@ -382,6 +387,12 @@ public class Dialog
         dtpTime.Width = 60;
         dtpTime.ShowUpDown = true;
 
+        // Carrega dos dados as informações, para a interface, de acordo com o id da linha selecionada no momento.
+        txtNomePaciente.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomePaciente;
+        txtNomeMedico.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomeMedico;
+        dtpData.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].data.ToString();
+        dtpTime.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].horario.ToString();
+
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
 
@@ -418,6 +429,10 @@ public class Dialog
         var txtNomeMedico = Builder.NewTextBox("medico_nome", 250, 100, 10);
         var txtTelefone = Builder.NewTextBox("medico_telefone", 150, 100, 40);
         var txtValorConsulta = Builder.NewTextBox("medico_valor_consulta", 150, 100, 70);
+
+        txtNomeMedico.Text = DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].nome;
+        txtTelefone.Text = DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].telefone;
+        txtValorConsulta.Text = DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].valorConsulta.ToString();
 
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
@@ -693,7 +708,7 @@ public class Builder
         // Teste: seleciona, da lista de tuplas "colunas", os segundos itens das tuplas, e converte em objeto, e então de objeto converte em array, pois Add pode iterar arrays. Então, adiciona conteúdo a cada célula da linha dinamicamente conforme as colunas, já que utilizam a mesma lista "colunas". Isto aqui é só pra fim de testes, já que a base de dados não foi ainda implementada.
         // table.Rows.Add(colunas.Select(t => t.Item2).Cast<object>().ToArray());
 
-        table.CellClick += Events.dataGridView_CellClick;
+        table.CellClick += Eventos.dataGridView_CellClick;
 
         tab.Controls.Add(table);
     }
@@ -764,46 +779,27 @@ public class DBTest
     }
 }
 
-public class Events
+public class Eventos
 {
-    // private static List<string> InterfaceInfo = [];
-    private static int CodigoEntrada;
+    private static int CurrentRowId = 0; // por padrão, o id inicial é 0, ou seja, o primeiro item da lista.
 
     public static void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
     {
         if (e.RowIndex < 0) return; // evita erro de (índice -1) ao clicar no cabeçalho
 
         DataGridView dgv = (DataGridView)sender;
-        DataGridViewRow row = dgv.Rows[e.RowIndex]; // captura a linha da tabela retornada pelo evento
-
-        // O comando abaixo puxa o código do cadastro, que fica na célula de índice 0 de toda linha.
-        // esse código deve ser usado para acessar o conteúdo de código correspondente na base. Por padrão, já que sabemos que a primeira linha de cada datagridview é selecionada por padrão, a variável de código inicial de cada um deve ser aquela linha (isto é, antes que o usuário clique qualquer linha pra puxar novo código).
-        //deve ser criado um método que faz isso, que possa ser usado aqui e na atualização dos formulários
-        SetCodigoEntrada((int)row.Cells[0].Value);
-        Console.WriteLine(CodigoEntrada);
-
-        // InterfaceInfo.Clear();
-        // foreach (DataGridViewCell cell in row.Cells)
-        // {
-        //     InterfaceInfo.Add(cell.Value?.ToString());
-        // }
-
-        // foreach (string info in InterfaceInfo)
-        // {
-        //     Console.Write(info + " ");
-        // }
-        // Console.WriteLine("");
+        CurrentRowId = e.RowIndex;
+        Console.WriteLine(CurrentRowId);
     }
 
-    public static void SetCodigoEntrada(int codigo)
+    public static void ResetSelectedRowId()
     {
-        CodigoEntrada = codigo;
+        CurrentRowId = 0;
     }
-
-    // public static List<string> CopyEditInfo()
-    // {
-    //     return InterfaceInfo;
-    // }
+    public static int GetCurrentSelectedRowId()
+    {
+        return CurrentRowId;
+    }
 }
 
 // componente customizado, que engloba três botões, de modo que só precisemos implementar estes botões todos uma só vez por tab.
