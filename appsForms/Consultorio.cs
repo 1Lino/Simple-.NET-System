@@ -66,21 +66,31 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_medicos = Builder.NewTab("medicos", "Médicos");
             tab_pacientes = Builder.NewTab("pacientes", "Pacientes");
 
-            tab_consultas.Enter += (_, _) => ChangeParameters();
-            tab_medicos.Enter += (_, _) => ChangeParameters();
-            tab_pacientes.Enter += (_, _) => ChangeParameters();
+            // tab_consultas.Enter += (_, _) => ChangeParameters(tab_consultas);
+            // tab_medicos.Enter += (_, _) => ChangeParameters(tab_medicos);
+            // tab_pacientes.Enter += (_, _) => ChangeParameters(tab_pacientes);
 
             tabControl.TabPages.Add(tab_consultas);
             tabControl.TabPages.Add(tab_medicos);
             tabControl.TabPages.Add(tab_pacientes);
 
+            tabControl.SelectedIndexChanged += OnTabChange;
+
             this.Controls.Add(tabControl);
         }
 
         // TODO: mudar parametros da interface toda vez que mudar de tab.
-        private void ChangeParameters()
+        private void OnTabChange(object sender, EventArgs e)
         {
-            Eventos.ResetSelectedRowId(); // TODO: ResetSelectedRowId deve ser capaz de resetar o id da linha da tabela para o que está selecionado atualmente, ao invés de simplesmente zerar a id. Basta puxar a propriedade selectedRow do DGV e passar como argumento pra essa função.
+            TabPage currentPage = tabControl.SelectedTab;
+            DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+            int currentSelectedRowId = dgv.CurrentRow.Index;
+
+            Eventos.ResetSelectedRowId(currentSelectedRowId);
+
+            // testes:
+            Console.WriteLine($"Página selecionada: {currentPage.Name}");
+            Console.WriteLine("Id da linha atualmente selecionada no DGV da atual página:" + Eventos.GetCurrentSelectedRowId());
         }
 
         private void InitializeTabComponents()
@@ -484,6 +494,25 @@ public class Dialog
         var txtTelefone = Builder.NewTextBox("paciente_telefone", 150, 100, 160);
         var txtCelular = Builder.NewTextBox("paciente_celular", 150, 100, 190);
 
+        // TODO... 
+        txtNomePaciente.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].nome;
+        txtEndereco.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].endereco;
+        txtNumero.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].numero.ToString();
+        txtBairro.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].bairro;
+        txtCidade.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].cidade;
+        txtCep.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].cep.ToString();
+        txtTelefone.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].telefone.ToString();
+        txtCelular.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].celular.ToString();
+
+        if (DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].sexo == "Masculino")
+        {
+            radioMasculino.Checked = true;
+        }
+        else
+        {
+            radioFeminino.Checked = true;
+        }
+
         var btnOk = Builder.AddButton("Salvar", 90, 250);
         var btnCancel = Builder.AddButton("Cancelar", 230, 250);
 
@@ -789,12 +818,12 @@ public class Eventos
 
         DataGridView dgv = (DataGridView)sender;
         CurrentRowId = e.RowIndex;
-        Console.WriteLine(CurrentRowId);
+        Console.WriteLine("Selecionou linha de id " + CurrentRowId);
     }
 
-    public static void ResetSelectedRowId()
+    public static void ResetSelectedRowId(int id)
     {
-        CurrentRowId = 0;
+        CurrentRowId = id;
     }
     public static int GetCurrentSelectedRowId()
     {
