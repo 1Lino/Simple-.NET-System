@@ -79,7 +79,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             this.Controls.Add(tabControl);
         }
 
-        // TODO: mudar parametros da interface toda vez que mudar de tab.
+        // TODO: a lógica presente neste callback de evento pode e deve ser generalizada, pois, por exemplo, suponha que o usuário
+        // digite algo para filtrar resultados, a tabela irá para a linha que corresponde aquele filtro, ou seja, uma nova seleção que
+        // deve ser detectada e atualizada para o SelectedRowId. Além do filtro, existe também o sort da tabela, que naturalmente muda a linha selecionada.
         private void OnTabChange(object sender, EventArgs e)
         {
             TabPage currentPage = tabControl.SelectedTab;
@@ -440,7 +442,7 @@ public class Dialog
         var txtTelefone = Builder.NewTextBox("medico_telefone", 150, 100, 40);
         var txtValorConsulta = Builder.NewTextBox("medico_valor_consulta", 150, 100, 70);
 
-        txtNomeMedico.Text = DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].nome;
+        txtNomeMedico.Text = DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].nomeMedico;
         txtTelefone.Text = DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].telefone;
         txtValorConsulta.Text = DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].valorConsulta.ToString();
 
@@ -495,7 +497,7 @@ public class Dialog
         var txtCelular = Builder.NewTextBox("paciente_celular", 150, 100, 190);
 
         // TODO... 
-        txtNomePaciente.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].nome;
+        txtNomePaciente.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].nomePaciente;
         txtEndereco.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].endereco;
         txtNumero.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].numero.ToString();
         txtBairro.Text = DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].bairro;
@@ -747,9 +749,15 @@ public class Builder
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
 public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno);
 
-public record RegistroMedico(int codigo, string nome, string telefone, double valorConsulta);
+public record RegistroMedico(int codigo, string nomeMedico, string telefone, double valorConsulta);
 
-public record RegistroPaciente(int codigo, string nome, string endereco, int numero, string bairro, string cidade, double cep, string sexo, string telefone, string celular);
+public record RegistroPaciente(int codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, double cep, string sexo, string telefone, string celular);
+
+
+// filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
+public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno);
+public record FiltroMedico(string codigo, string nomeMedico, string telefone, string valorConsulta);
+public record FiltroPaciente(string codigo, string nomePaciente, string endereco, string numero, string bairro, string cidade, string cep, string sexo, string telefone, string celular);
 
 
 //TODO: seria interessante simular situações assícronas (async) como delays de carga, etc, pra ver como o sistema reage a isso.
@@ -783,6 +791,20 @@ public class DBTest
     private static void LoadMedicosFromDB() { }
     private static void LoadPacientesFromDB() { }
 
+    // modelo de pesquisa (exemplo):
+    static FiltroConsulta filtro = new FiltroConsulta("", "", "", "", "", true);
+    List<RegistroConsulta> registroFiltrado = DBTest.SearchEntries<RegistroConsulta>(DBTest.dadosConsulta, filtro);
+
+    // - Este método recebe uma lista de entradas (entries), que podem ser do tipo: RegistroConsulta, RegistroMedico ou RegistroPaciente.
+    // - Recebe um objeto filter, que pode ser do tipo: FiltroConsulta, FiltroMedico, FiltroPaciente
+    // - O método deve retornar a mesma lista de entradas, só que filtrada, contendo apenas as entradas que são compatíveis com os
+    //   filtros presentes no objeto "filter".
+    // Esta nova lista deverá ser usada para atualizar o DGV em tempo real, mas isso é trabalho para um método de evento.
+    public static List<T> SearchEntries<T>(List<T> entries, object filter)
+    {
+        return new List<T> { };
+    }
+
     public static void LoadConsultasToTable(DataGridView table, List<RegistroConsulta> dados)
     {
         for (int i = 0; i < dados.Count; i++)
@@ -795,7 +817,7 @@ public class DBTest
     {
         for (int i = 0; i < dados.Count; i++)
         {
-            table.Rows.Add(dados[i].codigo, dados[i].nome, dados[i].telefone, dados[i].valorConsulta);
+            table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].telefone, dados[i].valorConsulta);
         }
     }
 
@@ -803,7 +825,7 @@ public class DBTest
     {
         for (int i = 0; i < dados.Count; i++)
         {
-            table.Rows.Add(dados[i].codigo, dados[i].nome, dados[i].endereco, dados[i].numero, dados[i].bairro, dados[i].cidade, dados[i].cep, dados[i].sexo, dados[i].telefone, dados[i].celular);
+            table.Rows.Add(dados[i].codigo, dados[i].nomePaciente, dados[i].endereco, dados[i].numero, dados[i].bairro, dados[i].cidade, dados[i].cep, dados[i].sexo, dados[i].telefone, dados[i].celular);
         }
     }
 }
