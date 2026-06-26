@@ -792,17 +792,38 @@ public class DBTest
     private static void LoadPacientesFromDB() { }
 
     // modelo de pesquisa (exemplo):
-    static FiltroConsulta filtro = new FiltroConsulta("", "", "", "", "", true);
-    List<RegistroConsulta> registroFiltrado = DBTest.SearchEntries<RegistroConsulta>(DBTest.dadosConsulta, filtro);
 
     // - Este método recebe uma lista de entradas (entries), que podem ser do tipo: RegistroConsulta, RegistroMedico ou RegistroPaciente.
     // - Recebe um objeto filter, que pode ser do tipo: FiltroConsulta, FiltroMedico, FiltroPaciente
     // - O método deve retornar a mesma lista de entradas, só que filtrada, contendo apenas as entradas que são compatíveis com os
     //   filtros presentes no objeto "filter".
     // Esta nova lista deverá ser usada para atualizar o DGV em tempo real, mas isso é trabalho para um método de evento.
-    public static List<T> SearchEntries<T>(List<T> entries, object filter)
+    // public static List<T> SearchEntries<T>(List<T> entries, Dictionary<string, string> filter)
+    // {
+    //     IEnumerable<T> resultado = entries;
+
+    //     // resultado = resultado.Where();
+
+    //     return new List<T> { };
+    // }
+
+    public static FiltroConsulta SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
     {
-        return new List<T> { };
+        IEnumerable<RegistroConsulta> resultado = dados;
+        // resultado = resultado.Where();
+        return new FiltroConsulta("", "", "", "", "", true);
+    }
+    public static FiltroMedico SearchMedico(List<RegistroMedico> dados, FiltroMedico filtro)
+    {
+        IEnumerable<RegistroMedico> resultado = dados;
+        // resultado = resultado.Where();
+        return new FiltroMedico("", "", "", "");
+    }
+    public static FiltroPaciente SearchPaciente(List<RegistroPaciente> dados, FiltroPaciente filtro)
+    {
+        IEnumerable<RegistroPaciente> resultado = dados;
+        // resultado = resultado.Where();
+        return new FiltroPaciente("", "", "", "", "", "", "", "", "", "");
     }
 
     public static void LoadConsultasToTable(DataGridView table, List<RegistroConsulta> dados)
