@@ -1,3 +1,5 @@
+using System.DirectoryServices;
+
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Consultorio : Form
@@ -66,10 +68,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_medicos = Builder.NewTab("medicos", "Médicos");
             tab_pacientes = Builder.NewTab("pacientes", "Pacientes");
 
-            // tab_consultas.Enter += (_, _) => ChangeParameters(tab_consultas);
-            // tab_medicos.Enter += (_, _) => ChangeParameters(tab_medicos);
-            // tab_pacientes.Enter += (_, _) => ChangeParameters(tab_pacientes);
-
             tabControl.TabPages.Add(tab_consultas);
             tabControl.TabPages.Add(tab_medicos);
             tabControl.TabPages.Add(tab_pacientes);
@@ -90,6 +88,16 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             Eventos.ResetSelectedRowId(currentSelectedRowId);
 
+            Console.WriteLine(dgv.Name);
+            for (int i = 0; i < dgv.RowCount; i++)
+            {
+                for (int j = 0; j < dgv.Rows[i].Cells.Count; j++)
+                {
+                    Console.Write($" {dgv.Rows[i].Cells[j].Value} ");
+                }
+                Console.WriteLine("");
+            }
+
             // testes:
             Console.WriteLine($"Página selecionada: {currentPage.Name}");
             Console.WriteLine("Id da linha atualmente selecionada no DGV da atual página:" + Eventos.GetCurrentSelectedRowId());
@@ -97,7 +105,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void InitializeTabComponents()
         {
-            // ## Aba consultas ##
+            // ## ABA CONSULTAS ##
             GroupBox grp_consultas = Builder.NewGroupBox("grp_consultas", "Buscar Consulta");
 
             var lbl_consulta = Builder.NewLabel("ID Consulta", 100, 10, 40);
@@ -120,7 +128,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             dtp_data.MaxDate = new DateTime(2026, 12, 31);
             dtp_time.ShowUpDown = true;
 
-            // ## aba médicos ##
+            // ## ABA MÉDICOS ##
             GroupBox grp_medicos = Builder.NewGroupBox("grp_medicos", "Buscar Médico");
 
             var lbl_medico_id = Builder.NewLabel("ID Médico", 100, 10, 40);
@@ -128,7 +136,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             var txt_medico_id = Builder.NewTextBox("box_medico_id", 100, 120, 40);
             var txt_medico_nome = Builder.NewTextBox("box_medico_nome", 200, 120, 80);
 
-            // ## Aba pacientes ##
+            // ## ABA PACIENTES ##
             GroupBox grp_pacientes = Builder.NewGroupBox("grp_pacientes", "Buscar Paciente");
 
             var lbl_paciente_id = Builder.NewLabel("ID Paciente", 100, 10, 40);
@@ -173,6 +181,21 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_consultas.Controls.Add(grp_consultas);
             tab_medicos.Controls.Add(grp_medicos);
             tab_pacientes.Controls.Add(grp_pacientes);
+
+
+            txt_consulta.TextChanged += (_, _) => OnTextChange(txt_consulta.Text);
+        }
+
+        // TODO: este protótipo de método está funcionando, só que tenho que resolver o problema do argumento booleano do filtro, e fazer mais testes de comportamento.
+        private void OnTextChange(string text)
+        {
+            TabPage currentPage = tabControl.SelectedTab;
+            DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+
+            FiltroConsulta filtro = new FiltroConsulta(text, "", "", "", "", true);
+            List<RegistroConsulta> FilteredData = DBTest.SearchConsultas(DBTest.dadosConsulta, filtro);
+
+            DBTest.LoadConsultasToTable(dgv, FilteredData);
         }
 
         // subject: consulta, médico ou paciente.
@@ -736,28 +759,11 @@ public class Builder
             table.Columns.Add(name, header);
         }
 
-        // Teste: seleciona, da lista de tuplas "colunas", os segundos itens das tuplas, e converte em objeto, e então de objeto converte em array, pois Add pode iterar arrays. Então, adiciona conteúdo a cada célula da linha dinamicamente conforme as colunas, já que utilizam a mesma lista "colunas". Isto aqui é só pra fim de testes, já que a base de dados não foi ainda implementada.
-        // table.Rows.Add(colunas.Select(t => t.Item2).Cast<object>().ToArray());
-
         table.CellClick += Eventos.dataGridView_CellClick;
 
         tab.Controls.Add(table);
     }
 }
-
-// record é basicamente uma classe, só que simplificada para contexto de dados.
-// Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
-public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno);
-
-public record RegistroMedico(int codigo, string nomeMedico, string telefone, double valorConsulta);
-
-public record RegistroPaciente(int codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, double cep, string sexo, string telefone, string celular);
-
-
-// filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
-public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno);
-public record FiltroMedico(string codigo, string nomeMedico, string telefone, string valorConsulta);
-public record FiltroPaciente(string codigo, string nomePaciente, string endereco, string numero, string bairro, string cidade, string cep, string sexo, string telefone, string celular);
 
 
 //TODO: seria interessante simular situações assícronas (async) como delays de carga, etc, pra ver como o sistema reage a isso.
@@ -791,43 +797,47 @@ public class DBTest
     private static void LoadMedicosFromDB() { }
     private static void LoadPacientesFromDB() { }
 
-    // modelo de pesquisa (exemplo):
-
-    // - Este método recebe uma lista de entradas (entries), que podem ser do tipo: RegistroConsulta, RegistroMedico ou RegistroPaciente.
-    // - Recebe um objeto filter, que pode ser do tipo: FiltroConsulta, FiltroMedico, FiltroPaciente
-    // - O método deve retornar a mesma lista de entradas, só que filtrada, contendo apenas as entradas que são compatíveis com os
-    //   filtros presentes no objeto "filter".
-    // Esta nova lista deverá ser usada para atualizar o DGV em tempo real, mas isso é trabalho para um método de evento.
-    // public static List<T> SearchEntries<T>(List<T> entries, Dictionary<string, string> filter)
-    // {
-    //     IEnumerable<T> resultado = entries;
-
-    //     // resultado = resultado.Where();
-
-    //     return new List<T> { };
-    // }
-
-    public static FiltroConsulta SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
+    public static List<RegistroConsulta> SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
     {
-        IEnumerable<RegistroConsulta> resultado = dados;
-        // resultado = resultado.Where();
-        return new FiltroConsulta("", "", "", "", "", true);
+        // string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno)
+        IEnumerable<RegistroConsulta> SearchFiltering = dados;
+
+        // passa cada um dos filtros ao SearchFiltering, verificando antes se os campos não estão vazios:
+        if (!string.IsNullOrWhiteSpace(filtro.codigo))
+            SearchFiltering = SearchFiltering.Where(entry => entry.codigo == int.Parse(filtro.codigo));
+
+        if (!string.IsNullOrWhiteSpace(filtro.nomeMedico))
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomeMedico == filtro.nomeMedico);
+
+        if (!string.IsNullOrWhiteSpace(filtro.nomePaciente))
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente == filtro.nomePaciente);
+
+        if (!string.IsNullOrWhiteSpace(filtro.data))
+            SearchFiltering = SearchFiltering.Where(entry => entry.data == DateOnly.Parse(filtro.data));
+
+        if (!string.IsNullOrWhiteSpace(filtro.retorno.ToString()))
+            SearchFiltering = SearchFiltering.Where(entry => entry.retorno == filtro.retorno);
+
+        List<RegistroConsulta> SearchResult = SearchFiltering.ToList();
+
+        return SearchResult;
     }
     public static FiltroMedico SearchMedico(List<RegistroMedico> dados, FiltroMedico filtro)
     {
-        IEnumerable<RegistroMedico> resultado = dados;
-        // resultado = resultado.Where();
+        IEnumerable<RegistroMedico> SearchResult = dados;
+        SearchResult = SearchResult.Where(entry => entry.codigo == int.Parse(filtro.codigo));
         return new FiltroMedico("", "", "", "");
     }
     public static FiltroPaciente SearchPaciente(List<RegistroPaciente> dados, FiltroPaciente filtro)
     {
-        IEnumerable<RegistroPaciente> resultado = dados;
-        // resultado = resultado.Where();
+        IEnumerable<RegistroPaciente> SearchResult = dados;
+        SearchResult = SearchResult.Where(entry => entry.codigo == int.Parse(filtro.codigo));
         return new FiltroPaciente("", "", "", "", "", "", "", "", "", "");
     }
 
     public static void LoadConsultasToTable(DataGridView table, List<RegistroConsulta> dados)
     {
+        table.Rows.Clear();
         for (int i = 0; i < dados.Count; i++)
         {
             table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].nomePaciente, dados[i].data, dados[i].horario, dados[i].retorno);
@@ -863,7 +873,6 @@ public class Eventos
         CurrentRowId = e.RowIndex;
         Console.WriteLine("Selecionou linha de id " + CurrentRowId);
     }
-
     public static void ResetSelectedRowId(int id)
     {
         CurrentRowId = id;
@@ -943,3 +952,18 @@ public class CrudButtonsControl : UserControl
         this.Controls.Add(btnDelete);
     }
 }
+
+// record é basicamente uma classe, só que simplificada para contexto de dados.
+// Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
+// TODO: acho que seria interessante que "retorno" fosse uma data. Acho que faz mais sentido no contexto deste sistema.
+public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno);
+
+public record RegistroMedico(int codigo, string nomeMedico, string telefone, double valorConsulta);
+
+public record RegistroPaciente(int codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, double cep, string sexo, string telefone, string celular);
+
+
+// filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
+public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno);
+public record FiltroMedico(string codigo, string nomeMedico, string telefone, string valorConsulta);
+public record FiltroPaciente(string codigo, string nomePaciente, string endereco, string numero, string bairro, string cidade, string cep, string sexo, string telefone, string celular);
