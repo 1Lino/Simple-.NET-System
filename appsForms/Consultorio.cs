@@ -186,13 +186,13 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             txt_consulta.TextChanged += (_, _) => OnTextChange(txt_consulta.Text);
         }
 
-        // TODO: este protótipo de método está funcionando, só que tenho que resolver o problema do argumento booleano do filtro, e fazer mais testes de comportamento.
+        // TODO: este método, como será usado no evento de vários texBoxes diferentes, de diferentes páginas, o valor de FilteredData deverá ser passado como argumento, através de uma lista de tipo genérico, basicamente, "filtro" e "FilteredData" são dados que deverão receber seus valores de fora da função, totalizando dois argumentos vindo de fora.
         private void OnTextChange(string text)
         {
             TabPage currentPage = tabControl.SelectedTab;
             DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
 
-            FiltroConsulta filtro = new FiltroConsulta(text, "", "", "", "", true);
+            FiltroConsulta filtro = new FiltroConsulta(text, "", "", "", "", "");
             List<RegistroConsulta> FilteredData = DBTest.SearchConsultas(DBTest.dadosConsulta, filtro);
 
             DBTest.LoadConsultasToTable(dgv, FilteredData);
@@ -773,9 +773,9 @@ public class DBTest
     // Objetos do tipo "RegistroConsulta", "RegistroMedico" e "RegistroPaciente". Estes valores são apenas teste (hardcoded), mas o que deve ocorrer de verdade é que um carregamento deve ser feito da base de dados para cá, para isso deve haver um método para cada tipo de objeto.
     public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
     {
-        new(1029,  "Marcela Andrade", "João da Silva",  DateOnly.Parse("2026-07-14"), TimeSpan.Parse("14:30"), true),
-        new(1030,  "Pedro Alcantara", "Maria Cruz",  DateOnly.Parse("2026-07-15"), TimeSpan.Parse("15:30"), false),
-        new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  DateOnly.Parse("2026-07-18"), TimeSpan.Parse("16:30"), true)
+        new(1029,  "Marcela Andrade", "João da Silva",  DateOnly.Parse("2026-07-14"), TimeSpan.Parse("14:30"), "2026-07-30"),
+        new(1030,  "Pedro Alcantara", "Maria Cruz",  DateOnly.Parse("2026-07-15"), TimeSpan.Parse("15:30"), "-"),
+        new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  DateOnly.Parse("2026-07-18"), TimeSpan.Parse("16:30"), "2026-08-05")
     };
 
     public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
@@ -816,7 +816,7 @@ public class DBTest
             SearchFiltering = SearchFiltering.Where(entry => entry.data == DateOnly.Parse(filtro.data));
 
         if (!string.IsNullOrWhiteSpace(filtro.retorno.ToString()))
-            SearchFiltering = SearchFiltering.Where(entry => entry.retorno == filtro.retorno);
+            SearchFiltering = SearchFiltering.Where(entry => DateOnly.Parse(entry.retorno) == DateOnly.Parse(filtro.retorno));
 
         List<RegistroConsulta> SearchResult = SearchFiltering.ToList();
 
@@ -955,8 +955,7 @@ public class CrudButtonsControl : UserControl
 
 // record é basicamente uma classe, só que simplificada para contexto de dados.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
-// TODO: acho que seria interessante que "retorno" fosse uma data. Acho que faz mais sentido no contexto deste sistema.
-public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno);
+public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, string retorno);
 
 public record RegistroMedico(int codigo, string nomeMedico, string telefone, double valorConsulta);
 
@@ -964,6 +963,6 @@ public record RegistroPaciente(int codigo, string nomePaciente, string endereco,
 
 
 // filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
-public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno);
+public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, string retorno);
 public record FiltroMedico(string codigo, string nomeMedico, string telefone, string valorConsulta);
 public record FiltroPaciente(string codigo, string nomePaciente, string endereco, string numero, string bairro, string cidade, string cep, string sexo, string telefone, string celular);
