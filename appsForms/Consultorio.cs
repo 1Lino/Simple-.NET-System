@@ -192,7 +192,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             TabPage currentPage = tabControl.SelectedTab;
             DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
 
-            FiltroConsulta filtro = new FiltroConsulta(text, "", "", "", "", "");
+            FiltroConsulta filtro = new FiltroConsulta(text, "", "", "", "", null, "");
             List<RegistroConsulta> FilteredData = DBTest.SearchConsultas(DBTest.dadosConsulta, filtro);
 
             DBTest.LoadConsultasToTable(dgv, FilteredData);
@@ -410,6 +410,7 @@ public class Dialog
         var lblNomeMedico = Builder.NewLabel("Médico", 55, 10, 40);
         var lblData = Builder.NewLabel("Data", 55, 10, 70);
         var lblHorario = Builder.NewLabel("Horário", 55, 200, 70);
+        var lblRetorno = Builder.NewLabel("Retorno", 55, 10, 100);
 
         var txtNomePaciente = Builder.NewTextBox("consulta_nome_paciente", 250, 80, 10);
         var txtNomeMedico = Builder.NewTextBox("consulta_nome_medico", 250, 80, 40);
@@ -422,11 +423,41 @@ public class Dialog
         dtpTime.Width = 60;
         dtpTime.ShowUpDown = true;
 
+        // Regra de negócio: data mínima de retorno jamais pode ser anterior à data da primeira consulta.
+        // por isso definimos a data atual da consulta como período mínimo para o picker, ou seja, o dia de retorno só pode ser a partir do mesmo dia da consulta. Outra coisa é que uma consulta pode ou não ter data de retorno, neste caso, só se carrega tal dado se de fato for verificado que há retorno para a consulta.
+        var dtpRetorno = Builder.NewDateTimePicker(105, 80, "dd/MM/yyyy");
+        dtpRetorno.MinDate = DateTime.Parse(dtpData.Value.ToString());
+        dtpRetorno.MaxDate = new DateTime(2026, 12, 31);
+
+        bool retorno = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].retorno;
+        var chkRetorno = new CheckBox
+        {
+            Top = 100,
+            Left = 210,
+            Text = "Retorno",
+            Checked = retorno
+        };
+
+
         // Carrega dos dados as informações, para a interface, de acordo com o id da linha selecionada no momento.
         txtNomePaciente.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomePaciente;
         txtNomeMedico.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomeMedico;
-        dtpData.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].data.ToString();
+
+        string dataConsulta = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].data.ToString();
+        dtpData.Text = dataConsulta;
+
         dtpTime.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].horario.ToString();
+
+        // TODO: deve-se configurar o chkRetorno para que, quando for alterado o estado entre "checked" true e false, o dtpRetorno também mude de Enabled true para false, etc.
+        if (retorno)
+        {
+            dtpRetorno.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].dataRetorno.ToString();
+        }
+        else
+        {
+            dtpRetorno.Text = dataConsulta;
+            dtpRetorno.Enabled = false;
+        }
 
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
@@ -437,10 +468,13 @@ public class Dialog
         formDialog.Controls.Add(lblNomeMedico);
         formDialog.Controls.Add(lblData);
         formDialog.Controls.Add(lblHorario);
+        formDialog.Controls.Add(lblRetorno);
         formDialog.Controls.Add(txtNomePaciente);
         formDialog.Controls.Add(txtNomeMedico);
         formDialog.Controls.Add(dtpData);
         formDialog.Controls.Add(dtpTime);
+        formDialog.Controls.Add(dtpRetorno);
+        formDialog.Controls.Add(chkRetorno);
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
         formDialog.AcceptButton = btnOk;
@@ -771,11 +805,13 @@ public class Builder
 public class DBTest
 {
     // Objetos do tipo "RegistroConsulta", "RegistroMedico" e "RegistroPaciente". Estes valores são apenas teste (hardcoded), mas o que deve ocorrer de verdade é que um carregamento deve ser feito da base de dados para cá, para isso deve haver um método para cada tipo de objeto.
+
+    // Regra de negócio: data de retorno jamais pode ser anterior à data da consulta.
     public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
     {
-        new(1029,  "Marcela Andrade", "João da Silva",  DateOnly.Parse("2026-07-14"), TimeSpan.Parse("14:30"), "2026-07-30"),
-        new(1030,  "Pedro Alcantara", "Maria Cruz",  DateOnly.Parse("2026-07-15"), TimeSpan.Parse("15:30"), "-"),
-        new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  DateOnly.Parse("2026-07-18"), TimeSpan.Parse("16:30"), "2026-08-05")
+        new(1029,  "Marcela Andrade", "João da Silva",  "2026-07-14", TimeSpan.Parse("14:30"), true, "2026-07-30"),
+        new(1030,  "Pedro Alcantara", "Maria Cruz",  "2026-07-15", TimeSpan.Parse("15:30"), false, "-"),
+        new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  "2026-07-18", TimeSpan.Parse("16:30"), true, "2026-08-05")
     };
 
     public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
@@ -813,10 +849,10 @@ public class DBTest
             SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente == filtro.nomePaciente);
 
         if (!string.IsNullOrWhiteSpace(filtro.data))
-            SearchFiltering = SearchFiltering.Where(entry => entry.data == DateOnly.Parse(filtro.data));
+            SearchFiltering = SearchFiltering.Where(entry => entry.data == filtro.data);
 
-        if (!string.IsNullOrWhiteSpace(filtro.retorno.ToString()))
-            SearchFiltering = SearchFiltering.Where(entry => DateOnly.Parse(entry.retorno) == DateOnly.Parse(filtro.retorno));
+        if (!string.IsNullOrWhiteSpace(filtro.dataRetorno.ToString()))
+            SearchFiltering = SearchFiltering.Where(entry => entry.dataRetorno == filtro.dataRetorno);
 
         List<RegistroConsulta> SearchResult = SearchFiltering.ToList();
 
@@ -955,7 +991,7 @@ public class CrudButtonsControl : UserControl
 
 // record é basicamente uma classe, só que simplificada para contexto de dados.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
-public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, string retorno);
+public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, string data, TimeSpan horario, bool retorno, string dataRetorno);
 
 public record RegistroMedico(int codigo, string nomeMedico, string telefone, double valorConsulta);
 
@@ -963,6 +999,6 @@ public record RegistroPaciente(int codigo, string nomePaciente, string endereco,
 
 
 // filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
-public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, string retorno);
+public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, string retorno, string dataRetorno);
 public record FiltroMedico(string codigo, string nomeMedico, string telefone, string valorConsulta);
 public record FiltroPaciente(string codigo, string nomePaciente, string endereco, string numero, string bairro, string cidade, string cep, string sexo, string telefone, string celular);
