@@ -438,7 +438,6 @@ public class Dialog
             Checked = retorno
         };
 
-
         // Carrega dos dados as informações, para a interface, de acordo com o id da linha selecionada no momento.
         txtNomePaciente.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomePaciente;
         txtNomeMedico.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomeMedico;
@@ -448,16 +447,13 @@ public class Dialog
 
         dtpTime.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].horario.ToString();
 
-        // TODO: deve-se configurar o chkRetorno para que, quando for alterado o estado entre "checked" true e false, o dtpRetorno também mude de Enabled true para false, etc.
-        if (retorno)
+        // Texto do datimepicker de retorno é puxado somente se de fato houver retorno para aquela consulta, do contrário puxa uma data padrão. Ademais, o estado Enabled deste componente é definido também pelo retorno, enquanto que o evento de CheckedChanged do checkbox controla também se esse datetimepicker está ativo ou não no momento da edição de entrada.
+        dtpRetorno.Text = retorno ? DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].dataRetorno.ToString() : dataConsulta;
+        dtpRetorno.Enabled = retorno ? true : false;
+        chkRetorno.CheckedChanged += (_, _) =>
         {
-            dtpRetorno.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].dataRetorno.ToString();
-        }
-        else
-        {
-            dtpRetorno.Text = dataConsulta;
-            dtpRetorno.Enabled = false;
-        }
+            dtpRetorno.Enabled = chkRetorno.Checked ? true : false;
+        };
 
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
