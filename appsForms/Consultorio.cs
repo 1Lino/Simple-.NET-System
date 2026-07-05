@@ -186,7 +186,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             txt_consulta.TextChanged += (_, _) => OnTextChange(txt_consulta.Text);
         }
 
-        // TODO: este método, como será usado no evento de vários texBoxes diferentes, de diferentes páginas, o valor de FilteredData deverá ser passado como argumento, através de uma lista de tipo genérico, basicamente, "filtro" e "FilteredData" são dados que deverão receber seus valores de fora da função, totalizando dois argumentos vindo de fora.
+        // TODO: "text", aqui, é só um teste, mas o que deve ocorrer de fato é que, ao digitar em qualquer textbox, o conteúdo seja registrado numa interface, e então esta interface é acessada por FiltroConsulta.
         private void OnTextChange(string text)
         {
             TabPage currentPage = tabControl.SelectedTab;
@@ -195,7 +195,10 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             FiltroConsulta filtro = new FiltroConsulta(text, "", "", "", "", null, "");
             List<RegistroConsulta> FilteredData = DBTest.SearchConsultas(DBTest.dadosConsulta, filtro);
 
-            DBTest.LoadConsultasToTable(dgv, FilteredData);
+            // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
+            List<RegistroConsulta> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosConsulta;
+
+            DBTest.LoadConsultasToTable(dgv, FinalResult);
         }
 
         // subject: consulta, médico ou paciente.
@@ -424,7 +427,6 @@ public class Dialog
         dtpTime.ShowUpDown = true;
 
         // Regra de negócio: data mínima de retorno jamais pode ser anterior à data da primeira consulta.
-        // por isso definimos a data atual da consulta como período mínimo para o picker, ou seja, o dia de retorno só pode ser a partir do mesmo dia da consulta. Outra coisa é que uma consulta pode ou não ter data de retorno, neste caso, só se carrega tal dado se de fato for verificado que há retorno para a consulta.
         var dtpRetorno = Builder.NewDateTimePicker(105, 80, "dd/MM/yyyy");
         dtpRetorno.MinDate = DateTime.Parse(dtpData.Value.ToString());
         dtpRetorno.MaxDate = new DateTime(2026, 12, 31);
@@ -805,23 +807,23 @@ public class DBTest
     // Regra de negócio: data de retorno jamais pode ser anterior à data da consulta.
     public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
     {
-        new(1029,  "Marcela Andrade", "João da Silva",  "2026-07-14", TimeSpan.Parse("14:30"), true, "2026-07-30"),
-        new(1030,  "Pedro Alcantara", "Maria Cruz",  "2026-07-15", TimeSpan.Parse("15:30"), false, "-"),
-        new(1031,  "Marcos Almeida", "Jacinta Ribeiro",  "2026-07-18", TimeSpan.Parse("16:30"), true, "2026-08-05")
+        new("1029",  "Marcela Andrade", "João da Silva",  "2026-07-14", TimeSpan.Parse("14:30"), true, "2026-07-30"),
+        new("1030",  "Pedro Alcantara", "Maria Cruz",  "2026-07-15", TimeSpan.Parse("15:30"), false, "-"),
+        new("1031",  "Marcos Almeida", "Jacinta Ribeiro",  "2026-07-18", TimeSpan.Parse("16:30"), true, "2026-08-05")
     };
 
     public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
     {
-        new(1,  "Marcela Andrade", "0800-9090", 170),
-        new(2,  "Pedro Alcantara", "0500-9092", 250),
-        new(3,  "Marcos Almeida", "0400-9095", 180)
+        new("1",  "Marcela Andrade", "0800-9090", 170),
+        new("2",  "Pedro Alcantara", "0500-9092", 250),
+        new("3",  "Marcos Almeida", "0400-9095", 180)
     };
 
     public static List<RegistroPaciente> dadosPaciente = new List<RegistroPaciente>
     {
-        new(40, "João da Silva", "R. Terra das Dores", 157, "Jabuti", "Vilalopolis", 12300000, "Masculino", "-", "(65) 99345-7657"),
-        new(45, "Maria Cruz", "R. Francisco Polo", 161, "Mapuio", "Areias", 17800000, "Feminino", "0500-0880", "(85) 97385-1359"),
-        new(49, "Jacinta Ribeiro", "R. Ivo de Almeida", 240, "Jangada", "Verdes Prados", 19500000, "Feminino", "-", "(50) 98445-2656")
+        new("40", "João da Silva", "R. Terra das Dores", 157, "Jabuti", "Vilalopolis", 12300000, "Masculino", "-", "(65) 99345-7657"),
+        new("45", "Maria Cruz", "R. Francisco Polo", 161, "Mapuio", "Areias", 17800000, "Feminino", "0500-0880", "(85) 97385-1359"),
+        new("49", "Jacinta Ribeiro", "R. Ivo de Almeida", 240, "Jangada", "Verdes Prados", 19500000, "Feminino", "-", "(50) 98445-2656")
     };
 
     // protótipos das funções de carregamento da base:
@@ -829,6 +831,7 @@ public class DBTest
     private static void LoadMedicosFromDB() { }
     private static void LoadPacientesFromDB() { }
 
+    // TODO: modificar as funções de Search, para que, quando o filtro passado não for correto, simplesmente deixar a tabela como está, ao invés de retornar uma vazia.
     public static List<RegistroConsulta> SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
     {
         // string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno)
@@ -836,34 +839,36 @@ public class DBTest
 
         // passa cada um dos filtros ao SearchFiltering, verificando antes se os campos não estão vazios:
         if (!string.IsNullOrWhiteSpace(filtro.codigo))
-            SearchFiltering = SearchFiltering.Where(entry => entry.codigo == int.Parse(filtro.codigo));
+            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
 
         if (!string.IsNullOrWhiteSpace(filtro.nomeMedico))
-            SearchFiltering = SearchFiltering.Where(entry => entry.nomeMedico == filtro.nomeMedico);
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomeMedico.Contains(filtro.nomeMedico, StringComparison.OrdinalIgnoreCase));
 
         if (!string.IsNullOrWhiteSpace(filtro.nomePaciente))
-            SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente == filtro.nomePaciente);
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente.Contains(filtro.nomePaciente, StringComparison.OrdinalIgnoreCase));
 
         if (!string.IsNullOrWhiteSpace(filtro.data))
-            SearchFiltering = SearchFiltering.Where(entry => entry.data == filtro.data);
+            SearchFiltering = SearchFiltering.Where(entry => entry.data.Contains(filtro.data, StringComparison.OrdinalIgnoreCase));
 
-        if (!string.IsNullOrWhiteSpace(filtro.dataRetorno.ToString()))
-            SearchFiltering = SearchFiltering.Where(entry => entry.dataRetorno == filtro.dataRetorno);
+        if (!string.IsNullOrWhiteSpace(filtro.dataRetorno))
+            SearchFiltering = SearchFiltering.Where(entry => entry.dataRetorno.Contains(filtro.dataRetorno, StringComparison.OrdinalIgnoreCase));
 
         List<RegistroConsulta> SearchResult = SearchFiltering.ToList();
 
         return SearchResult;
     }
+
+    // TODO: estas duas funções de "search" abaixo deverão seguir a  lógica da search acima:
     public static FiltroMedico SearchMedico(List<RegistroMedico> dados, FiltroMedico filtro)
     {
         IEnumerable<RegistroMedico> SearchResult = dados;
-        SearchResult = SearchResult.Where(entry => entry.codigo == int.Parse(filtro.codigo));
+        SearchResult = SearchResult.Where(entry => entry.codigo == filtro.codigo);
         return new FiltroMedico("", "", "", "");
     }
     public static FiltroPaciente SearchPaciente(List<RegistroPaciente> dados, FiltroPaciente filtro)
     {
         IEnumerable<RegistroPaciente> SearchResult = dados;
-        SearchResult = SearchResult.Where(entry => entry.codigo == int.Parse(filtro.codigo));
+        SearchResult = SearchResult.Where(entry => entry.codigo == filtro.codigo);
         return new FiltroPaciente("", "", "", "", "", "", "", "", "", "");
     }
 
@@ -987,11 +992,11 @@ public class CrudButtonsControl : UserControl
 
 // record é basicamente uma classe, só que simplificada para contexto de dados.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
-public record RegistroConsulta(int codigo, string nomeMedico, string nomePaciente, string data, TimeSpan horario, bool retorno, string dataRetorno);
+public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, TimeSpan horario, bool retorno, string dataRetorno);
 
-public record RegistroMedico(int codigo, string nomeMedico, string telefone, double valorConsulta);
+public record RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta);
 
-public record RegistroPaciente(int codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, double cep, string sexo, string telefone, string celular);
+public record RegistroPaciente(string codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, double cep, string sexo, string telefone, string celular);
 
 
 // filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
