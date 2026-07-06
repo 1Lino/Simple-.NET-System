@@ -1,13 +1,17 @@
 using System.DirectoryServices;
+using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Consultorio : Form
     {
-        private TabControl tabControl;
+        public static TabControl tabControl;
         private TabPage tab_consultas;
         private TabPage tab_medicos;
         private TabPage tab_pacientes;
+        private FiltroConsulta filtroConsulta = new FiltroConsulta();
+        // private FiltroMedico filtroMedico = new FiltroMedico();
+        // private FiltroPaciente filtroPaciente = new FiltroPaciente();
 
         public Consultorio()
         {
@@ -182,23 +186,23 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_medicos.Controls.Add(grp_medicos);
             tab_pacientes.Controls.Add(grp_pacientes);
 
+            // Inicializa os eventos das texboxes:
+            txt_consulta.TextChanged += (_, _) =>
+            {
+                filtroConsulta.codigo = txt_consulta.Text;
+                DBTest.FiltrarConsulta(filtroConsulta);
+            };
 
-            txt_consulta.TextChanged += (_, _) => OnTextChange(txt_consulta.Text);
-        }
-
-        // TODO: "text", aqui, é só um teste, mas o que deve ocorrer de fato é que, ao digitar em qualquer textbox, o conteúdo seja registrado numa interface, e então esta interface é acessada por FiltroConsulta.
-        private void OnTextChange(string text)
-        {
-            TabPage currentPage = tabControl.SelectedTab;
-            DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
-
-            FiltroConsulta filtro = new FiltroConsulta(text, "", "", "", "", null, "");
-            List<RegistroConsulta> FilteredData = DBTest.SearchConsultas(DBTest.dadosConsulta, filtro);
-
-            // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
-            List<RegistroConsulta> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosConsulta;
-
-            DBTest.LoadConsultasToTable(dgv, FinalResult);
+            txt_medico.TextChanged += (_, _) =>
+            {
+                filtroConsulta.nomeMedico = txt_medico.Text;
+                DBTest.FiltrarConsulta(filtroConsulta);
+            };
+            txt_paciente.TextChanged += (_, _) =>
+            {
+                filtroConsulta.nomePaciente = txt_paciente.Text;
+                DBTest.FiltrarConsulta(filtroConsulta);
+            };
         }
 
         // subject: consulta, médico ou paciente.
@@ -872,6 +876,21 @@ public class DBTest
         return new FiltroPaciente("", "", "", "", "", "", "", "", "", "");
     }
 
+    // TODO: Os métodos abaixo possuem acesso a informações da interface gráfica do app. Idealmente isto não deve ocorrer na classe DB.
+    // A classe DBTest deve ser exclusiva para dados e processamentos de dados para a interface, mas não deve alterar a interface diretamente. Ou seja, estes métodos abaixo deverão ir para uma classe própria que lida só com atualizações de interface.
+    public static void FiltrarConsulta(FiltroConsulta filtroConsulta)
+    {
+        TabPage currentPage = Consultorio.tabControl.SelectedTab;
+        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+
+        List<RegistroConsulta> FilteredData = SearchConsultas(dadosConsulta, filtroConsulta);
+
+        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
+        List<RegistroConsulta> FinalResult = FilteredData.Any() ? FilteredData : dadosConsulta;
+
+        LoadConsultasToTable(dgv, FinalResult);
+    }
+
     public static void LoadConsultasToTable(DataGridView table, List<RegistroConsulta> dados)
     {
         table.Rows.Clear();
@@ -990,6 +1009,9 @@ public class CrudButtonsControl : UserControl
     }
 }
 
+
+// TODO: Ver viabilidade de transformar os blocos a seguir em uma interface, já que compartilham de muitas propriedades similares, fazendo com que as classes individuais (record) herdassem essa interface e fosse declarado nelas apenas o que há de diferente (polimorfismo).
+
 // record é basicamente uma classe, só que simplificada para contexto de dados.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
 public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, TimeSpan horario, bool retorno, string dataRetorno);
@@ -1000,6 +1022,18 @@ public record RegistroPaciente(string codigo, string nomePaciente, string endere
 
 
 // filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
-public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, string retorno, string dataRetorno);
+// public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, string retorno, string dataRetorno);
+
+public record FiltroConsulta
+{
+    // como record é naturalmente imutável, "set" normalmente seria "init" (ou seja, só pode definir na inicialização), por isso é preciso usar "set" explicitamente aqui, para permitir modificação de propriedades da instância
+    public string codigo { get; set; }
+    public string nomeMedico { get; set; }
+    public string nomePaciente { get; set; }
+    public string data { get; set; }
+    public string horario { get; set; }
+    public string retorno { get; set; }
+    public string dataRetorno { get; set; }
+}
 public record FiltroMedico(string codigo, string nomeMedico, string telefone, string valorConsulta);
 public record FiltroPaciente(string codigo, string nomePaciente, string endereco, string numero, string bairro, string cidade, string cep, string sexo, string telefone, string celular);
