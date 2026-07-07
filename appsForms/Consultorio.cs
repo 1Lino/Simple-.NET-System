@@ -196,28 +196,38 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         {
             // Inicializa os eventos das texboxes da tab Consultas:
 
-            // tipo string:
+            //dados tipo string:
             grp_consulta.Controls["txt_consulta"].TextChanged += (_, _) =>
             {
+                // pra resetar o filtro de datas e de horario, já que, do contrário, seria aplicado permanentemente, já que DateOnly e TimeSpan são fixos.
+                filtroConsulta.data = null;
+                filtroConsulta.horario = null;
+
                 filtroConsulta.codigo = grp_consulta.Controls["txt_consulta"].Text;
                 UI.FiltrarConsulta(filtroConsulta);
             };
 
-            //tipo string:
+            //dados tipo string:
             grp_consulta.Controls["txt_medico"].TextChanged += (_, _) =>
             {
+                filtroConsulta.data = null;
+                filtroConsulta.horario = null;
+
                 filtroConsulta.nomeMedico = grp_consulta.Controls["txt_medico"].Text;
                 UI.FiltrarConsulta(filtroConsulta);
             };
 
-            //tipo string:
+            //dados tipo string:
             grp_consulta.Controls["txt_paciente"].TextChanged += (_, _) =>
             {
+                filtroConsulta.data = null;
+                filtroConsulta.horario = null;
+
                 filtroConsulta.nomePaciente = grp_consulta.Controls["txt_paciente"].Text;
                 UI.FiltrarConsulta(filtroConsulta);
             };
 
-            //tipo DateOnly
+            //dados tipo DateOnly
             // O casting de DateTimePicker aqui é necessário, pois Controls não possui por si só a propriedade ValueChanged:
             ((DateTimePicker)grp_consulta.Controls["dtp_data"]).ValueChanged += (_, _) =>
             {
@@ -226,7 +236,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 UI.FiltrarConsulta(filtroConsulta);
             };
 
-            //tipo TimeSpan
+            //dados tipo TimeSpan
             ((DateTimePicker)grp_consulta.Controls["dtp_time"]).ValueChanged += (_, _) =>
             {
                 filtroConsulta.horario = TimeSpan.Parse(((DateTimePicker)grp_consulta.Controls["dtp_time"]).Text);
@@ -234,9 +244,12 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 UI.FiltrarConsulta(filtroConsulta);
             };
 
-            //tipo bool
+            //dados tipo bool
             ((CheckBox)grp_consulta.Controls["chk_retorno"]).CheckedChanged += (_, _) =>
             {
+                filtroConsulta.data = null;
+                filtroConsulta.horario = null;
+
                 filtroConsulta.retorno = ((CheckBox)grp_consulta.Controls["chk_retorno"]).Checked;
                 UI.FiltrarConsulta(filtroConsulta);
             };
@@ -1073,6 +1086,7 @@ public record FiltroConsulta
     public string codigo { get; set; }
     public string nomeMedico { get; set; }
     public string nomePaciente { get; set; }
+    // "?" torna o valor anulável, de modo que seja possível que o campo seja nulo. Isto é necessário aqui porque, para DateOnly e TimeSpan nunca podem estar nulos normalmente, sendo assim isto significa que o filtro já seria inicializado com um valor padrão (ex: 01/01/0001 00:00:00), o que atrapalharia o funcionamento do filtro. Então tornamos o valor anulável para que isto não ocorra e o filtro comece tendo "null" por valor inicial. Com o booleano "retorno" isto também se aplicaria, já que bool só pode ser "true" ou "false" por padrão, mas não o anularemos porque não é necessário, neste contexto.
     public DateOnly? data { get; set; }
     public TimeSpan? horario { get; set; }
     public bool retorno { get; set; }
