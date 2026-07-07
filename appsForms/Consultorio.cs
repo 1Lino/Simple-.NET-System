@@ -48,9 +48,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 ]);
 
             // carrega informações da base nas tabelas:
-            DBTest.LoadConsultasToTable((DataGridView)tab_consultas.Controls[$"table_{tab_consultas.Name}"], DBTest.dadosConsulta);
-            DBTest.LoadMedicosToTable((DataGridView)tab_medicos.Controls[$"table_{tab_medicos.Name}"], DBTest.dadosMedico);
-            DBTest.LoadPacientesToTable((DataGridView)tab_pacientes.Controls[$"table_{tab_pacientes.Name}"], DBTest.dadosPaciente);
+            UI.LoadConsultasToTable((DataGridView)tab_consultas.Controls[$"table_{tab_consultas.Name}"], DBTest.dadosConsulta);
+            UI.LoadMedicosToTable((DataGridView)tab_medicos.Controls[$"table_{tab_medicos.Name}"], DBTest.dadosMedico);
+            UI.LoadPacientesToTable((DataGridView)tab_pacientes.Controls[$"table_{tab_pacientes.Name}"], DBTest.dadosPaciente);
         }
 
         private void InitializeConsultorio()
@@ -120,14 +120,16 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             lbl_data.Width = 50;
             lbl_horario.Width = 50;
 
-            CheckBox chk_retorno = new CheckBox { Text = "Retorno", Top = 160 - 5, Left = 400 };
+            CheckBox chk_retorno = new CheckBox { Name = "chk_retorno", Text = "Retorno", Top = 160 - 5, Left = 400 };
 
-            var txt_consulta = Builder.NewTextBox("box_consulta_id", 100, 120, 40);
-            var txt_medico = Builder.NewTextBox("box_medico", 200, 120, 80);
-            var txt_paciente = Builder.NewTextBox("box_paciente", 200, 120, 120);
+            var txt_consulta = Builder.NewTextBox("txt_consulta", 100, 120, 40);
+            var txt_medico = Builder.NewTextBox("txt_medico", 200, 120, 80);
+            var txt_paciente = Builder.NewTextBox("txt_paciente", 200, 120, 120);
 
             DateTimePicker dtp_data = Builder.NewDateTimePicker(160, 60, "dd/MM/yyyy");
+            dtp_data.Name = "dtp_data";
             DateTimePicker dtp_time = Builder.NewDateTimePicker(160, 260, "HH:mm");
+            dtp_time.Name = "dtp_time";
             dtp_data.MinDate = new DateTime(2026, 1, 1);
             dtp_data.MaxDate = new DateTime(2026, 12, 31);
             dtp_time.ShowUpDown = true;
@@ -186,22 +188,57 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_medicos.Controls.Add(grp_medicos);
             tab_pacientes.Controls.Add(grp_pacientes);
 
-            // Inicializa os eventos das texboxes:
-            txt_consulta.TextChanged += (_, _) =>
+            InitConsultaChangeEvents(grp_consultas);
+        }
+
+        // TODO: tudo isto está funcional, mas é necessário mudar agora os tipos dos dados para os tipos esperados, ao invés de string.
+        private void InitConsultaChangeEvents(GroupBox grp_consulta)
+        {
+            // Inicializa os eventos das texboxes da tab Consultas:
+
+            // tipo string:
+            grp_consulta.Controls["txt_consulta"].TextChanged += (_, _) =>
             {
-                filtroConsulta.codigo = txt_consulta.Text;
-                DBTest.FiltrarConsulta(filtroConsulta);
+                filtroConsulta.codigo = grp_consulta.Controls["txt_consulta"].Text;
+                UI.FiltrarConsulta(filtroConsulta);
             };
 
-            txt_medico.TextChanged += (_, _) =>
+            //tipo string:
+            grp_consulta.Controls["txt_medico"].TextChanged += (_, _) =>
             {
-                filtroConsulta.nomeMedico = txt_medico.Text;
-                DBTest.FiltrarConsulta(filtroConsulta);
+                filtroConsulta.nomeMedico = grp_consulta.Controls["txt_medico"].Text;
+                UI.FiltrarConsulta(filtroConsulta);
             };
-            txt_paciente.TextChanged += (_, _) =>
+
+            //tipo string:
+            grp_consulta.Controls["txt_paciente"].TextChanged += (_, _) =>
             {
-                filtroConsulta.nomePaciente = txt_paciente.Text;
-                DBTest.FiltrarConsulta(filtroConsulta);
+                filtroConsulta.nomePaciente = grp_consulta.Controls["txt_paciente"].Text;
+                UI.FiltrarConsulta(filtroConsulta);
+            };
+
+            //tipo DateOnly
+            // O casting de DateTimePicker aqui é necessário, pois Controls não possui por si só a propriedade ValueChanged:
+            ((DateTimePicker)grp_consulta.Controls["dtp_data"]).ValueChanged += (_, _) =>
+            {
+                filtroConsulta.data = DateOnly.Parse(((DateTimePicker)grp_consulta.Controls["dtp_data"]).Text);
+                Console.WriteLine(filtroConsulta.data);
+                UI.FiltrarConsulta(filtroConsulta);
+            };
+
+            //tipo TimeSpan
+            ((DateTimePicker)grp_consulta.Controls["dtp_time"]).ValueChanged += (_, _) =>
+            {
+                filtroConsulta.horario = TimeSpan.Parse(((DateTimePicker)grp_consulta.Controls["dtp_time"]).Text);
+                Console.WriteLine(filtroConsulta.horario);
+                UI.FiltrarConsulta(filtroConsulta);
+            };
+
+            //tipo bool
+            ((CheckBox)grp_consulta.Controls["chk_retorno"]).CheckedChanged += (_, _) =>
+            {
+                filtroConsulta.retorno = ((CheckBox)grp_consulta.Controls["chk_retorno"]).Checked;
+                UI.FiltrarConsulta(filtroConsulta);
             };
         }
 
@@ -432,8 +469,9 @@ public class Dialog
 
         // Regra de negócio: data mínima de retorno jamais pode ser anterior à data da primeira consulta.
         var dtpRetorno = Builder.NewDateTimePicker(105, 80, "dd/MM/yyyy");
-        dtpRetorno.MinDate = DateTime.Parse(dtpData.Value.ToString());
+        dtpRetorno.MinDate = DateTime.Parse(DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].data.ToString());
         dtpRetorno.MaxDate = new DateTime(2026, 12, 31);
+        Console.WriteLine(dtpData.Value);
 
         bool retorno = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].retorno;
         var chkRetorno = new CheckBox
@@ -811,9 +849,9 @@ public class DBTest
     // Regra de negócio: data de retorno jamais pode ser anterior à data da consulta.
     public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
     {
-        new("1029",  "Marcela Andrade", "João da Silva",  "2026-07-14", TimeSpan.Parse("14:30"), true, "2026-07-30"),
-        new("1030",  "Pedro Alcantara", "Maria Cruz",  "2026-07-15", TimeSpan.Parse("15:30"), false, "-"),
-        new("1031",  "Marcos Almeida", "Jacinta Ribeiro",  "2026-07-18", TimeSpan.Parse("16:30"), true, "2026-08-05")
+        new("1029",  "Marcela Andrade", "João da Silva",  DateOnly.Parse("14/07/2026"), TimeSpan.Parse("14:30"), true, DateOnly.Parse("30/07/2026")),
+        new("1030",  "Pedro Alcantara", "Maria Cruz",  DateOnly.Parse("15/07/2026"), TimeSpan.Parse("15:30"), false, DateOnly.Parse("15/07/2026")),
+        new("1031",  "Marcos Almeida", "Jacinta Ribeiro",  DateOnly.Parse("18/07/2026"), TimeSpan.Parse("16:30"), true, DateOnly.Parse("05/08/2026"))
     };
 
     public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
@@ -851,11 +889,14 @@ public class DBTest
         if (!string.IsNullOrWhiteSpace(filtro.nomePaciente))
             SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente.Contains(filtro.nomePaciente, StringComparison.OrdinalIgnoreCase));
 
-        if (!string.IsNullOrWhiteSpace(filtro.data))
-            SearchFiltering = SearchFiltering.Where(entry => entry.data.Contains(filtro.data, StringComparison.OrdinalIgnoreCase));
+        if (filtro.data != null)
+            SearchFiltering = SearchFiltering.Where(entry => entry.data == filtro.data);
 
-        if (!string.IsNullOrWhiteSpace(filtro.dataRetorno))
-            SearchFiltering = SearchFiltering.Where(entry => entry.dataRetorno.Contains(filtro.dataRetorno, StringComparison.OrdinalIgnoreCase));
+        if (filtro.horario != null)
+            SearchFiltering = SearchFiltering.Where(entry => entry.horario == filtro.horario);
+
+        if (filtro.retorno)
+            SearchFiltering = SearchFiltering.Where(entry => entry.retorno == filtro.retorno);
 
         List<RegistroConsulta> SearchResult = SearchFiltering.ToList();
 
@@ -876,17 +917,19 @@ public class DBTest
         return new FiltroPaciente("", "", "", "", "", "", "", "", "", "");
     }
 
-    // TODO: Os métodos abaixo possuem acesso a informações da interface gráfica do app. Idealmente isto não deve ocorrer na classe DB.
-    // A classe DBTest deve ser exclusiva para dados e processamentos de dados para a interface, mas não deve alterar a interface diretamente. Ou seja, estes métodos abaixo deverão ir para uma classe própria que lida só com atualizações de interface.
+}
+
+public class UI
+{
     public static void FiltrarConsulta(FiltroConsulta filtroConsulta)
     {
         TabPage currentPage = Consultorio.tabControl.SelectedTab;
         DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
 
-        List<RegistroConsulta> FilteredData = SearchConsultas(dadosConsulta, filtroConsulta);
+        List<RegistroConsulta> FilteredData = DBTest.SearchConsultas(DBTest.dadosConsulta, filtroConsulta);
 
         // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
-        List<RegistroConsulta> FinalResult = FilteredData.Any() ? FilteredData : dadosConsulta;
+        List<RegistroConsulta> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosConsulta;
 
         LoadConsultasToTable(dgv, FinalResult);
     }
@@ -1014,7 +1057,7 @@ public class CrudButtonsControl : UserControl
 
 // record é basicamente uma classe, só que simplificada para contexto de dados.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
-public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, TimeSpan horario, bool retorno, string dataRetorno);
+public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno);
 
 public record RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta);
 
@@ -1030,10 +1073,10 @@ public record FiltroConsulta
     public string codigo { get; set; }
     public string nomeMedico { get; set; }
     public string nomePaciente { get; set; }
-    public string data { get; set; }
-    public string horario { get; set; }
-    public string retorno { get; set; }
-    public string dataRetorno { get; set; }
+    public DateOnly? data { get; set; }
+    public TimeSpan? horario { get; set; }
+    public bool retorno { get; set; }
+    public DateOnly? dataRetorno { get; set; }
 }
 public record FiltroMedico(string codigo, string nomeMedico, string telefone, string valorConsulta);
 public record FiltroPaciente(string codigo, string nomePaciente, string endereco, string numero, string bairro, string cidade, string cep, string sexo, string telefone, string celular);
