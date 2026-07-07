@@ -1,4 +1,3 @@
-using System.DirectoryServices;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
@@ -10,8 +9,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         private TabPage tab_medicos;
         private TabPage tab_pacientes;
         private FiltroConsulta filtroConsulta = new FiltroConsulta();
-        // private FiltroMedico filtroMedico = new FiltroMedico();
-        // private FiltroPaciente filtroPaciente = new FiltroPaciente();
+        private FiltroMedico filtroMedico = new FiltroMedico();
+        private FiltroPaciente filtroPaciente = new FiltroPaciente();
 
         public Consultorio()
         {
@@ -20,7 +19,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             InitializeTabComponents();
 
             // tc = tabela consultas; tm = tabela medicos; tp = tabela pacientes
-            Builder.AddDataGridViewToTab(tab_consultas, [
+            Builder.AddDataGridViewToTab(tab_consultas,
+            [
                 ("tc_id", "ID"),
                 ("tc_medico_nome", "Médico"),
                 ("tc_paciente_nome", "Paciente"),
@@ -55,7 +55,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
         private void InitializeConsultorio()
         {
-            Text = "Consultório";
+            Text = "Consultório (ERP Software)";
             Size = new Size(600, 400);
             FormBorderStyle = FormBorderStyle.FixedSingle;
             BackColor = Color.FromArgb(29, 49, 49);
@@ -81,9 +81,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             this.Controls.Add(tabControl);
         }
 
-        // TODO: a lógica presente neste callback de evento pode e deve ser generalizada, pois, por exemplo, suponha que o usuário
-        // digite algo para filtrar resultados, a tabela irá para a linha que corresponde aquele filtro, ou seja, uma nova seleção que
-        // deve ser detectada e atualizada para o SelectedRowId. Além do filtro, existe também o sort da tabela, que naturalmente muda a linha selecionada.
         private void OnTabChange(object sender, EventArgs e)
         {
             TabPage currentPage = tabControl.SelectedTab;
@@ -139,16 +136,18 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             var lbl_medico_id = Builder.NewLabel("ID Médico", 100, 10, 40);
             var lbl_medico_nome = Builder.NewLabel("Nome Médico", 100, 10, 80);
-            var txt_medico_id = Builder.NewTextBox("box_medico_id", 100, 120, 40);
-            var txt_medico_nome = Builder.NewTextBox("box_medico_nome", 200, 120, 80);
+
+            var txt_medico_id = Builder.NewTextBox("txt_medico_id", 100, 120, 40);
+            var txt_medico_nome = Builder.NewTextBox("txt_medico_nome", 200, 120, 80);
 
             // ## ABA PACIENTES ##
             GroupBox grp_pacientes = Builder.NewGroupBox("grp_pacientes", "Buscar Paciente");
 
             var lbl_paciente_id = Builder.NewLabel("ID Paciente", 100, 10, 40);
             var lbl_paciente_nome = Builder.NewLabel("Nome Paciente", 100, 10, 80);
-            var txt_paciente_id = Builder.NewTextBox("box_paciente_id", 100, 120, 40);
-            var txt_paciente_nome = Builder.NewTextBox("box_paciente_nome", 200, 120, 80);
+
+            var txt_paciente_id = Builder.NewTextBox("txt_paciente_id", 100, 120, 40);
+            var txt_paciente_nome = Builder.NewTextBox("txt_paciente_nome", 200, 120, 80);
 
             // botões de controle para cada aba:
             var crud_consultas = new CrudButtonsControl();
@@ -188,11 +187,13 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_medicos.Controls.Add(grp_medicos);
             tab_pacientes.Controls.Add(grp_pacientes);
 
-            InitConsultaChangeEvents(grp_consultas);
+            InitConsultasChangeEvents(grp_consultas);
+            InitMedicosChangeEvents(grp_medicos);
+            InitPacientesChangeEvents(grp_pacientes);
         }
 
-        // TODO: tudo isto está funcional, mas é necessário mudar agora os tipos dos dados para os tipos esperados, ao invés de string.
-        private void InitConsultaChangeEvents(GroupBox grp_consulta)
+        // TODO: Considerar mandar todos os métodos de eventos abaixo pra classe Eventos.
+        private void InitConsultasChangeEvents(GroupBox grp_consulta)
         {
             // Inicializa os eventos das texboxes da tab Consultas:
 
@@ -255,6 +256,35 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             };
         }
 
+        private void InitMedicosChangeEvents(GroupBox grp_medico)
+        {
+            grp_medico.Controls["txt_medico_id"].TextChanged += (_, _) =>
+            {
+                filtroMedico.codigo = grp_medico.Controls["txt_medico_id"].Text;
+                UI.FiltrarMedicos(filtroMedico);
+            };
+
+            grp_medico.Controls["txt_medico_nome"].TextChanged += (_, _) =>
+            {
+                filtroMedico.nomeMedico = grp_medico.Controls["txt_medico_nome"].Text;
+                UI.FiltrarMedicos(filtroMedico);
+            };
+        }
+
+        private void InitPacientesChangeEvents(GroupBox grp_paciente)
+        {
+            grp_paciente.Controls["txt_paciente_id"].TextChanged += (_, _) =>
+            {
+                filtroPaciente.codigo = grp_paciente.Controls["txt_paciente_id"].Text;
+                UI.FiltrarPacientes(filtroPaciente);
+            };
+
+            grp_paciente.Controls["txt_paciente_nome"].TextChanged += (_, _) =>
+            {
+                filtroPaciente.nomePaciente = grp_paciente.Controls["txt_paciente_nome"].Text;
+                UI.FiltrarPacientes(filtroPaciente);
+            };
+        }
         // subject: consulta, médico ou paciente.
         private void InitializeBtnEvents(CrudButtonsControl btn, string subject)
         {
@@ -886,7 +916,6 @@ public class DBTest
     private static void LoadMedicosFromDB() { }
     private static void LoadPacientesFromDB() { }
 
-    // TODO: modificar as funções de Search, para que, quando o filtro passado não for correto, simplesmente deixar a tabela como está, ao invés de retornar uma vazia.
     public static List<RegistroConsulta> SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
     {
         // string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno)
@@ -917,17 +946,33 @@ public class DBTest
     }
 
     // TODO: estas duas funções de "search" abaixo deverão seguir a  lógica da search acima:
-    public static FiltroMedico SearchMedico(List<RegistroMedico> dados, FiltroMedico filtro)
+    public static List<RegistroMedico> SearchMedico(List<RegistroMedico> dados, FiltroMedico filtro)
     {
-        IEnumerable<RegistroMedico> SearchResult = dados;
-        SearchResult = SearchResult.Where(entry => entry.codigo == filtro.codigo);
-        return new FiltroMedico("", "", "", "");
+        IEnumerable<RegistroMedico> SearchFiltering = dados;
+
+        if (!string.IsNullOrWhiteSpace(filtro.codigo))
+            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(filtro.nomeMedico))
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomeMedico.Contains(filtro.nomeMedico, StringComparison.OrdinalIgnoreCase));
+
+        List<RegistroMedico> SearchResult = SearchFiltering.ToList();
+
+        return SearchResult;
     }
-    public static FiltroPaciente SearchPaciente(List<RegistroPaciente> dados, FiltroPaciente filtro)
+    public static List<RegistroPaciente> SearchPaciente(List<RegistroPaciente> dados, FiltroPaciente filtro)
     {
-        IEnumerable<RegistroPaciente> SearchResult = dados;
-        SearchResult = SearchResult.Where(entry => entry.codigo == filtro.codigo);
-        return new FiltroPaciente("", "", "", "", "", "", "", "", "", "");
+        IEnumerable<RegistroPaciente> SearchFiltering = dados;
+
+        if (!string.IsNullOrWhiteSpace(filtro.codigo))
+            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(filtro.nomePaciente))
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente.Contains(filtro.nomePaciente, StringComparison.OrdinalIgnoreCase));
+
+        List<RegistroPaciente> SearchResult = SearchFiltering.ToList();
+
+        return SearchResult;
     }
 
 }
@@ -947,6 +992,32 @@ public class UI
         LoadConsultasToTable(dgv, FinalResult);
     }
 
+    public static void FiltrarMedicos(FiltroMedico filtroMedico)
+    {
+        TabPage currentPage = Consultorio.tabControl.SelectedTab;
+        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+
+        List<RegistroMedico> FilteredData = DBTest.SearchMedico(DBTest.dadosMedico, filtroMedico);
+
+        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
+        List<RegistroMedico> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosMedico;
+
+        LoadMedicosToTable(dgv, FinalResult);
+    }
+
+    public static void FiltrarPacientes(FiltroPaciente filtroPaciente)
+    {
+        TabPage currentPage = Consultorio.tabControl.SelectedTab;
+        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+
+        List<RegistroPaciente> FilteredData = DBTest.SearchPaciente(DBTest.dadosPaciente, filtroPaciente);
+
+        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
+        List<RegistroPaciente> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosPaciente;
+
+        LoadPacientesToTable(dgv, FinalResult);
+    }
+
     public static void LoadConsultasToTable(DataGridView table, List<RegistroConsulta> dados)
     {
         table.Rows.Clear();
@@ -958,6 +1029,7 @@ public class UI
 
     public static void LoadMedicosToTable(DataGridView table, List<RegistroMedico> dados)
     {
+        table.Rows.Clear();
         for (int i = 0; i < dados.Count; i++)
         {
             table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].telefone, dados[i].valorConsulta);
@@ -966,6 +1038,7 @@ public class UI
 
     public static void LoadPacientesToTable(DataGridView table, List<RegistroPaciente> dados)
     {
+        table.Rows.Clear();
         for (int i = 0; i < dados.Count; i++)
         {
             table.Rows.Add(dados[i].codigo, dados[i].nomePaciente, dados[i].endereco, dados[i].numero, dados[i].bairro, dados[i].cidade, dados[i].cep, dados[i].sexo, dados[i].telefone, dados[i].celular);
@@ -1092,5 +1165,24 @@ public record FiltroConsulta
     public bool retorno { get; set; }
     public DateOnly? dataRetorno { get; set; }
 }
-public record FiltroMedico(string codigo, string nomeMedico, string telefone, string valorConsulta);
-public record FiltroPaciente(string codigo, string nomePaciente, string endereco, string numero, string bairro, string cidade, string cep, string sexo, string telefone, string celular);
+public record FiltroMedico
+{
+    public string codigo { get; set; }
+    public string nomeMedico { get; set; }
+    public string telefone { get; set; }
+    public double valorConsulta { get; set; }
+}
+
+public record FiltroPaciente
+{
+    public string codigo { get; set; }
+    public string nomePaciente { get; set; }
+    public string endereco { get; set; }
+    public string numero { get; set; }
+    public string bairro { get; set; }
+    public string cidade { get; set; }
+    public string cep { get; set; }
+    public string sexo { get; set; }
+    public string telefone { get; set; }
+    public string celular { get; set; }
+}
