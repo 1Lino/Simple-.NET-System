@@ -356,17 +356,30 @@ public class Dialog
 
         var txtNomePaciente = Builder.NewTextBox("consulta_nome_paciente", 250, 80, 10);
         var txtNomeMedico = Builder.NewTextBox("consulta_nome_medico", 250, 80, 40);
+        txtNomeMedico.Tag = "médico";
+        txtNomePaciente.Tag = "paciente";
 
         var dtpData = Builder.NewDateTimePicker(75, 80, "dd/MM/yyyy");
-        dtpData.MinDate = new DateTime(2026, 1, 1);
-        dtpData.MaxDate = new DateTime(2026, 12, 31);
+        dtpData.MinDate = DateTime.Now; // a data mínima deve ser sempre o dia atual.
+        dtpData.MaxDate = new DateTime(2026, 12, 31); // a data máxima deve ser a data final do período de operações anual da empresa.
 
         var dtpTime = Builder.NewDateTimePicker(75, 260, "HH:mm");
+        // puxa o horário atual como horário mínimo caso a data da consulta coincida com a de hoje, afinal, se a data da consulta é hoje, por exemplo, e estamos às 14 horas, não é possível marcar para as 10 horas do dia.
+        dtpTime.MinDate = dtpData.Value.Date == DateTime.Now.Date ? DateTime.Now : DateTime.MinValue;
         dtpTime.Width = 60;
         dtpTime.ShowUpDown = true;
 
+        dtpData.ValueChanged += (_, _) =>
+        {
+            // toda vez que mudarmos a data da consulta, atualiza os limites mínimos de horário:
+            dtpTime.MinDate = dtpData.Value.Date == DateTime.Now.Date ? DateTime.Now : new DateTime(2026, 01, 01);
+            return;
+        };
+
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
+        btnOk.DialogResult = DialogResult.None;
+        btnCancel.DialogResult = DialogResult.Cancel;
 
         formDialog.Controls.Clear(); // esta limpeza deve ser feita a cada chamada, pois o formDialog é apenas um único componente reutilizado em todas as situações.
 
@@ -380,13 +393,21 @@ public class Dialog
         formDialog.Controls.Add(dtpTime);
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
-        formDialog.AcceptButton = btnOk;
-        formDialog.CancelButton = btnCancel;
 
-        if (formDialog.ShowDialog() == DialogResult.OK)
+        // TODO: aqui deverá ser chamado o método para atualizar a lista de consultas com uma nova entrada.
+        // Os métodos necessários para isso deverão ser criados em DBTest.
+        // Deverá haver uma validação que checa se os campos das texboxes retornam dados válidos, e também uma validação especial com 
+        // relação às datas e os horários, para que não ocorra conflitos de dados. Esta validação deve ser feita no DBTest, simulando validação backend. Quanto ao front-end, pode-se configurar as textboxes com uma propriedade "required" ou algo do tipo.
+
+        btnOk.Click += (_, _) => Eventos.ValidateTextBox(btnOk, new List<TextBox> { txtNomePaciente, txtNomeMedico }, formDialog);
+
+        btnCancel.Click += (_, _) =>
         {
-            // string nome = txtNome.Text;
-        }
+            Console.WriteLine("Operação Cancelada!");
+        };
+
+        formDialog.ShowDialog();
+
     }
 
     private static void AddMedico(string actionType, string subject)
@@ -1066,6 +1087,26 @@ public class Eventos
     {
         return CurrentRowId;
     }
+
+    public static void ValidateTextBox(Button btnOk, List<TextBox> txtList, Form formDiag)
+    {
+        foreach (TextBox textBox in txtList)
+        {
+            if (string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                MessageBox.Show($"Campo '{textBox.Tag}' não pode ficar vazio!");
+                textBox.Focus();
+                return;
+            }
+        }
+
+        btnOk.DialogResult = DialogResult.OK;
+
+        // realiza qualquer operação importante aqui.
+
+        Console.WriteLine("Operação completa!");
+        formDiag.Close(); // fecha o form especificado
+    }
 }
 
 // componente customizado, que engloba três botões, de modo que só precisemos implementar estes botões todos uma só vez por tab.
@@ -1163,26 +1204,25 @@ public record FiltroConsulta
     public DateOnly? data { get; set; }
     public TimeSpan? horario { get; set; }
     public bool retorno { get; set; }
-    public DateOnly? dataRetorno { get; set; }
+    // public DateOnly? dataRetorno { get; set; }
 }
 public record FiltroMedico
 {
     public string codigo { get; set; }
     public string nomeMedico { get; set; }
-    public string telefone { get; set; }
-    public double valorConsulta { get; set; }
+    // public string telefone { get; set; }
+    // public double valorConsulta { get; set; }
 }
-
 public record FiltroPaciente
 {
     public string codigo { get; set; }
     public string nomePaciente { get; set; }
-    public string endereco { get; set; }
-    public string numero { get; set; }
-    public string bairro { get; set; }
-    public string cidade { get; set; }
-    public string cep { get; set; }
-    public string sexo { get; set; }
-    public string telefone { get; set; }
-    public string celular { get; set; }
+    // public string endereco { get; set; }
+    // public string numero { get; set; }
+    // public string bairro { get; set; }
+    // public string cidade { get; set; }
+    // public string cep { get; set; }
+    // public string sexo { get; set; }
+    // public string telefone { get; set; }
+    // public string celular { get; set; }
 }
