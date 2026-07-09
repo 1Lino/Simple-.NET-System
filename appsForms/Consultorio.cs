@@ -422,9 +422,14 @@ public class Dialog
         var txtNomeMedico = Builder.NewTextBox("medico_nome", 250, 100, 10);
         var txtTelefone = Builder.NewTextBox("medico_telefone", 150, 100, 40);
         var txtValorConsulta = Builder.NewTextBox("medico_valor_consulta", 150, 100, 70);
+        txtNomeMedico.Tag = "Nome";
+        txtTelefone.Tag = "Telefone";
+        txtValorConsulta.Tag = "Valor Consulta";
 
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
+        btnOk.DialogResult = DialogResult.None;
+        btnCancel.DialogResult = DialogResult.Cancel;
 
         formDialog.Controls.Clear();
 
@@ -436,13 +441,15 @@ public class Dialog
         formDialog.Controls.Add(txtValorConsulta);
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
-        formDialog.AcceptButton = btnOk;
-        formDialog.CancelButton = btnCancel;
 
-        if (formDialog.ShowDialog() == DialogResult.OK)
+        btnOk.Click += (_, _) => Eventos.ValidateTextBox(btnOk, new List<TextBox> { txtNomeMedico, txtTelefone, txtValorConsulta }, formDialog);
+
+        btnCancel.Click += (_, _) =>
         {
-            // string nome = txtNome.Text;
-        }
+            Console.WriteLine("Operação Cancelada!");
+        };
+
+        formDialog.ShowDialog();
     }
 
     private static void AddPaciente(string actionType, string subject)
@@ -469,12 +476,24 @@ public class Dialog
 
         var radioMasculino = Builder.AddRadio("Masculino", 90, 100, 130);
         var radioFeminino = Builder.AddRadio("Feminino", 90, 200, 130);
+        radioMasculino.Checked = true;
 
         var txtTelefone = Builder.NewTextBox("paciente_telefone", 150, 100, 160);
         var txtCelular = Builder.NewTextBox("paciente_celular", 150, 100, 190);
 
+        txtNomePaciente.Tag = "Nome";
+        txtEndereco.Tag = "Endereço";
+        txtNumero.Tag = "Número";
+        txtBairro.Tag = "Bairro";
+        txtCidade.Tag = "Cidade";
+        txtCep.Tag = "CEP";
+        txtTelefone.Tag = "Telefone";
+        txtCelular.Tag = "Celular";
+
         var btnOk = Builder.AddButton("Salvar", 90, 250);
         var btnCancel = Builder.AddButton("Cancelar", 230, 250);
+        btnOk.DialogResult = DialogResult.None;
+        btnCancel.DialogResult = DialogResult.Cancel;
 
         formDialog.Controls.Clear(); // remove todos os componentes que estiverem no form.
 
@@ -502,10 +521,24 @@ public class Dialog
         formDialog.AcceptButton = btnOk;
         formDialog.CancelButton = btnCancel;
 
-        if (formDialog.ShowDialog() == DialogResult.OK)
+        btnOk.Click += (_, _) => Eventos.ValidateTextBox(btnOk, new List<TextBox>
         {
-            // TODO...
-        }
+            txtNomePaciente,
+            txtEndereco,
+            txtNumero,
+            txtBairro,
+            txtCidade,
+            txtCep,
+            txtTelefone,
+            txtCelular
+        }, formDialog);
+
+        btnCancel.Click += (_, _) =>
+        {
+            Console.WriteLine("Operação Cancelada!");
+        };
+
+        formDialog.ShowDialog();
     }
 
     //OBS.: todos estes formulários de edição devem puxar a entrada de registro atualmente selecionada.
