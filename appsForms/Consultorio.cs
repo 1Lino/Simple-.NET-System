@@ -1,3 +1,4 @@
+using System.ComponentModel.Design;
 using Sistema_De_Aplicativos_Simples__.NET.appsForms;
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
@@ -232,6 +233,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             // O casting de DateTimePicker aqui é necessário, pois Controls não possui por si só a propriedade ValueChanged:
             ((DateTimePicker)grp_consulta.Controls["dtp_data"]).ValueChanged += (_, _) =>
             {
+                filtroConsulta.horario = null;
                 filtroConsulta.data = DateOnly.Parse(((DateTimePicker)grp_consulta.Controls["dtp_data"]).Text);
                 Console.WriteLine(filtroConsulta.data);
                 UI.FiltrarConsulta(filtroConsulta);
@@ -240,6 +242,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             //dados tipo TimeSpan
             ((DateTimePicker)grp_consulta.Controls["dtp_time"]).ValueChanged += (_, _) =>
             {
+                filtroConsulta.data = null;
+
                 filtroConsulta.horario = TimeSpan.Parse(((DateTimePicker)grp_consulta.Controls["dtp_time"]).Text);
                 Console.WriteLine(filtroConsulta.horario);
                 UI.FiltrarConsulta(filtroConsulta);
@@ -354,10 +358,30 @@ public class Dialog
         var lblData = Builder.NewLabel("Data", 55, 10, 70);
         var lblHorario = Builder.NewLabel("Horário", 55, 200, 70);
 
-        var txtNomePaciente = Builder.NewTextBox("consulta_nome_paciente", 250, 80, 10);
-        var txtNomeMedico = Builder.NewTextBox("consulta_nome_medico", 250, 80, 40);
-        txtNomeMedico.Tag = "médico";
-        txtNomePaciente.Tag = "paciente";
+        var comboNomePaciente = new ComboBox
+        {
+            Tag = "paciente",
+            Width = 240,
+            Left = 80,
+            Top = 10,
+            AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+            AutoCompleteSource = AutoCompleteSource.ListItems,
+            DataSource = DBTest.dadosConsulta.ToList(), // ToList é usado aqui apenas para criar uma cópia, do contrário os dados seriam compartilhados entre todos os comboboxes, fazendo com que a edição em um refletisse no outro.
+            DisplayMember = "nomePaciente",
+            ValueMember = "codigo"
+        };
+        var comboNomeMedico = new ComboBox
+        {
+            Tag = "médico",
+            Width = 240,
+            Left = 80,
+            Top = 40,
+            AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+            AutoCompleteSource = AutoCompleteSource.ListItems,
+            DataSource = DBTest.dadosConsulta.ToList(),
+            DisplayMember = "nomeMedico",
+            ValueMember = "codigo"
+        };
 
         var dtpData = Builder.NewDateTimePicker(75, 80, "dd/MM/yyyy");
         dtpData.MinDate = DateTime.Now; // a data mínima deve ser sempre o dia atual.
@@ -387,19 +411,14 @@ public class Dialog
         formDialog.Controls.Add(lblNomeMedico);
         formDialog.Controls.Add(lblData);
         formDialog.Controls.Add(lblHorario);
-        formDialog.Controls.Add(txtNomePaciente);
-        formDialog.Controls.Add(txtNomeMedico);
+        formDialog.Controls.Add(comboNomePaciente);
+        formDialog.Controls.Add(comboNomeMedico);
         formDialog.Controls.Add(dtpData);
         formDialog.Controls.Add(dtpTime);
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
 
-        // TODO: aqui deverá ser chamado o método para atualizar a lista de consultas com uma nova entrada.
-        // Os métodos necessários para isso deverão ser criados em DBTest.
-        // Deverá haver uma validação que checa se os campos das texboxes retornam dados válidos, e também uma validação especial com 
-        // relação às datas e os horários, para que não ocorra conflitos de dados. Esta validação deve ser feita no DBTest, simulando validação backend. Quanto ao front-end, pode-se configurar as textboxes com uma propriedade "required" ou algo do tipo.
-
-        btnOk.Click += (_, _) => Eventos.ValidateTextBox(btnOk, new List<TextBox> { txtNomePaciente, txtNomeMedico }, formDialog);
+        btnOk.Click += (_, _) => Eventos.ValidateComboBox(btnOk, new List<ComboBox> { comboNomePaciente, comboNomeMedico }, formDialog);
 
         btnCancel.Click += (_, _) =>
         {
@@ -941,7 +960,7 @@ public class Builder
 //DBTest poderá se tornar uma interface de serviço: ou seja, é esta camada que deverá conectar-se ao banco e fazer a ponte entre front e dados (front não acessa dados diretamente).
 public class DBTest
 {
-    // Objetos do tipo "RegistroConsulta", "RegistroMedico" e "RegistroPaciente". Estes valores são apenas teste (hardcoded), mas o que deve ocorrer de verdade é que um carregamento deve ser feito da base de dados para cá, para isso deve haver um método para cada tipo de objeto.
+    // Objetos do tipo "RegistroConsulta", "RegistroMedico" e "RegistroPaciente". Estes valores são apenas teste (hardcoded), mas o que deve ocorrer de verdade é que um carregamento deve ser feito da base de dados para cá, para isso deve haver um método para cada tipo de objeto. Como este projeto é de "playground", só isto aqui basta pra simulação.
 
     // Regra de negócio: data de retorno jamais pode ser anterior à data da consulta.
     public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
@@ -964,11 +983,6 @@ public class DBTest
         new("45", "Maria Cruz", "R. Francisco Polo", 161, "Mapuio", "Areias", 17800000, "Feminino", "0500-0880", "(85) 97385-1359"),
         new("49", "Jacinta Ribeiro", "R. Ivo de Almeida", 240, "Jangada", "Verdes Prados", 19500000, "Feminino", "-", "(50) 98445-2656")
     };
-
-    // protótipos das funções de carregamento da base:
-    private static void LoadConsultasFromDB() { }
-    private static void LoadMedicosFromDB() { }
-    private static void LoadPacientesFromDB() { }
 
     public static List<RegistroConsulta> SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
     {
@@ -998,8 +1012,6 @@ public class DBTest
 
         return SearchResult;
     }
-
-    // TODO: estas duas funções de "search" abaixo deverão seguir a  lógica da search acima:
     public static List<RegistroMedico> SearchMedico(List<RegistroMedico> dados, FiltroMedico filtro)
     {
         IEnumerable<RegistroMedico> SearchFiltering = dados;
@@ -1029,6 +1041,20 @@ public class DBTest
         return SearchResult;
     }
 
+    //TODO: funções de criação de novos dados.
+    public static void NewConsulta() { }
+    public static void NewMedico() { }
+    public static void NewPaciente() { }
+
+    //TODO: funções de edição de dados.
+    public static void UpdateConsulta() { }
+    public static void UpdateMedico() { }
+    public static void UpdatePaciente() { }
+
+    //TODO: funções de deleção de dados.
+    public static void RemoveConsulta() { }
+    public static void RemoveMedico() { }
+    public static void RemovePaciente() { }
 }
 
 public class UI
@@ -1133,9 +1159,31 @@ public class Eventos
             }
         }
 
+        // TODO: chama a função de validação de backend aqui. Se for bem sucedida, aciona a linha abaixo:
         btnOk.DialogResult = DialogResult.OK;
 
-        // realiza qualquer operação importante aqui.
+        // TODO: então chama a função que registra o novo cadastro na base.
+
+        Console.WriteLine("Operação completa!");
+        formDiag.Close(); // fecha o form especificado
+    }
+
+    public static void ValidateComboBox(Button btnOk, List<ComboBox> txtList, Form formDiag)
+    {
+        foreach (ComboBox comboBox in txtList)
+        {
+            if (string.IsNullOrWhiteSpace(comboBox.Text))
+            {
+                MessageBox.Show($"Campo '{comboBox.Tag}' deve conter um valor válido.");
+                comboBox.Focus();
+                return;
+            }
+        }
+
+        // TODO: chama a função de validação de backend aqui. Se for bem sucedida, aciona a linha abaixo:
+        btnOk.DialogResult = DialogResult.OK;
+
+        // TODO: então chama a função que registra o novo cadastro na base.
 
         Console.WriteLine("Operação completa!");
         formDiag.Close(); // fecha o form especificado
