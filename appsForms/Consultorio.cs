@@ -1041,6 +1041,28 @@ public class DBTest
         return SearchResult;
     }
 
+    //TODO: funções de validação backend (verifica cada item de txtList, checa se está conforme os dados existentes na base)
+    public static bool isConsultaValid(List<ComboBox> txtList)
+    {
+        // FirstOrDefault procura a primeira ocorrência que satisfaz as condições. Se não encontrar, retorna null;
+        //Nota: é necessário prestar atenção à ordem com que os valores são passados para o método. No caso, nomeMédico está no índice 1 da txtList, mas poderia estar no índice 0. Depois mudarei isso, para que ordem não importe.
+        var medico = dadosConsulta.FirstOrDefault(p => p.nomeMedico == txtList[1].Text);
+        var paciente = dadosConsulta.FirstOrDefault(p => p.nomePaciente == txtList[0].Text);
+
+        if (medico != null && paciente != null)
+        {
+            return true;
+        }
+        return false;
+    }
+    public static void isMedicoValid(List<ComboBox> txtList)
+    {
+
+    }
+    public static void isPacienteValid(List<ComboBox> txtList)
+    {
+
+    }
     //TODO: funções de criação de novos dados.
     public static void NewConsulta() { }
     public static void NewMedico() { }
@@ -1180,7 +1202,13 @@ public class Eventos
             }
         }
 
-        // TODO: chama a função de validação de backend aqui. Se for bem sucedida, aciona a linha abaixo:
+        // Se for verificado que tanto o nome do médico como do paciente, passados na validação de Front, não existem porém na base de dados, então não procede com cadastro. 
+        if (!DBTest.isConsultaValid(txtList))
+        {
+            MessageBox.Show($"Valor inválido!");
+            return;
+        }
+
         btnOk.DialogResult = DialogResult.OK;
 
         // TODO: então chama a função que registra o novo cadastro na base.
