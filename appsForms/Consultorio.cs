@@ -12,6 +12,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         private FiltroConsulta filtroConsulta = new FiltroConsulta();
         private FiltroMedico filtroMedico = new FiltroMedico();
         private FiltroPaciente filtroPaciente = new FiltroPaciente();
+        public static RegistroConsulta registroConsulta; // Os dados do formulário de registro de consulta serão passados pra este objeto.
 
         public Consultorio()
         {
@@ -418,7 +419,21 @@ public class Dialog
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
 
-        btnOk.Click += (_, _) => Eventos.ValidateComboBox(btnOk, new List<ComboBox> { comboNomePaciente, comboNomeMedico }, formDialog);
+        //TODO: além de ValidateComboBox receber uma lista de componentes, seria melhor que recebece uma lista contendo todos os dados de todos os campos, assim o método o método isConsultaValid faria a verificação somente de dados, já que se trata de um método backend.
+        btnOk.Click += (_, _) =>
+        {
+            Consultorio.registroConsulta = new RegistroConsulta(
+                (int.Parse(DBTest.dadosConsulta[-1].codigo) + 1).ToString(), // pega a última consulta da lista e acrescenta 1 ao código.
+                comboNomeMedico.Text,
+                comboNomePaciente.Text,
+                DateOnly.Parse(dtpData.Text),
+                TimeSpan.Parse(dtpTime.Text),
+                false, // TODO...
+                new DateOnly(1000, 01, 01) //TODO... 
+            );
+
+            Eventos.ValidateComboBox(btnOk, new List<ComboBox> { comboNomePaciente, comboNomeMedico }, formDialog);
+        };
 
         btnCancel.Click += (_, _) =>
         {
@@ -1064,7 +1079,10 @@ public class DBTest
 
     }
     //TODO: funções de criação de novos dados.
-    public static void NewConsulta() { }
+    public static void NewConsulta()
+    {
+        // Uma vez que as validações passem, é hora de registrar os dados.
+    }
     public static void NewMedico() { }
     public static void NewPaciente() { }
 
@@ -1294,6 +1312,22 @@ public class CrudButtonsControl : UserControl
 // record é basicamente uma classe, só que simplificada para contexto de dados.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
 public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno);
+
+// public record RegistroConsulta
+// {
+//     public string codigo { get; set; }
+//     public string nomeMedico { get; set; }
+//     public string nomePaciente { get; set; }
+//     public DateOnly data { get; set; }
+//     public TimeSpan horario { get; set; }
+//     public bool retorno { get; set; }
+//     public DateOnly dataRetorno { get; set; }
+
+//     public RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno)
+//     {
+
+//     }
+// };
 
 public record RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta);
 
