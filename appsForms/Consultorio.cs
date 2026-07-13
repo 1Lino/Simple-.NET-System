@@ -6,9 +6,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
     public partial class Consultorio : Form
     {
         public static TabControl tabControl;
-        private TabPage tab_consultas;
-        private TabPage tab_medicos;
-        private TabPage tab_pacientes;
+        public static TabPage tab_consultas;
+        public static TabPage tab_medicos;
+        public static TabPage tab_pacientes;
         private FiltroConsulta filtroConsulta = new FiltroConsulta();
         private FiltroMedico filtroMedico = new FiltroMedico();
         private FiltroPaciente filtroPaciente = new FiltroPaciente();
@@ -394,13 +394,6 @@ public class Dialog
         dtpTime.Width = 60;
         dtpTime.ShowUpDown = true;
 
-        dtpData.ValueChanged += (_, _) =>
-        {
-            // toda vez que mudarmos a data da consulta, atualiza os limites mínimos de horário:
-            dtpTime.MinDate = dtpData.Value.Date == DateTime.Now.Date ? DateTime.Now : new DateTime(2026, 01, 01);
-            return;
-        };
-
         var chkRetorno = new CheckBox
         {
             Text = "Retorno",
@@ -413,6 +406,14 @@ public class Dialog
         dtpRetorno.MinDate = dtpData.Value;
         dtpRetorno.MaxDate = new DateTime(2026, 12, 31);
         dtpRetorno.Enabled = false;
+
+        dtpData.ValueChanged += (_, _) =>
+        {
+            // toda vez que mudarmos a data da consulta, atualiza os limites mínimos de horário:
+            dtpTime.MinDate = dtpData.Value.Date == DateTime.Now.Date ? DateTime.Now : new DateTime(2026, 01, 01);
+            dtpRetorno.MinDate = dtpData.Value;
+            return;
+        };
 
         chkRetorno.CheckedChanged += (_, _) =>
         {
@@ -445,7 +446,7 @@ public class Dialog
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
 
-        //TODO: além de ValidateComboBox receber uma lista de componentes, seria melhor que recebece uma lista contendo todos os dados de todos os campos, assim o método o método isConsultaValid faria a verificação somente de dados, já que se trata de um método backend.
+        //TODO: testar a validação de "registroConsulta".
         btnOk.Click += (_, _) =>
         {
             Consultorio.registroConsulta = new RegistroConsulta(
@@ -461,6 +462,7 @@ public class Dialog
             // Print dos dados que deverão ir para a validação:
             Console.WriteLine($"ID: {Consultorio.registroConsulta.codigo}\nMédico: {Consultorio.registroConsulta.nomeMedico}\nPaciente: {Consultorio.registroConsulta.nomePaciente}\nData: {Consultorio.registroConsulta.data} - {Consultorio.registroConsulta.horario}\nRetorno: {Consultorio.registroConsulta.retorno} - {Consultorio.registroConsulta.dataRetorno}");
 
+            // validação frontend dos campos nomePaciente e nomeMédico
             Eventos.ValidateComboBox(btnOk, new List<ComboBox> { comboNomePaciente, comboNomeMedico }, formDialog);
         };
 
@@ -972,7 +974,7 @@ public class Builder
         DataGridView table = new DataGridView
         {
             Name = "table_" + tab.Name,
-            Size = new Size(575, 200),
+            Size = new Size(575, 120),
             Top = 210,
             Dock = DockStyle.None,
             RowHeadersVisible = false,
@@ -981,6 +983,7 @@ public class Builder
             AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
             AllowUserToResizeRows = false,
             AllowUserToResizeColumns = false,
+            ScrollBars = ScrollBars.Vertical
         };
         table.AllowUserToAddRows = false;
         table.SelectionMode = DataGridViewSelectionMode.FullRowSelect; // seleciona visualmente toda a linha.
@@ -1249,7 +1252,7 @@ public class Eventos
             }
         }
 
-        // Se for verificado que tanto o nome do médico como do paciente, passados na validação de Front, não existem porém na base de dados, então não procede com cadastro. 
+        // TODO: o ideal é que isConsultaValid receba Consultorio.registroConsulta e valide estes dados.
         if (!DBTest.isConsultaValid(txtList))
         {
             MessageBox.Show($"Valor inválido!");
@@ -1258,7 +1261,10 @@ public class Eventos
 
         btnOk.DialogResult = DialogResult.OK;
 
-        // TODO: então chama a função que registra o novo cadastro na base.
+        // Registra o novo cadastro na base.
+        DBTest.dadosConsulta.Add(Consultorio.registroConsulta);
+
+        UI.LoadConsultasToTable((DataGridView)Consultorio.tab_consultas.Controls[$"table_{Consultorio.tab_consultas.Name}"], DBTest.dadosConsulta);
 
         Console.WriteLine("Operação completa!");
         formDiag.Close(); // fecha o form especificado
@@ -1341,22 +1347,6 @@ public class CrudButtonsControl : UserControl
 // record é basicamente uma classe, só que simplificada para contexto de dados.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
 public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno);
-
-// public record RegistroConsulta
-// {
-//     public string codigo { get; set; }
-//     public string nomeMedico { get; set; }
-//     public string nomePaciente { get; set; }
-//     public DateOnly data { get; set; }
-//     public TimeSpan horario { get; set; }
-//     public bool retorno { get; set; }
-//     public DateOnly dataRetorno { get; set; }
-
-//     public RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno)
-//     {
-
-//     }
-// };
 
 public record RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta);
 
