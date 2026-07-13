@@ -401,6 +401,30 @@ public class Dialog
             return;
         };
 
+        var chkRetorno = new CheckBox
+        {
+            Text = "Retorno",
+            Checked = false,
+            Top = 105,
+            Left = 260
+        };
+
+        var dtpRetorno = Builder.NewDateTimePicker(105, 80, "dd/MM/yyyy");
+        dtpRetorno.MinDate = dtpData.Value;
+        dtpRetorno.MaxDate = new DateTime(2026, 12, 31);
+        dtpRetorno.Enabled = false;
+
+        chkRetorno.CheckedChanged += (_, _) =>
+        {
+            if (chkRetorno.Checked)
+            {
+                dtpRetorno.Enabled = true;
+                return;
+            }
+            dtpRetorno.Enabled = false;
+            return;
+        };
+
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
         btnOk.DialogResult = DialogResult.None;
@@ -416,6 +440,8 @@ public class Dialog
         formDialog.Controls.Add(comboNomeMedico);
         formDialog.Controls.Add(dtpData);
         formDialog.Controls.Add(dtpTime);
+        formDialog.Controls.Add(chkRetorno);
+        formDialog.Controls.Add(dtpRetorno);
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
 
@@ -423,14 +449,17 @@ public class Dialog
         btnOk.Click += (_, _) =>
         {
             Consultorio.registroConsulta = new RegistroConsulta(
-                (int.Parse(DBTest.dadosConsulta[-1].codigo) + 1).ToString(), // pega a última consulta da lista e acrescenta 1 ao código.
+                (int.Parse(DBTest.dadosConsulta[DBTest.dadosConsulta.Count - 1].codigo) + 1).ToString(), // pega a última consulta da lista e acrescenta 1 ao código.
                 comboNomeMedico.Text,
                 comboNomePaciente.Text,
                 DateOnly.Parse(dtpData.Text),
                 TimeSpan.Parse(dtpTime.Text),
-                false, // TODO...
-                new DateOnly(1000, 01, 01) //TODO... 
+                chkRetorno.Checked,
+                DateOnly.Parse(dtpRetorno.Text)
             );
+
+            // Print dos dados que deverão ir para a validação:
+            Console.WriteLine($"ID: {Consultorio.registroConsulta.codigo}\nMédico: {Consultorio.registroConsulta.nomeMedico}\nPaciente: {Consultorio.registroConsulta.nomePaciente}\nData: {Consultorio.registroConsulta.data} - {Consultorio.registroConsulta.horario}\nRetorno: {Consultorio.registroConsulta.retorno} - {Consultorio.registroConsulta.dataRetorno}");
 
             Eventos.ValidateComboBox(btnOk, new List<ComboBox> { comboNomePaciente, comboNomeMedico }, formDialog);
         };
