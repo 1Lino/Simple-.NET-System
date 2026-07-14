@@ -13,6 +13,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         private FiltroMedico filtroMedico = new FiltroMedico();
         private FiltroPaciente filtroPaciente = new FiltroPaciente();
         public static RegistroConsulta registroConsulta; // Os dados do formulário de registro de consulta serão passados pra este objeto.
+        public static RegistroMedico registroMedico;
+        public static RegistroPaciente registroPaciente;
 
         public Consultorio()
         {
@@ -446,7 +448,9 @@ public class Dialog
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
 
-        //TODO: testar a validação de "registroConsulta".
+        // TODO: replicar isto aqui para as abas Medico e Paciente, finalizando então a lógica de cadastro.
+        // TODO: a lógica de edição seguirá algo parecido, bastando fazer as devidas adaptações.
+        // TODO: lembrar também de limitar a quantidade de carateres das caixas de texto, e fazer validação com relação a isso no backend também.
         btnOk.Click += (_, _) =>
         {
             Consultorio.registroConsulta = new RegistroConsulta(
@@ -507,7 +511,35 @@ public class Dialog
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
 
-        btnOk.Click += (_, _) => Eventos.ValidateTextBox(btnOk, new List<TextBox> { txtNomeMedico, txtTelefone, txtValorConsulta }, formDialog);
+        btnOk.Click += (_, _) =>
+        {
+            // tryParse deve ser usado aqui por conta que pode ocorrer de a textbox estar vazia, evitando assim um erro de tipo, pois não é possível converter string vazia em double, nem letras.
+            double valorConsulta;
+            if (double.TryParse(txtValorConsulta.Text, out double value))
+            {
+                valorConsulta = value;
+            }
+            else
+            {
+                valorConsulta = 0.0;
+            }
+
+            Consultorio.registroMedico = new RegistroMedico(
+                (int.Parse(DBTest.dadosMedico[DBTest.dadosMedico.Count - 1].codigo) + 1).ToString() ?? "",
+                txtNomeMedico.Text,
+                txtTelefone.Text,
+                valorConsulta
+            );
+
+            Eventos.ValidateTextBox(btnOk,
+                new List<TextBox> {
+                    txtNomeMedico,
+                    txtTelefone,
+                    txtValorConsulta
+                    }, formDialog,
+                    !DBTest.isMedicoValid(Consultorio.registroMedico),
+                    $"Inválido!\n-Nome do médico deve conter mais de 2 caracteres.\n-Telefone deve conter pelo menos 8 números.\n-Valor da consulta deve ser numérico.");
+        };
 
         btnCancel.Click += (_, _) =>
         {
@@ -596,7 +628,10 @@ public class Dialog
             txtCep,
             txtTelefone,
             txtCelular
-        }, formDialog);
+        },
+        formDialog,
+        !DBTest.isPacienteValid(Consultorio.registroPaciente),
+        $"Inválido!\n-Nome do médico deve conter mais de 2 caracteres.\n-Telefone deve conter pelo menos 8 números.\n-Valor da consulta deve ser numérico.");
 
         btnCancel.Click += (_, _) =>
         {
@@ -1089,12 +1124,11 @@ public class DBTest
     }
 
     //TODO: funções de validação backend (verifica cada item de txtList, checa se está conforme os dados existentes na base)
-    public static bool isConsultaValid(List<ComboBox> txtList)
+    public static bool isConsultaValid(RegistroConsulta registroConsulta)
     {
         // FirstOrDefault procura a primeira ocorrência que satisfaz as condições. Se não encontrar, retorna null;
-        //Nota: é necessário prestar atenção à ordem com que os valores são passados para o método. No caso, nomeMédico está no índice 1 da txtList, mas poderia estar no índice 0. Depois mudarei isso, para que ordem não importe.
-        var medico = dadosConsulta.FirstOrDefault(p => p.nomeMedico == txtList[1].Text);
-        var paciente = dadosConsulta.FirstOrDefault(p => p.nomePaciente == txtList[0].Text);
+        var medico = dadosConsulta.FirstOrDefault(consulta => consulta.nomeMedico == registroConsulta.nomeMedico);
+        var paciente = dadosConsulta.FirstOrDefault(consulta => consulta.nomePaciente == registroConsulta.nomePaciente);
 
         if (medico != null && paciente != null)
         {
@@ -1102,13 +1136,31 @@ public class DBTest
         }
         return false;
     }
-    public static void isMedicoValid(List<ComboBox> txtList)
+    public static bool isMedicoValid(RegistroMedico registroMedico)
     {
+        bool nomeValido = registroMedico.nomeMedico.Length >= 2 && registroMedico.nomeMedico.Length <= 100;
+        bool telefoneValido = registroMedico.telefone.Length >= 8 && registroMedico.telefone.Length <= 16 && double.Parse(registroMedico.telefone) is double;
+        bool valorConsultaValido = registroMedico.valorConsulta is double;
 
+        if (nomeValido && telefoneValido && valorConsultaValido)
+        {
+            return true;
+        }
+        return false;
     }
-    public static void isPacienteValid(List<ComboBox> txtList)
+    public static bool isPacienteValid(RegistroPaciente registroPaciente)
     {
+        bool nomeValido;
+        bool enderecoValido;
+        bool numeroValido;
+        bool bairroValido;
+        bool cidadeValido;
+        bool cepValido;
+        bool sexoValido;
+        bool telefoneValido;
+        bool celularValido;
 
+        return false;
     }
     //TODO: funções de criação de novos dados.
     public static void NewConsulta()
@@ -1219,7 +1271,7 @@ public class Eventos
         return CurrentRowId;
     }
 
-    public static void ValidateTextBox(Button btnOk, List<TextBox> txtList, Form formDiag)
+    public static void ValidateTextBox(Button btnOk, List<TextBox> txtList, Form formDiag, bool dataValidation, string errorMessage)
     {
         foreach (TextBox textBox in txtList)
         {
@@ -1231,10 +1283,18 @@ public class Eventos
             }
         }
 
-        // TODO: chama a função de validação de backend aqui. Se for bem sucedida, aciona a linha abaixo:
+        if (dataValidation)
+        {
+            MessageBox.Show(errorMessage);
+            return;
+        }
+
         btnOk.DialogResult = DialogResult.OK;
 
-        // TODO: então chama a função que registra o novo cadastro na base.
+        // Registra o novo cadastro na base.
+        DBTest.dadosMedico.Add(Consultorio.registroMedico);
+
+        UI.LoadMedicosToTable((DataGridView)Consultorio.tab_medicos.Controls[$"table_{Consultorio.tab_medicos.Name}"], DBTest.dadosMedico);
 
         Console.WriteLine("Operação completa!");
         formDiag.Close(); // fecha o form especificado
@@ -1252,8 +1312,7 @@ public class Eventos
             }
         }
 
-        // TODO: o ideal é que isConsultaValid receba Consultorio.registroConsulta e valide estes dados.
-        if (!DBTest.isConsultaValid(txtList))
+        if (!DBTest.isConsultaValid(Consultorio.registroConsulta))
         {
             MessageBox.Show($"Valor inválido!");
             return;
