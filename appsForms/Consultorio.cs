@@ -531,6 +531,15 @@ public class Dialog
                 valorConsulta
             );
 
+            Arguments<RegistroMedico, RegistroMedico> args = new Arguments<RegistroMedico, RegistroMedico>
+            {
+                newEntry = Consultorio.registroMedico,
+                table = (DataGridView)Consultorio.tab_medicos.Controls[$"table_{Consultorio.tab_medicos.Name}"],
+                db = DBTest.dadosMedico,
+                registerData = DBTest.NewMedico,
+                updateTable = UI.LoadMedicosToTable
+            };
+
             Eventos.ValidateTextBox(btnOk,
                 new List<TextBox> {
                     txtNomeMedico,
@@ -538,7 +547,7 @@ public class Dialog
                     txtValorConsulta
                     }, formDialog,
                     !DBTest.isMedicoValid(Consultorio.registroMedico),
-                    $"Inválido!\n-Nome do médico deve conter mais de 2 caracteres.\n-Telefone deve conter pelo menos 8 números.\n-Valor da consulta deve ser numérico.");
+                    $"Inválido!\n-Nome do médico deve conter mais de 2 caracteres.\n-Telefone deve conter pelo menos 8 números.\n-Valor da consulta deve ser numérico.", args);
         };
 
         btnCancel.Click += (_, _) =>
@@ -618,7 +627,16 @@ public class Dialog
         formDialog.AcceptButton = btnOk;
         formDialog.CancelButton = btnCancel;
 
-        btnOk.Click += (_, _) => Eventos.ValidateTextBox(btnOk, new List<TextBox>
+        Arguments<RegistroPaciente, RegistroPaciente> args = new Arguments<RegistroPaciente, RegistroPaciente>
+        {
+            newEntry = Consultorio.registroPaciente,
+            table = (DataGridView)Consultorio.tab_pacientes.Controls[$"table_{Consultorio.tab_pacientes.Name}"],
+            db = DBTest.dadosPaciente,
+            registerData = DBTest.NewPaciente,
+            updateTable = UI.LoadPacientesToTable
+        };
+
+        btnOk.Click += (_, _) => Eventos.ValidateTextBox<RegistroPaciente, RegistroPaciente>(btnOk, new List<TextBox>
         {
             txtNomePaciente,
             txtEndereco,
@@ -631,7 +649,7 @@ public class Dialog
         },
         formDialog,
         !DBTest.isPacienteValid(Consultorio.registroPaciente),
-        $"Inválido!\n-Nome do médico deve conter mais de 2 caracteres.\n-Telefone deve conter pelo menos 8 números.\n-Valor da consulta deve ser numérico.");
+        $"Inválido!\n-Campos de texto devem conter mais de 2 caracteres.\n-Campos numéricos devem ser pelo menos 8 números de 0 a 9", args);
 
         btnCancel.Click += (_, _) =>
         {
@@ -1148,6 +1166,8 @@ public class DBTest
         }
         return false;
     }
+
+    // TODO: ...
     public static bool isPacienteValid(RegistroPaciente registroPaciente)
     {
         bool nomeValido;
@@ -1167,8 +1187,14 @@ public class DBTest
     {
         // Uma vez que as validações passem, é hora de registrar os dados.
     }
-    public static void NewMedico() { }
-    public static void NewPaciente() { }
+    public static void NewMedico(RegistroMedico newMedico)
+    {
+        dadosMedico.Add(newMedico);
+    }
+    public static void NewPaciente(RegistroPaciente newPaciente)
+    {
+        dadosPaciente.Add(newPaciente);
+    }
 
     //TODO: funções de edição de dados.
     public static void UpdateConsulta() { }
@@ -1271,7 +1297,7 @@ public class Eventos
         return CurrentRowId;
     }
 
-    public static void ValidateTextBox(Button btnOk, List<TextBox> txtList, Form formDiag, bool dataValidation, string errorMessage)
+    public static void ValidateTextBox<addedData, dbData>(Button btnOk, List<TextBox> txtList, Form formDiag, bool dataValidation, string errorMessage, Arguments<addedData, dbData> args)
     {
         foreach (TextBox textBox in txtList)
         {
@@ -1291,10 +1317,14 @@ public class Eventos
 
         btnOk.DialogResult = DialogResult.OK;
 
-        // Registra o novo cadastro na base.
-        DBTest.dadosMedico.Add(Consultorio.registroMedico);
+        // TODO: assim como feito acima com dataValidation e errorMessage, também os comandos abaixo devem ser passados para este método como argumento. Agora, nota-se que isto fará o método ter grande quantidade de parâmetros, o que não é interessante, então verei se é possível passar um único objeto contendo todas estas funções aqui (basta criar uma classe pra isso).
 
-        UI.LoadMedicosToTable((DataGridView)Consultorio.tab_medicos.Controls[$"table_{Consultorio.tab_medicos.Name}"], DBTest.dadosMedico);
+        // DBTest.dadosMedico.Add(Consultorio.registroMedico);
+
+        // UI.LoadMedicosToTable((DataGridView)Consultorio.tab_medicos.Controls[$"table_{Consultorio.tab_medicos.Name}"], DBTest.dadosMedico);
+
+        args.registerData(args.newEntry);
+        args.updateTable(args.table, args.db);
 
         Console.WriteLine("Operação completa!");
         formDiag.Close(); // fecha o form especificado
@@ -1446,4 +1476,14 @@ public record FiltroPaciente
     // public string sexo { get; set; }
     // public string telefone { get; set; }
     // public string celular { get; set; }
+}
+
+// Generic Record para argumentos, pra diminuir quantidade de parâmetros em métodos que utilizam destas informações.
+public record Arguments<addedData, dbData>
+{
+    public addedData newEntry { get; init; }
+    public DataGridView table { get; init; }
+    public List<dbData> db { get; init; }
+    public Action<addedData> registerData { get; init; }
+    public Action<DataGridView, List<dbData>> updateTable { get; init; }
 }
