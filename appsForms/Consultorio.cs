@@ -9,9 +9,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
         public static TabPage tab_consultas;
         public static TabPage tab_medicos;
         public static TabPage tab_pacientes;
-        private FiltroConsulta filtroConsulta = new FiltroConsulta();
-        private FiltroMedico filtroMedico = new FiltroMedico();
-        private FiltroPaciente filtroPaciente = new FiltroPaciente();
+        public static FiltroConsulta filtroConsulta = new FiltroConsulta();
+        public static FiltroMedico filtroMedico = new FiltroMedico();
+        public static FiltroPaciente filtroPaciente = new FiltroPaciente();
         public static RegistroConsulta registroConsulta; // Os dados do formulário de registro de consulta serão passados pra este objeto.
         public static RegistroMedico registroMedico;
         public static RegistroPaciente registroPaciente;
@@ -158,9 +158,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             var crud_medicos = new CrudButtonsControl();
             var crud_pacientes = new CrudButtonsControl();
 
-            InitializeBtnEvents(crud_consultas, "consulta");
-            InitializeBtnEvents(crud_medicos, "médico");
-            InitializeBtnEvents(crud_pacientes, "paciente");
+            Eventos.InitializeBtnEvents(crud_consultas, "consulta");
+            Eventos.InitializeBtnEvents(crud_medicos, "médico");
+            Eventos.InitializeBtnEvents(crud_pacientes, "paciente");
 
             grp_consultas.Controls.Add(lbl_consulta);
             grp_consultas.Controls.Add(lbl_medico);
@@ -191,113 +191,9 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             tab_medicos.Controls.Add(grp_medicos);
             tab_pacientes.Controls.Add(grp_pacientes);
 
-            InitConsultasChangeEvents(grp_consultas);
-            InitMedicosChangeEvents(grp_medicos);
-            InitPacientesChangeEvents(grp_pacientes);
-        }
-
-        // TODO: Considerar mandar todos os métodos de eventos abaixo pra classe Eventos.
-        private void InitConsultasChangeEvents(GroupBox grp_consulta)
-        {
-            // Inicializa os eventos das texboxes da tab Consultas:
-
-            //dados tipo string:
-            grp_consulta.Controls["txt_consulta"].TextChanged += (_, _) =>
-            {
-                // pra resetar o filtro de datas e de horario, já que, do contrário, seria aplicado permanentemente, já que DateOnly e TimeSpan são fixos.
-                filtroConsulta.data = null;
-                filtroConsulta.horario = null;
-
-                filtroConsulta.codigo = grp_consulta.Controls["txt_consulta"].Text;
-                UI.FiltrarConsulta(filtroConsulta);
-            };
-
-            //dados tipo string:
-            grp_consulta.Controls["txt_medico"].TextChanged += (_, _) =>
-            {
-                filtroConsulta.data = null;
-                filtroConsulta.horario = null;
-
-                filtroConsulta.nomeMedico = grp_consulta.Controls["txt_medico"].Text;
-                UI.FiltrarConsulta(filtroConsulta);
-            };
-
-            //dados tipo string:
-            grp_consulta.Controls["txt_paciente"].TextChanged += (_, _) =>
-            {
-                filtroConsulta.data = null;
-                filtroConsulta.horario = null;
-
-                filtroConsulta.nomePaciente = grp_consulta.Controls["txt_paciente"].Text;
-                UI.FiltrarConsulta(filtroConsulta);
-            };
-
-            //dados tipo DateOnly
-            // O casting de DateTimePicker aqui é necessário, pois Controls não possui por si só a propriedade ValueChanged:
-            ((DateTimePicker)grp_consulta.Controls["dtp_data"]).ValueChanged += (_, _) =>
-            {
-                filtroConsulta.horario = null;
-                filtroConsulta.data = DateOnly.Parse(((DateTimePicker)grp_consulta.Controls["dtp_data"]).Text);
-                Console.WriteLine(filtroConsulta.data);
-                UI.FiltrarConsulta(filtroConsulta);
-            };
-
-            //dados tipo TimeSpan
-            ((DateTimePicker)grp_consulta.Controls["dtp_time"]).ValueChanged += (_, _) =>
-            {
-                filtroConsulta.data = null;
-
-                filtroConsulta.horario = TimeSpan.Parse(((DateTimePicker)grp_consulta.Controls["dtp_time"]).Text);
-                Console.WriteLine(filtroConsulta.horario);
-                UI.FiltrarConsulta(filtroConsulta);
-            };
-
-            //dados tipo bool
-            ((CheckBox)grp_consulta.Controls["chk_retorno"]).CheckedChanged += (_, _) =>
-            {
-                filtroConsulta.data = null;
-                filtroConsulta.horario = null;
-
-                filtroConsulta.retorno = ((CheckBox)grp_consulta.Controls["chk_retorno"]).Checked;
-                UI.FiltrarConsulta(filtroConsulta);
-            };
-        }
-
-        private void InitMedicosChangeEvents(GroupBox grp_medico)
-        {
-            grp_medico.Controls["txt_medico_id"].TextChanged += (_, _) =>
-            {
-                filtroMedico.codigo = grp_medico.Controls["txt_medico_id"].Text;
-                UI.FiltrarMedicos(filtroMedico);
-            };
-
-            grp_medico.Controls["txt_medico_nome"].TextChanged += (_, _) =>
-            {
-                filtroMedico.nomeMedico = grp_medico.Controls["txt_medico_nome"].Text;
-                UI.FiltrarMedicos(filtroMedico);
-            };
-        }
-
-        private void InitPacientesChangeEvents(GroupBox grp_paciente)
-        {
-            grp_paciente.Controls["txt_paciente_id"].TextChanged += (_, _) =>
-            {
-                filtroPaciente.codigo = grp_paciente.Controls["txt_paciente_id"].Text;
-                UI.FiltrarPacientes(filtroPaciente);
-            };
-
-            grp_paciente.Controls["txt_paciente_nome"].TextChanged += (_, _) =>
-            {
-                filtroPaciente.nomePaciente = grp_paciente.Controls["txt_paciente_nome"].Text;
-                UI.FiltrarPacientes(filtroPaciente);
-            };
-        }
-        // subject: consulta, médico ou paciente.
-        private void InitializeBtnEvents(CrudButtonsControl btn, string subject)
-        {
-            btn.AddClicked += (s, e) => Dialog.InvokeDialog("Cadastrar", subject);
-            btn.EditClicked += (s, e) => Dialog.InvokeDialog("Editar", subject);
-            btn.DeleteClicked += (s, e) => Dialog.InvokeDialog("Deletar", subject);
+            Eventos.InitConsultasChangeEvents(grp_consultas);
+            Eventos.InitMedicosChangeEvents(grp_medicos);
+            Eventos.InitPacientesChangeEvents(grp_pacientes);
         }
 
     }
@@ -306,7 +202,6 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 // classe que lida com formulários de Criação, Edição e Remoção de cadastros:
 public class Dialog
 {
-    // TODO: para todos os componentes que se repetem entre os forms, ver se dá pra reutilizar, ao invés de fazer redeclarações.
     private static Form formDialog = new Form
     {
         FormBorderStyle = FormBorderStyle.FixedSingle,
@@ -371,7 +266,8 @@ public class Dialog
             AutoCompleteSource = AutoCompleteSource.ListItems,
             DataSource = DBTest.dadosConsulta.ToList(), // ToList é usado aqui apenas para criar uma cópia, do contrário os dados seriam compartilhados entre todos os comboboxes, fazendo com que a edição em um refletisse no outro.
             DisplayMember = "nomePaciente",
-            ValueMember = "codigo"
+            ValueMember = "codigo",
+            MaxLength = 100
         };
         var comboNomeMedico = new ComboBox
         {
@@ -383,7 +279,8 @@ public class Dialog
             AutoCompleteSource = AutoCompleteSource.ListItems,
             DataSource = DBTest.dadosConsulta.ToList(),
             DisplayMember = "nomeMedico",
-            ValueMember = "codigo"
+            ValueMember = "codigo",
+            MaxLength = 100
         };
 
         var dtpData = Builder.NewDateTimePicker(75, 80, "dd/MM/yyyy");
@@ -448,9 +345,7 @@ public class Dialog
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
 
-        // TODO: replicar isto aqui para as abas Medico e Paciente, finalizando então a lógica de cadastro.
         // TODO: a lógica de edição seguirá algo parecido, bastando fazer as devidas adaptações.
-        // TODO: lembrar também de limitar a quantidade de carateres das caixas de texto, e fazer validação com relação a isso no backend também.
         btnOk.Click += (_, _) =>
         {
             Consultorio.registroConsulta = new RegistroConsulta(
@@ -492,8 +387,11 @@ public class Dialog
         var txtTelefone = Builder.NewTextBox("medico_telefone", 150, 100, 40);
         var txtValorConsulta = Builder.NewTextBox("medico_valor_consulta", 150, 100, 70);
         txtNomeMedico.Tag = "Nome";
+        txtNomeMedico.MaxLength = 100;
         txtTelefone.Tag = "Telefone";
+        txtTelefone.MaxLength = 16;
         txtValorConsulta.Tag = "Valor Consulta";
+        txtValorConsulta.MaxLength = 9;
 
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
@@ -531,7 +429,7 @@ public class Dialog
                 valorConsulta
             );
 
-            Arguments<RegistroMedico, RegistroMedico> args = new Arguments<RegistroMedico, RegistroMedico>
+            Arguments<RegistroMedico> args = new Arguments<RegistroMedico>
             {
                 newEntry = Consultorio.registroMedico,
                 table = (DataGridView)Consultorio.tab_medicos.Controls[$"table_{Consultorio.tab_medicos.Name}"],
@@ -586,6 +484,15 @@ public class Dialog
 
         var txtTelefone = Builder.NewTextBox("paciente_telefone", 150, 100, 160);
         var txtCelular = Builder.NewTextBox("paciente_celular", 150, 100, 190);
+
+        txtNomePaciente.MaxLength = 100;
+        txtEndereco.MaxLength = 100;
+        txtNumero.MaxLength = 6;
+        txtBairro.MaxLength = 50;
+        txtCidade.MaxLength = 50;
+        txtCep.MaxLength = 8;
+        txtTelefone.MaxLength = 16;
+        txtCelular.MaxLength = 16;
 
         txtNomePaciente.Tag = "Nome";
         txtEndereco.Tag = "Endereço";
@@ -655,7 +562,7 @@ public class Dialog
                 txtCelular.Text
             );
 
-            Arguments<RegistroPaciente, RegistroPaciente> args = new Arguments<RegistroPaciente, RegistroPaciente>
+            Arguments<RegistroPaciente> args = new Arguments<RegistroPaciente>
             {
                 newEntry = Consultorio.registroPaciente,
                 table = (DataGridView)Consultorio.tab_pacientes.Controls[$"table_{Consultorio.tab_pacientes.Name}"],
@@ -688,7 +595,6 @@ public class Dialog
         formDialog.ShowDialog();
     }
 
-    //OBS.: todos estes formulários de edição devem puxar a entrada de registro atualmente selecionada.
     private static void EditConsulta(string actionType, string subject)
     {
         formDialog.Text = actionType + " " + subject;
@@ -893,7 +799,7 @@ public class Dialog
     }
 
 
-    // OBS.: Qualquer exclusão de entradas no registro deve seguir esta lógica: na tentativa de deletar um médico do cadastro, primeiramente deve-se verificar se há consultas para ele/ela, se houver, a exclusão não pode ocorrer até que as consultas sejam editadas. No caso, o usuário terá de pesquisar consultas por médico e substituir o médico a ser excluido do registro por outro, só então poderá ser excluido. Já no caso de pacientes, a lógica é a mesma. Isto tudo é para que não haja tabelas na base de dados com informações desatualizadas.
+    // TODO: Qualquer exclusão de entradas no registro deve seguir esta lógica: na tentativa de deletar um médico do cadastro, primeiramente deve-se verificar se há consultas para ele/ela, se houver, a exclusão não pode ocorrer até que as consultas sejam editadas. No caso, o usuário terá de pesquisar consultas por médico e substituir o médico a ser excluido do registro por outro, só então poderá ser excluido. Já no caso de pacientes, a lógica é a mesma. Isto tudo é para que não haja tabelas na base de dados com informações desatualizadas.
     private static void DeleteConsulta(string actionType, string subject)
     {
         formDialog.Text = actionType + " " + subject;
@@ -967,6 +873,408 @@ public class Dialog
         {
             // TODO...
         }
+    }
+}
+
+public class DBTest
+{
+    // Objetos do tipo "RegistroConsulta", "RegistroMedico" e "RegistroPaciente". Estes valores são apenas teste (hardcoded), mas o que deve ocorrer de verdade é que um carregamento deve ser feito da base de dados para cá, para isso deve haver um método para cada tipo de objeto. Como este projeto é de "playground", só isto aqui basta pra simulação.
+
+    // Regra de negócio: data de retorno jamais pode ser anterior à data da consulta.
+    public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
+    {
+        new("1029",  "Marcela Andrade", "João da Silva",  DateOnly.Parse("14/07/2026"), TimeSpan.Parse("14:30"), true, DateOnly.Parse("30/07/2026")),
+        new("1030",  "Pedro Alcantara", "Maria Cruz",  DateOnly.Parse("15/07/2026"), TimeSpan.Parse("15:30"), false, DateOnly.Parse("15/07/2026")),
+        new("1031",  "Marcos Almeida", "Jacinta Ribeiro",  DateOnly.Parse("18/07/2026"), TimeSpan.Parse("16:30"), true, DateOnly.Parse("05/08/2026"))
+    };
+
+    public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
+    {
+        new("1",  "Marcela Andrade", "0800-9090", 170),
+        new("2",  "Pedro Alcantara", "0500-9092", 250),
+        new("3",  "Marcos Almeida", "0400-9095", 180)
+    };
+
+    public static List<RegistroPaciente> dadosPaciente = new List<RegistroPaciente>
+    {
+        new("40", "João da Silva", "R. Terra das Dores", 157, "Jabuti", "Vilalopolis", 12300000, "Masculino", "-", "(65) 99345-7657"),
+        new("45", "Maria Cruz", "R. Francisco Polo", 161, "Mapuio", "Areias", 17800000, "Feminino", "0500-0880", "(85) 97385-1359"),
+        new("49", "Jacinta Ribeiro", "R. Ivo de Almeida", 240, "Jangada", "Verdes Prados", 19500000, "Feminino", "-", "(50) 98445-2656")
+    };
+
+    public static List<RegistroConsulta> SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
+    {
+        // string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno)
+        IEnumerable<RegistroConsulta> SearchFiltering = dados;
+
+        // passa cada um dos filtros ao SearchFiltering, verificando antes se os campos não estão vazios:
+        if (!string.IsNullOrWhiteSpace(filtro.codigo))
+            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(filtro.nomeMedico))
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomeMedico.Contains(filtro.nomeMedico, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(filtro.nomePaciente))
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente.Contains(filtro.nomePaciente, StringComparison.OrdinalIgnoreCase));
+
+        if (filtro.data != null)
+            SearchFiltering = SearchFiltering.Where(entry => entry.data == filtro.data);
+
+        if (filtro.horario != null)
+            SearchFiltering = SearchFiltering.Where(entry => entry.horario == filtro.horario);
+
+        if (filtro.retorno)
+            SearchFiltering = SearchFiltering.Where(entry => entry.retorno == filtro.retorno);
+
+        List<RegistroConsulta> SearchResult = SearchFiltering.ToList();
+
+        return SearchResult;
+    }
+    public static List<RegistroMedico> SearchMedico(List<RegistroMedico> dados, FiltroMedico filtro)
+    {
+        IEnumerable<RegistroMedico> SearchFiltering = dados;
+
+        if (!string.IsNullOrWhiteSpace(filtro.codigo))
+            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(filtro.nomeMedico))
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomeMedico.Contains(filtro.nomeMedico, StringComparison.OrdinalIgnoreCase));
+
+        List<RegistroMedico> SearchResult = SearchFiltering.ToList();
+
+        return SearchResult;
+    }
+    public static List<RegistroPaciente> SearchPaciente(List<RegistroPaciente> dados, FiltroPaciente filtro)
+    {
+        IEnumerable<RegistroPaciente> SearchFiltering = dados;
+
+        if (!string.IsNullOrWhiteSpace(filtro.codigo))
+            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
+
+        if (!string.IsNullOrWhiteSpace(filtro.nomePaciente))
+            SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente.Contains(filtro.nomePaciente, StringComparison.OrdinalIgnoreCase));
+
+        List<RegistroPaciente> SearchResult = SearchFiltering.ToList();
+
+        return SearchResult;
+    }
+
+    // funções de validação backend (verifica cada item de txtList, checa se está conforme os dados existentes na base)
+    public static bool isConsultaValid(RegistroConsulta registroConsulta)
+    {
+        // FirstOrDefault procura a primeira ocorrência que satisfaz as condições. Se não encontrar, retorna null;
+        var medico = dadosConsulta.FirstOrDefault(consulta => consulta.nomeMedico == registroConsulta.nomeMedico);
+        var paciente = dadosConsulta.FirstOrDefault(consulta => consulta.nomePaciente == registroConsulta.nomePaciente);
+
+        if (medico != null && paciente != null)
+        {
+            return true;
+        }
+        return false;
+    }
+    public static bool isMedicoValid(RegistroMedico registroMedico)
+    {
+        bool nomeValido = registroMedico.nomeMedico.Length >= 2 && registroMedico.nomeMedico.Length <= 100;
+        bool telefoneValido = registroMedico.telefone.Length >= 8 && registroMedico.telefone.Length <= 16 && double.Parse(registroMedico.telefone) is double;
+        bool valorConsultaValido = registroMedico.valorConsulta is double;
+
+        if (nomeValido && telefoneValido && valorConsultaValido)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    public static bool isPacienteValid(RegistroPaciente registroPaciente)
+    {
+        bool nomeValido = registroPaciente.nomePaciente.Length >= 2 && registroPaciente.nomePaciente.Length <= 100;
+        bool enderecoValido = registroPaciente.endereco.Length >= 2 && registroPaciente.endereco.Length <= 100;
+        bool numeroValido = registroPaciente.numero.ToString().Length >= 1 && registroPaciente.numero is int;
+        bool bairroValido = registroPaciente.bairro.Length >= 2 && registroPaciente.bairro.Length <= 100;
+        bool cidadeValido = registroPaciente.cidade.Length >= 2 && registroPaciente.cidade.Length <= 50;
+        bool cepValido = registroPaciente.cep.ToString().Length == 8 && registroPaciente.cep is int;
+        bool sexoValido = registroPaciente.sexo == "Masculino" || registroPaciente.sexo == "Feminino";
+        bool telefoneValido = registroPaciente.telefone.Length >= 8 && registroPaciente.telefone.Length <= 16 && int.Parse(registroPaciente.telefone) is int;
+        bool celularValido = registroPaciente.celular.Length >= 8 && registroPaciente.celular.Length <= 16 && int.Parse(registroPaciente.celular) is int;
+
+        if (nomeValido && enderecoValido && numeroValido && bairroValido &&
+            cidadeValido && cepValido && sexoValido && telefoneValido && celularValido)
+        {
+            return true;
+        }
+
+        return false;
+    }
+    // funções de criação de novos dados.
+    public static void NewConsulta(RegistroConsulta newConsulta)
+    {
+        dadosConsulta.Add(newConsulta);
+    }
+    public static void NewMedico(RegistroMedico newMedico)
+    {
+        dadosMedico.Add(newMedico);
+    }
+    public static void NewPaciente(RegistroPaciente newPaciente)
+    {
+        dadosPaciente.Add(newPaciente);
+    }
+
+    //TODO: funções de edição de dados.
+    public static void UpdateConsulta() { }
+    public static void UpdateMedico() { }
+    public static void UpdatePaciente() { }
+
+    //TODO: funções de deleção de dados.
+    public static void RemoveConsulta() { }
+    public static void RemoveMedico() { }
+    public static void RemovePaciente() { }
+}
+
+public class UI
+{
+    public static void FiltrarConsulta(FiltroConsulta filtroConsulta)
+    {
+        TabPage currentPage = Consultorio.tabControl.SelectedTab;
+        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+
+        List<RegistroConsulta> FilteredData = DBTest.SearchConsultas(DBTest.dadosConsulta, filtroConsulta);
+
+        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
+        List<RegistroConsulta> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosConsulta;
+
+        LoadConsultasToTable(dgv, FinalResult);
+    }
+
+    public static void FiltrarMedicos(FiltroMedico filtroMedico)
+    {
+        TabPage currentPage = Consultorio.tabControl.SelectedTab;
+        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+
+        List<RegistroMedico> FilteredData = DBTest.SearchMedico(DBTest.dadosMedico, filtroMedico);
+
+        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
+        List<RegistroMedico> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosMedico;
+
+        LoadMedicosToTable(dgv, FinalResult);
+    }
+
+    public static void FiltrarPacientes(FiltroPaciente filtroPaciente)
+    {
+        TabPage currentPage = Consultorio.tabControl.SelectedTab;
+        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+
+        List<RegistroPaciente> FilteredData = DBTest.SearchPaciente(DBTest.dadosPaciente, filtroPaciente);
+
+        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
+        List<RegistroPaciente> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosPaciente;
+
+        LoadPacientesToTable(dgv, FinalResult);
+    }
+
+    public static void LoadConsultasToTable(DataGridView table, List<RegistroConsulta> dados)
+    {
+        table.Rows.Clear();
+        for (int i = 0; i < dados.Count; i++)
+        {
+            table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].nomePaciente, dados[i].data, dados[i].horario, dados[i].retorno);
+        }
+    }
+
+    public static void LoadMedicosToTable(DataGridView table, List<RegistroMedico> dados)
+    {
+        table.Rows.Clear();
+        for (int i = 0; i < dados.Count; i++)
+        {
+            table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].telefone, dados[i].valorConsulta);
+        }
+    }
+
+    public static void LoadPacientesToTable(DataGridView table, List<RegistroPaciente> dados)
+    {
+        table.Rows.Clear();
+        for (int i = 0; i < dados.Count; i++)
+        {
+            table.Rows.Add(dados[i].codigo, dados[i].nomePaciente, dados[i].endereco, dados[i].numero, dados[i].bairro, dados[i].cidade, dados[i].cep, dados[i].sexo, dados[i].telefone, dados[i].celular);
+        }
+    }
+}
+
+public class Eventos
+{
+    private static int CurrentRowId = 0; // por padrão, o id inicial é 0, ou seja, o primeiro item da lista.
+    public static void InitConsultasChangeEvents(GroupBox grp_consulta)
+    {
+        // Inicializa os eventos das texboxes da tab Consultas:
+
+        //dados tipo string:
+        grp_consulta.Controls["txt_consulta"].TextChanged += (_, _) =>
+        {
+            // pra resetar o filtro de datas e de horario, já que, do contrário, seria aplicado permanentemente, já que DateOnly e TimeSpan são fixos.
+            Consultorio.filtroConsulta.data = null;
+            Consultorio.filtroConsulta.horario = null;
+
+            Consultorio.filtroConsulta.codigo = grp_consulta.Controls["txt_consulta"].Text;
+            UI.FiltrarConsulta(Consultorio.filtroConsulta);
+        };
+
+        //dados tipo string:
+        grp_consulta.Controls["txt_medico"].TextChanged += (_, _) =>
+        {
+            Consultorio.filtroConsulta.data = null;
+            Consultorio.filtroConsulta.horario = null;
+
+            Consultorio.filtroConsulta.nomeMedico = grp_consulta.Controls["txt_medico"].Text;
+            UI.FiltrarConsulta(Consultorio.filtroConsulta);
+        };
+
+        //dados tipo string:
+        grp_consulta.Controls["txt_paciente"].TextChanged += (_, _) =>
+        {
+            Consultorio.filtroConsulta.data = null;
+            Consultorio.filtroConsulta.horario = null;
+
+            Consultorio.filtroConsulta.nomePaciente = grp_consulta.Controls["txt_paciente"].Text;
+            UI.FiltrarConsulta(Consultorio.filtroConsulta);
+        };
+
+        //dados tipo DateOnly
+        // O casting de DateTimePicker aqui é necessário, pois Controls não possui por si só a propriedade ValueChanged:
+        ((DateTimePicker)grp_consulta.Controls["dtp_data"]).ValueChanged += (_, _) =>
+        {
+            Consultorio.filtroConsulta.horario = null;
+            Consultorio.filtroConsulta.data = DateOnly.Parse(((DateTimePicker)grp_consulta.Controls["dtp_data"]).Text);
+            Console.WriteLine(Consultorio.filtroConsulta.data);
+            UI.FiltrarConsulta(Consultorio.filtroConsulta);
+        };
+
+        //dados tipo TimeSpan
+        ((DateTimePicker)grp_consulta.Controls["dtp_time"]).ValueChanged += (_, _) =>
+        {
+            Consultorio.filtroConsulta.data = null;
+
+            Consultorio.filtroConsulta.horario = TimeSpan.Parse(((DateTimePicker)grp_consulta.Controls["dtp_time"]).Text);
+            Console.WriteLine(Consultorio.filtroConsulta.horario);
+            UI.FiltrarConsulta(Consultorio.filtroConsulta);
+        };
+
+        //dados tipo bool
+        ((CheckBox)grp_consulta.Controls["chk_retorno"]).CheckedChanged += (_, _) =>
+        {
+            Consultorio.filtroConsulta.data = null;
+            Consultorio.filtroConsulta.horario = null;
+
+            Consultorio.filtroConsulta.retorno = ((CheckBox)grp_consulta.Controls["chk_retorno"]).Checked;
+            UI.FiltrarConsulta(Consultorio.filtroConsulta);
+        };
+    }
+
+    public static void InitMedicosChangeEvents(GroupBox grp_medico)
+    {
+        grp_medico.Controls["txt_medico_id"].TextChanged += (_, _) =>
+        {
+            Consultorio.filtroMedico.codigo = grp_medico.Controls["txt_medico_id"].Text;
+            UI.FiltrarMedicos(Consultorio.filtroMedico);
+        };
+
+        grp_medico.Controls["txt_medico_nome"].TextChanged += (_, _) =>
+        {
+            Consultorio.filtroMedico.nomeMedico = grp_medico.Controls["txt_medico_nome"].Text;
+            UI.FiltrarMedicos(Consultorio.filtroMedico);
+        };
+    }
+
+    public static void InitPacientesChangeEvents(GroupBox grp_paciente)
+    {
+        grp_paciente.Controls["txt_paciente_id"].TextChanged += (_, _) =>
+        {
+            Consultorio.filtroPaciente.codigo = grp_paciente.Controls["txt_paciente_id"].Text;
+            UI.FiltrarPacientes(Consultorio.filtroPaciente);
+        };
+
+        grp_paciente.Controls["txt_paciente_nome"].TextChanged += (_, _) =>
+        {
+            Consultorio.filtroPaciente.nomePaciente = grp_paciente.Controls["txt_paciente_nome"].Text;
+            UI.FiltrarPacientes(Consultorio.filtroPaciente);
+        };
+    }
+    // subject: consulta, médico ou paciente.
+    public static void InitializeBtnEvents(CrudButtonsControl btn, string subject)
+    {
+        btn.AddClicked += (s, e) => Dialog.InvokeDialog("Cadastrar", subject);
+        btn.EditClicked += (s, e) => Dialog.InvokeDialog("Editar", subject);
+        btn.DeleteClicked += (s, e) => Dialog.InvokeDialog("Deletar", subject);
+    }
+    public static void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
+    {
+        if (e.RowIndex < 0) return; // evita erro de (índice -1) ao clicar no cabeçalho
+
+        DataGridView dgv = (DataGridView)sender;
+        CurrentRowId = e.RowIndex;
+        Console.WriteLine("Selecionou linha de id " + CurrentRowId);
+    }
+    public static void ResetSelectedRowId(int id)
+    {
+        CurrentRowId = id;
+    }
+    public static int GetCurrentSelectedRowId()
+    {
+        return CurrentRowId;
+    }
+
+    public static void ValidateTextBox<T>(Button btnOk, List<TextBox> txtList, Form formDiag, bool dataValidation, string warnMessage, Arguments<T> args)
+    {
+        foreach (TextBox textBox in txtList)
+        {
+            if (string.IsNullOrWhiteSpace(textBox.Text))
+            {
+                MessageBox.Show($"Campo '{textBox.Tag}' não pode ficar vazio!");
+                textBox.Focus();
+                return;
+            }
+        }
+
+        if (dataValidation)
+        {
+            MessageBox.Show(warnMessage);
+            return;
+        }
+
+        btnOk.DialogResult = DialogResult.OK;
+
+        args.registerData(args.newEntry);
+        args.updateTable(args.table, args.db);
+
+        Console.WriteLine("Operação completa!");
+        formDiag.Close(); // fecha o form especificado
+    }
+
+    public static void ValidateComboBox(Button btnOk, List<ComboBox> txtList, Form formDiag)
+    {
+        foreach (ComboBox comboBox in txtList)
+        {
+            if (string.IsNullOrWhiteSpace(comboBox.Text))
+            {
+                MessageBox.Show($"Campo '{comboBox.Tag}' deve conter um valor válido.");
+                comboBox.Focus();
+                return;
+            }
+        }
+
+        if (!DBTest.isConsultaValid(Consultorio.registroConsulta))
+        {
+            MessageBox.Show($"Valor inválido!");
+            return;
+        }
+
+        btnOk.DialogResult = DialogResult.OK;
+
+        // Registra o novo cadastro na base.
+        DBTest.NewConsulta(Consultorio.registroConsulta);
+
+        UI.LoadConsultasToTable((DataGridView)Consultorio.tab_consultas.Controls[$"table_{Consultorio.tab_consultas.Name}"], DBTest.dadosConsulta);
+
+        Console.WriteLine("Operação completa!");
+        formDiag.Close(); // fecha o form especificado
     }
 }
 
@@ -1084,315 +1392,57 @@ public class Builder
     }
 }
 
+// record é basicamente uma classe, só que simplificada para contexto de dados.
+// Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
+public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno);
 
-//TODO: seria interessante simular situações assícronas (async) como delays de carga, etc, pra ver como o sistema reage a isso.
-//DBTest poderá se tornar uma interface de serviço: ou seja, é esta camada que deverá conectar-se ao banco e fazer a ponte entre front e dados (front não acessa dados diretamente).
-public class DBTest
+public record RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta);
+
+public record RegistroPaciente(string codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, int cep, string sexo, string telefone, string celular);
+
+
+// filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
+public record FiltroConsulta
 {
-    // Objetos do tipo "RegistroConsulta", "RegistroMedico" e "RegistroPaciente". Estes valores são apenas teste (hardcoded), mas o que deve ocorrer de verdade é que um carregamento deve ser feito da base de dados para cá, para isso deve haver um método para cada tipo de objeto. Como este projeto é de "playground", só isto aqui basta pra simulação.
-
-    // Regra de negócio: data de retorno jamais pode ser anterior à data da consulta.
-    public static List<RegistroConsulta> dadosConsulta = new List<RegistroConsulta>
-    {
-        new("1029",  "Marcela Andrade", "João da Silva",  DateOnly.Parse("14/07/2026"), TimeSpan.Parse("14:30"), true, DateOnly.Parse("30/07/2026")),
-        new("1030",  "Pedro Alcantara", "Maria Cruz",  DateOnly.Parse("15/07/2026"), TimeSpan.Parse("15:30"), false, DateOnly.Parse("15/07/2026")),
-        new("1031",  "Marcos Almeida", "Jacinta Ribeiro",  DateOnly.Parse("18/07/2026"), TimeSpan.Parse("16:30"), true, DateOnly.Parse("05/08/2026"))
-    };
-
-    public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
-    {
-        new("1",  "Marcela Andrade", "0800-9090", 170),
-        new("2",  "Pedro Alcantara", "0500-9092", 250),
-        new("3",  "Marcos Almeida", "0400-9095", 180)
-    };
-
-    public static List<RegistroPaciente> dadosPaciente = new List<RegistroPaciente>
-    {
-        new("40", "João da Silva", "R. Terra das Dores", 157, "Jabuti", "Vilalopolis", 12300000, "Masculino", "-", "(65) 99345-7657"),
-        new("45", "Maria Cruz", "R. Francisco Polo", 161, "Mapuio", "Areias", 17800000, "Feminino", "0500-0880", "(85) 97385-1359"),
-        new("49", "Jacinta Ribeiro", "R. Ivo de Almeida", 240, "Jangada", "Verdes Prados", 19500000, "Feminino", "-", "(50) 98445-2656")
-    };
-
-    public static List<RegistroConsulta> SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
-    {
-        // string codigo, string nomeMedico, string nomePaciente, string data, string horario, bool retorno)
-        IEnumerable<RegistroConsulta> SearchFiltering = dados;
-
-        // passa cada um dos filtros ao SearchFiltering, verificando antes se os campos não estão vazios:
-        if (!string.IsNullOrWhiteSpace(filtro.codigo))
-            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(filtro.nomeMedico))
-            SearchFiltering = SearchFiltering.Where(entry => entry.nomeMedico.Contains(filtro.nomeMedico, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(filtro.nomePaciente))
-            SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente.Contains(filtro.nomePaciente, StringComparison.OrdinalIgnoreCase));
-
-        if (filtro.data != null)
-            SearchFiltering = SearchFiltering.Where(entry => entry.data == filtro.data);
-
-        if (filtro.horario != null)
-            SearchFiltering = SearchFiltering.Where(entry => entry.horario == filtro.horario);
-
-        if (filtro.retorno)
-            SearchFiltering = SearchFiltering.Where(entry => entry.retorno == filtro.retorno);
-
-        List<RegistroConsulta> SearchResult = SearchFiltering.ToList();
-
-        return SearchResult;
-    }
-    public static List<RegistroMedico> SearchMedico(List<RegistroMedico> dados, FiltroMedico filtro)
-    {
-        IEnumerable<RegistroMedico> SearchFiltering = dados;
-
-        if (!string.IsNullOrWhiteSpace(filtro.codigo))
-            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(filtro.nomeMedico))
-            SearchFiltering = SearchFiltering.Where(entry => entry.nomeMedico.Contains(filtro.nomeMedico, StringComparison.OrdinalIgnoreCase));
-
-        List<RegistroMedico> SearchResult = SearchFiltering.ToList();
-
-        return SearchResult;
-    }
-    public static List<RegistroPaciente> SearchPaciente(List<RegistroPaciente> dados, FiltroPaciente filtro)
-    {
-        IEnumerable<RegistroPaciente> SearchFiltering = dados;
-
-        if (!string.IsNullOrWhiteSpace(filtro.codigo))
-            SearchFiltering = SearchFiltering.Where(entry => entry.codigo.Contains(filtro.codigo, StringComparison.OrdinalIgnoreCase));
-
-        if (!string.IsNullOrWhiteSpace(filtro.nomePaciente))
-            SearchFiltering = SearchFiltering.Where(entry => entry.nomePaciente.Contains(filtro.nomePaciente, StringComparison.OrdinalIgnoreCase));
-
-        List<RegistroPaciente> SearchResult = SearchFiltering.ToList();
-
-        return SearchResult;
-    }
-
-    //TODO: funções de validação backend (verifica cada item de txtList, checa se está conforme os dados existentes na base)
-    public static bool isConsultaValid(RegistroConsulta registroConsulta)
-    {
-        // FirstOrDefault procura a primeira ocorrência que satisfaz as condições. Se não encontrar, retorna null;
-        var medico = dadosConsulta.FirstOrDefault(consulta => consulta.nomeMedico == registroConsulta.nomeMedico);
-        var paciente = dadosConsulta.FirstOrDefault(consulta => consulta.nomePaciente == registroConsulta.nomePaciente);
-
-        if (medico != null && paciente != null)
-        {
-            return true;
-        }
-        return false;
-    }
-    public static bool isMedicoValid(RegistroMedico registroMedico)
-    {
-        bool nomeValido = registroMedico.nomeMedico.Length >= 2 && registroMedico.nomeMedico.Length <= 100;
-        bool telefoneValido = registroMedico.telefone.Length >= 8 && registroMedico.telefone.Length <= 16 && double.Parse(registroMedico.telefone) is double;
-        bool valorConsultaValido = registroMedico.valorConsulta is double;
-
-        if (nomeValido && telefoneValido && valorConsultaValido)
-        {
-            return true;
-        }
-        return false;
-    }
-
-    // TODO: ... terminar esta validação e testar:
-    public static bool isPacienteValid(RegistroPaciente registroPaciente)
-    {
-        bool nomeValido = registroPaciente.nomePaciente.Length >= 2 && registroPaciente.nomePaciente.Length <= 100;
-        bool enderecoValido = registroPaciente.endereco.Length >= 2 && registroPaciente.endereco.Length <= 100;
-        bool numeroValido = registroPaciente.numero.ToString().Length >= 1 && registroPaciente.numero is int;
-        bool bairroValido = registroPaciente.bairro.Length >= 2 && registroPaciente.bairro.Length <= 100;
-        bool cidadeValido = registroPaciente.cidade.Length >= 2 && registroPaciente.cidade.Length <= 50;
-        bool cepValido = registroPaciente.cep.ToString().Length == 8 && registroPaciente.cep is int;
-        bool sexoValido = registroPaciente.sexo == "Masculino" || registroPaciente.sexo == "Feminino";
-        bool telefoneValido = registroPaciente.telefone.Length >= 8 && registroPaciente.telefone.Length <= 16 && int.Parse(registroPaciente.telefone) is int;
-        bool celularValido = registroPaciente.celular.Length >= 8 && registroPaciente.celular.Length <= 16 && int.Parse(registroPaciente.celular) is int;
-
-        if (nomeValido && enderecoValido && numeroValido && bairroValido &&
-            cidadeValido && cepValido && sexoValido && telefoneValido && celularValido)
-        {
-            return true;
-        }
-
-        return false;
-    }
-    //TODO: funções de criação de novos dados.
-    public static void NewConsulta()
-    {
-        // Uma vez que as validações passem, é hora de registrar os dados.
-    }
-    public static void NewMedico(RegistroMedico newMedico)
-    {
-        dadosMedico.Add(newMedico);
-    }
-    public static void NewPaciente(RegistroPaciente newPaciente)
-    {
-        dadosPaciente.Add(newPaciente);
-    }
-
-    //TODO: funções de edição de dados.
-    public static void UpdateConsulta() { }
-    public static void UpdateMedico() { }
-    public static void UpdatePaciente() { }
-
-    //TODO: funções de deleção de dados.
-    public static void RemoveConsulta() { }
-    public static void RemoveMedico() { }
-    public static void RemovePaciente() { }
+    // como record é naturalmente imutável, "set" normalmente seria "init" (ou seja, só pode definir na inicialização), por isso é preciso usar "set" explicitamente aqui, para permitir modificação de propriedades da instância
+    public string codigo { get; set; }
+    public string nomeMedico { get; set; }
+    public string nomePaciente { get; set; }
+    // "?" torna o valor anulável, de modo que seja possível que o campo seja nulo. Isto é necessário aqui porque, para DateOnly e TimeSpan nunca podem estar nulos normalmente, sendo assim isto significa que o filtro já seria inicializado com um valor padrão (ex: 01/01/0001 00:00:00), o que atrapalharia o funcionamento do filtro. Então tornamos o valor anulável para que isto não ocorra e o filtro comece tendo "null" por valor inicial. Com o booleano "retorno" isto também se aplicaria, já que bool só pode ser "true" ou "false" por padrão, mas não o anularemos porque não é necessário, neste contexto.
+    public DateOnly? data { get; set; }
+    public TimeSpan? horario { get; set; }
+    public bool retorno { get; set; }
+    // public DateOnly? dataRetorno { get; set; }
+}
+public record FiltroMedico
+{
+    public string codigo { get; set; }
+    public string nomeMedico { get; set; }
+    // public string telefone { get; set; }
+    // public double valorConsulta { get; set; }
+}
+public record FiltroPaciente
+{
+    public string codigo { get; set; }
+    public string nomePaciente { get; set; }
+    // public string endereco { get; set; }
+    // public string numero { get; set; }
+    // public string bairro { get; set; }
+    // public string cidade { get; set; }
+    // public string cep { get; set; }
+    // public string sexo { get; set; }
+    // public string telefone { get; set; }
+    // public string celular { get; set; }
 }
 
-public class UI
+// Generic Record para argumentos, pra diminuir quantidade de parâmetros em métodos que utilizam destas informações.
+public record Arguments<T>
 {
-    public static void FiltrarConsulta(FiltroConsulta filtroConsulta)
-    {
-        TabPage currentPage = Consultorio.tabControl.SelectedTab;
-        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
-
-        List<RegistroConsulta> FilteredData = DBTest.SearchConsultas(DBTest.dadosConsulta, filtroConsulta);
-
-        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
-        List<RegistroConsulta> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosConsulta;
-
-        LoadConsultasToTable(dgv, FinalResult);
-    }
-
-    public static void FiltrarMedicos(FiltroMedico filtroMedico)
-    {
-        TabPage currentPage = Consultorio.tabControl.SelectedTab;
-        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
-
-        List<RegistroMedico> FilteredData = DBTest.SearchMedico(DBTest.dadosMedico, filtroMedico);
-
-        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
-        List<RegistroMedico> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosMedico;
-
-        LoadMedicosToTable(dgv, FinalResult);
-    }
-
-    public static void FiltrarPacientes(FiltroPaciente filtroPaciente)
-    {
-        TabPage currentPage = Consultorio.tabControl.SelectedTab;
-        DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
-
-        List<RegistroPaciente> FilteredData = DBTest.SearchPaciente(DBTest.dadosPaciente, filtroPaciente);
-
-        // O método Any() verifica se SearchResult possui algo na lista, do contrário retorna os dados iniciais mesmo, no caso de nada ser encontrado pelo filtro, isto é para evitar que a tabela fique vazia caso nada seja.
-        List<RegistroPaciente> FinalResult = FilteredData.Any() ? FilteredData : DBTest.dadosPaciente;
-
-        LoadPacientesToTable(dgv, FinalResult);
-    }
-
-    public static void LoadConsultasToTable(DataGridView table, List<RegistroConsulta> dados)
-    {
-        table.Rows.Clear();
-        for (int i = 0; i < dados.Count; i++)
-        {
-            table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].nomePaciente, dados[i].data, dados[i].horario, dados[i].retorno);
-        }
-    }
-
-    public static void LoadMedicosToTable(DataGridView table, List<RegistroMedico> dados)
-    {
-        table.Rows.Clear();
-        for (int i = 0; i < dados.Count; i++)
-        {
-            table.Rows.Add(dados[i].codigo, dados[i].nomeMedico, dados[i].telefone, dados[i].valorConsulta);
-        }
-    }
-
-    public static void LoadPacientesToTable(DataGridView table, List<RegistroPaciente> dados)
-    {
-        table.Rows.Clear();
-        for (int i = 0; i < dados.Count; i++)
-        {
-            table.Rows.Add(dados[i].codigo, dados[i].nomePaciente, dados[i].endereco, dados[i].numero, dados[i].bairro, dados[i].cidade, dados[i].cep, dados[i].sexo, dados[i].telefone, dados[i].celular);
-        }
-    }
-}
-
-public class Eventos
-{
-    private static int CurrentRowId = 0; // por padrão, o id inicial é 0, ou seja, o primeiro item da lista.
-
-    public static void dataGridView_CellClick(object sender, DataGridViewCellEventArgs e)
-    {
-        if (e.RowIndex < 0) return; // evita erro de (índice -1) ao clicar no cabeçalho
-
-        DataGridView dgv = (DataGridView)sender;
-        CurrentRowId = e.RowIndex;
-        Console.WriteLine("Selecionou linha de id " + CurrentRowId);
-    }
-    public static void ResetSelectedRowId(int id)
-    {
-        CurrentRowId = id;
-    }
-    public static int GetCurrentSelectedRowId()
-    {
-        return CurrentRowId;
-    }
-
-    public static void ValidateTextBox<addedData, dbData>(Button btnOk, List<TextBox> txtList, Form formDiag, bool dataValidation, string warnMessage, Arguments<addedData, dbData> args)
-    {
-        foreach (TextBox textBox in txtList)
-        {
-            if (string.IsNullOrWhiteSpace(textBox.Text))
-            {
-                MessageBox.Show($"Campo '{textBox.Tag}' não pode ficar vazio!");
-                textBox.Focus();
-                return;
-            }
-        }
-
-        if (dataValidation)
-        {
-            MessageBox.Show(warnMessage);
-            return;
-        }
-
-        btnOk.DialogResult = DialogResult.OK;
-
-        // TODO: assim como feito acima com dataValidation e warnMessage, também os comandos abaixo devem ser passados para este método como argumento. Agora, nota-se que isto fará o método ter grande quantidade de parâmetros, o que não é interessante, então verei se é possível passar um único objeto contendo todas estas funções aqui (basta criar uma classe pra isso).
-
-        // DBTest.dadosMedico.Add(Consultorio.registroMedico);
-
-        // UI.LoadMedicosToTable((DataGridView)Consultorio.tab_medicos.Controls[$"table_{Consultorio.tab_medicos.Name}"], DBTest.dadosMedico);
-
-        args.registerData(args.newEntry);
-        args.updateTable(args.table, args.db);
-
-        Console.WriteLine("Operação completa!");
-        formDiag.Close(); // fecha o form especificado
-    }
-
-    public static void ValidateComboBox(Button btnOk, List<ComboBox> txtList, Form formDiag)
-    {
-        foreach (ComboBox comboBox in txtList)
-        {
-            if (string.IsNullOrWhiteSpace(comboBox.Text))
-            {
-                MessageBox.Show($"Campo '{comboBox.Tag}' deve conter um valor válido.");
-                comboBox.Focus();
-                return;
-            }
-        }
-
-        if (!DBTest.isConsultaValid(Consultorio.registroConsulta))
-        {
-            MessageBox.Show($"Valor inválido!");
-            return;
-        }
-
-        btnOk.DialogResult = DialogResult.OK;
-
-        // Registra o novo cadastro na base.
-        DBTest.dadosConsulta.Add(Consultorio.registroConsulta);
-
-        UI.LoadConsultasToTable((DataGridView)Consultorio.tab_consultas.Controls[$"table_{Consultorio.tab_consultas.Name}"], DBTest.dadosConsulta);
-
-        Console.WriteLine("Operação completa!");
-        formDiag.Close(); // fecha o form especificado
-    }
+    public T newEntry { get; init; }
+    public DataGridView table { get; init; }
+    public List<T> db { get; init; }
+    public Action<T> registerData { get; init; }
+    public Action<DataGridView, List<T>> updateTable { get; init; }
 }
 
 // componente customizado, que engloba três botões, de modo que só precisemos implementar estes botões todos uma só vez por tab.
@@ -1463,63 +1513,4 @@ public class CrudButtonsControl : UserControl
         this.Controls.Add(btnEdit);
         this.Controls.Add(btnDelete);
     }
-}
-
-
-// TODO: Ver viabilidade de transformar os blocos a seguir em uma interface, já que compartilham de muitas propriedades similares, fazendo com que as classes individuais (record) herdassem essa interface e fosse declarado nelas apenas o que há de diferente (polimorfismo).
-
-// record é basicamente uma classe, só que simplificada para contexto de dados.
-// Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
-public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno);
-
-public record RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta);
-
-public record RegistroPaciente(string codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, int cep, string sexo, string telefone, string celular);
-
-
-// filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
-// public record FiltroConsulta(string codigo, string nomeMedico, string nomePaciente, string data, string horario, string retorno, string dataRetorno);
-
-public record FiltroConsulta
-{
-    // como record é naturalmente imutável, "set" normalmente seria "init" (ou seja, só pode definir na inicialização), por isso é preciso usar "set" explicitamente aqui, para permitir modificação de propriedades da instância
-    public string codigo { get; set; }
-    public string nomeMedico { get; set; }
-    public string nomePaciente { get; set; }
-    // "?" torna o valor anulável, de modo que seja possível que o campo seja nulo. Isto é necessário aqui porque, para DateOnly e TimeSpan nunca podem estar nulos normalmente, sendo assim isto significa que o filtro já seria inicializado com um valor padrão (ex: 01/01/0001 00:00:00), o que atrapalharia o funcionamento do filtro. Então tornamos o valor anulável para que isto não ocorra e o filtro comece tendo "null" por valor inicial. Com o booleano "retorno" isto também se aplicaria, já que bool só pode ser "true" ou "false" por padrão, mas não o anularemos porque não é necessário, neste contexto.
-    public DateOnly? data { get; set; }
-    public TimeSpan? horario { get; set; }
-    public bool retorno { get; set; }
-    // public DateOnly? dataRetorno { get; set; }
-}
-public record FiltroMedico
-{
-    public string codigo { get; set; }
-    public string nomeMedico { get; set; }
-    // public string telefone { get; set; }
-    // public double valorConsulta { get; set; }
-}
-public record FiltroPaciente
-{
-    public string codigo { get; set; }
-    public string nomePaciente { get; set; }
-    // public string endereco { get; set; }
-    // public string numero { get; set; }
-    // public string bairro { get; set; }
-    // public string cidade { get; set; }
-    // public string cep { get; set; }
-    // public string sexo { get; set; }
-    // public string telefone { get; set; }
-    // public string celular { get; set; }
-}
-
-// Generic Record para argumentos, pra diminuir quantidade de parâmetros em métodos que utilizam destas informações.
-// TODO: já que addedData e dbData são basicamente o mesmo tipo, dá pra reduzir isso apenas para um.
-public record Arguments<addedData, dbData>
-{
-    public addedData newEntry { get; init; }
-    public DataGridView table { get; init; }
-    public List<dbData> db { get; init; }
-    public Action<addedData> registerData { get; init; }
-    public Action<DataGridView, List<dbData>> updateTable { get; init; }
 }
