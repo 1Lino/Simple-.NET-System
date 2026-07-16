@@ -627,29 +627,58 @@ public class Dialog
         formDialog.AcceptButton = btnOk;
         formDialog.CancelButton = btnCancel;
 
-        Arguments<RegistroPaciente, RegistroPaciente> args = new Arguments<RegistroPaciente, RegistroPaciente>
+        btnOk.Click += (_, _) =>
         {
-            newEntry = Consultorio.registroPaciente,
-            table = (DataGridView)Consultorio.tab_pacientes.Controls[$"table_{Consultorio.tab_pacientes.Name}"],
-            db = DBTest.dadosPaciente,
-            registerData = DBTest.NewPaciente,
-            updateTable = UI.LoadPacientesToTable
-        };
+            int numero;
+            int cep;
+            if (int.TryParse(txtNumero.Text, out int num) && int.TryParse(txtCep.Text, out int ce))
+            {
+                numero = num;
+                cep = ce;
+            }
+            else
+            {
+                numero = 0;
+                cep = 0;
+            }
 
-        btnOk.Click += (_, _) => Eventos.ValidateTextBox<RegistroPaciente, RegistroPaciente>(btnOk, new List<TextBox>
-        {
-            txtNomePaciente,
-            txtEndereco,
-            txtNumero,
-            txtBairro,
-            txtCidade,
-            txtCep,
-            txtTelefone,
-            txtCelular
-        },
-        formDialog,
-        !DBTest.isPacienteValid(Consultorio.registroPaciente),
-        $"Inválido!\n-Campos de texto devem conter mais de 2 caracteres.\n-Campos numéricos devem ser pelo menos 8 números de 0 a 9", args);
+            Consultorio.registroPaciente = new RegistroPaciente(
+                (int.Parse(DBTest.dadosPaciente[DBTest.dadosPaciente.Count - 1].codigo) + 1).ToString() ?? "",
+                txtNomePaciente.Text,
+                txtEndereco.Text,
+                numero,
+                txtBairro.Text,
+                txtCidade.Text,
+                cep,
+                radioMasculino.Checked ? "Masculino" : "Feminino",
+                txtTelefone.Text,
+                txtCelular.Text
+            );
+
+            Arguments<RegistroPaciente, RegistroPaciente> args = new Arguments<RegistroPaciente, RegistroPaciente>
+            {
+                newEntry = Consultorio.registroPaciente,
+                table = (DataGridView)Consultorio.tab_pacientes.Controls[$"table_{Consultorio.tab_pacientes.Name}"],
+                db = DBTest.dadosPaciente,
+                registerData = DBTest.NewPaciente,
+                updateTable = UI.LoadPacientesToTable
+            };
+
+            Eventos.ValidateTextBox(btnOk, new List<TextBox>
+            {
+                txtNomePaciente,
+                txtEndereco,
+                txtNumero,
+                txtBairro,
+                txtCidade,
+                txtCep,
+                txtTelefone,
+                txtCelular
+            },
+            formDialog,
+            !DBTest.isPacienteValid(Consultorio.registroPaciente),
+            $"Inválido!\n-Campos de texto devem conter mais de 2 caracteres.\n-Campos numéricos devem ser pelo menos 8 números de 0 a 9", args);
+        };
 
         btnCancel.Click += (_, _) =>
         {
@@ -1167,18 +1196,24 @@ public class DBTest
         return false;
     }
 
-    // TODO: ...
+    // TODO: ... terminar esta validação e testar:
     public static bool isPacienteValid(RegistroPaciente registroPaciente)
     {
-        bool nomeValido;
-        bool enderecoValido;
-        bool numeroValido;
-        bool bairroValido;
-        bool cidadeValido;
-        bool cepValido;
-        bool sexoValido;
-        bool telefoneValido;
-        bool celularValido;
+        bool nomeValido = registroPaciente.nomePaciente.Length >= 2 && registroPaciente.nomePaciente.Length <= 100;
+        bool enderecoValido = registroPaciente.endereco.Length >= 2 && registroPaciente.endereco.Length <= 100;
+        bool numeroValido = registroPaciente.numero.ToString().Length >= 1 && registroPaciente.numero is int;
+        bool bairroValido = registroPaciente.bairro.Length >= 2 && registroPaciente.bairro.Length <= 100;
+        bool cidadeValido = registroPaciente.cidade.Length >= 2 && registroPaciente.cidade.Length <= 50;
+        bool cepValido = registroPaciente.cep.ToString().Length == 8 && registroPaciente.cep is int;
+        bool sexoValido = registroPaciente.sexo == "Masculino" || registroPaciente.sexo == "Feminino";
+        bool telefoneValido = registroPaciente.telefone.Length >= 8 && registroPaciente.telefone.Length <= 16 && int.Parse(registroPaciente.telefone) is int;
+        bool celularValido = registroPaciente.celular.Length >= 8 && registroPaciente.celular.Length <= 16 && int.Parse(registroPaciente.celular) is int;
+
+        if (nomeValido && enderecoValido && numeroValido && bairroValido &&
+            cidadeValido && cepValido && sexoValido && telefoneValido && celularValido)
+        {
+            return true;
+        }
 
         return false;
     }
@@ -1297,7 +1332,7 @@ public class Eventos
         return CurrentRowId;
     }
 
-    public static void ValidateTextBox<addedData, dbData>(Button btnOk, List<TextBox> txtList, Form formDiag, bool dataValidation, string errorMessage, Arguments<addedData, dbData> args)
+    public static void ValidateTextBox<addedData, dbData>(Button btnOk, List<TextBox> txtList, Form formDiag, bool dataValidation, string warnMessage, Arguments<addedData, dbData> args)
     {
         foreach (TextBox textBox in txtList)
         {
@@ -1311,13 +1346,13 @@ public class Eventos
 
         if (dataValidation)
         {
-            MessageBox.Show(errorMessage);
+            MessageBox.Show(warnMessage);
             return;
         }
 
         btnOk.DialogResult = DialogResult.OK;
 
-        // TODO: assim como feito acima com dataValidation e errorMessage, também os comandos abaixo devem ser passados para este método como argumento. Agora, nota-se que isto fará o método ter grande quantidade de parâmetros, o que não é interessante, então verei se é possível passar um único objeto contendo todas estas funções aqui (basta criar uma classe pra isso).
+        // TODO: assim como feito acima com dataValidation e warnMessage, também os comandos abaixo devem ser passados para este método como argumento. Agora, nota-se que isto fará o método ter grande quantidade de parâmetros, o que não é interessante, então verei se é possível passar um único objeto contendo todas estas funções aqui (basta criar uma classe pra isso).
 
         // DBTest.dadosMedico.Add(Consultorio.registroMedico);
 
@@ -1439,7 +1474,7 @@ public record RegistroConsulta(string codigo, string nomeMedico, string nomePaci
 
 public record RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta);
 
-public record RegistroPaciente(string codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, double cep, string sexo, string telefone, string celular);
+public record RegistroPaciente(string codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, int cep, string sexo, string telefone, string celular);
 
 
 // filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
@@ -1479,6 +1514,7 @@ public record FiltroPaciente
 }
 
 // Generic Record para argumentos, pra diminuir quantidade de parâmetros em métodos que utilizam destas informações.
+// TODO: já que addedData e dbData são basicamente o mesmo tipo, dá pra reduzir isso apenas para um.
 public record Arguments<addedData, dbData>
 {
     public addedData newEntry { get; init; }
