@@ -963,7 +963,12 @@ public class Dialog
 
         if (formDialog.ShowDialog() == DialogResult.OK)
         {
-            // TODO...
+            // TO_FIX: existe o seguinte problema -> se houver apenas uma linha na tabela, se tentarmos deletá-la sem selecionar primeiro, o índice irá apontar para a da linha que foi deletada por último. Em outras palavras, é necessário atualizar a currentRow toda vez que uma linha da tabela for deletada.
+            DBTest.RemoveConsulta(DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].codigo);
+
+            TabPage currentPage = Consultorio.tabControl.SelectedTab;
+            DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+            UI.LoadConsultasToTable(dgv, DBTest.dadosConsulta);
         }
     }
 
@@ -988,7 +993,11 @@ public class Dialog
 
         if (formDialog.ShowDialog() == DialogResult.OK)
         {
-            // TODO...
+            DBTest.RemoveMedico(DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].codigo);
+
+            TabPage currentPage = Consultorio.tabControl.SelectedTab;
+            DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+            UI.LoadMedicosToTable(dgv, DBTest.dadosMedico);
         }
     }
 
@@ -1013,7 +1022,11 @@ public class Dialog
 
         if (formDialog.ShowDialog() == DialogResult.OK)
         {
-            // TODO...
+            DBTest.RemovePaciente(DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].codigo);
+
+            TabPage currentPage = Consultorio.tabControl.SelectedTab;
+            DataGridView dgv = (DataGridView)currentPage.Controls[$"table_{currentPage.Name}"];
+            UI.LoadPacientesToTable(dgv, DBTest.dadosPaciente);
         }
     }
 }
@@ -1215,9 +1228,33 @@ public class DBTest
     }
 
     //TODO: funções de deleção de dados.
-    public static void RemoveConsulta(RegistroConsulta removeConsulta) { }
-    public static void RemoveMedico(RegistroConsulta removeMedico) { }
-    public static void RemovePaciente(RegistroConsulta removePaciente) { }
+    public static void RemoveConsulta(string codigoConsulta)
+    {
+        RegistroConsulta registro = dadosConsulta.FirstOrDefault(entry => entry.codigo == codigoConsulta);
+
+        if (registro != null)
+        {
+            dadosConsulta.Remove(registro);
+        }
+    }
+    public static void RemoveMedico(string codigoMedico)
+    {
+        RegistroMedico registro = dadosMedico.FirstOrDefault(entry => entry.codigo == codigoMedico);
+
+        if (registro != null)
+        {
+            dadosMedico.Remove(registro);
+        }
+    }
+    public static void RemovePaciente(string codigoPaciente)
+    {
+        RegistroPaciente registro = dadosPaciente.FirstOrDefault(entry => entry.codigo == codigoPaciente);
+
+        if (registro != null)
+        {
+            dadosPaciente.Remove(registro);
+        }
+    }
 }
 
 public class UI
