@@ -362,7 +362,7 @@ public class Dialog
             Console.WriteLine($"ID: {Consultorio.registroConsulta.codigo}\nMédico: {Consultorio.registroConsulta.nomeMedico}\nPaciente: {Consultorio.registroConsulta.nomePaciente}\nData: {Consultorio.registroConsulta.data} - {Consultorio.registroConsulta.horario}\nRetorno: {Consultorio.registroConsulta.retorno} - {Consultorio.registroConsulta.dataRetorno}");
 
             // validação frontend dos campos nomePaciente e nomeMédico
-            Eventos.ValidateComboBox(btnOk, new List<ComboBox> { comboNomePaciente, comboNomeMedico }, formDialog);
+            Eventos.ValidateComboBox(btnOk, new List<ComboBox> { comboNomePaciente, comboNomeMedico }, formDialog, DBTest.NewConsulta);
         };
 
         btnCancel.Click += (_, _) =>
@@ -434,7 +434,7 @@ public class Dialog
                 newEntry = Consultorio.registroMedico,
                 table = (DataGridView)Consultorio.tab_medicos.Controls[$"table_{Consultorio.tab_medicos.Name}"],
                 db = DBTest.dadosMedico,
-                registerData = DBTest.NewMedico,
+                executeOperation = DBTest.NewMedico,
                 updateTable = UI.LoadMedicosToTable
             };
 
@@ -567,7 +567,7 @@ public class Dialog
                 newEntry = Consultorio.registroPaciente,
                 table = (DataGridView)Consultorio.tab_pacientes.Controls[$"table_{Consultorio.tab_pacientes.Name}"],
                 db = DBTest.dadosPaciente,
-                registerData = DBTest.NewPaciente,
+                executeOperation = DBTest.NewPaciente,
                 updateTable = UI.LoadPacientesToTable
             };
 
@@ -606,8 +606,32 @@ public class Dialog
         var lblHorario = Builder.NewLabel("Horário", 55, 200, 70);
         var lblRetorno = Builder.NewLabel("Retorno", 55, 10, 100);
 
-        var txtNomePaciente = Builder.NewTextBox("consulta_nome_paciente", 250, 80, 10);
-        var txtNomeMedico = Builder.NewTextBox("consulta_nome_medico", 250, 80, 40);
+        var comboNomePaciente = new ComboBox
+        {
+            Tag = "paciente",
+            Width = 240,
+            Left = 80,
+            Top = 10,
+            AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+            AutoCompleteSource = AutoCompleteSource.ListItems,
+            DataSource = DBTest.dadosConsulta.ToList(), // ToList é usado aqui apenas para criar uma cópia, do contrário os dados seriam compartilhados entre todos os comboboxes, fazendo com que a edição em um refletisse no outro.
+            DisplayMember = "nomePaciente",
+            ValueMember = "codigo",
+            MaxLength = 100
+        };
+        var comboNomeMedico = new ComboBox
+        {
+            Tag = "médico",
+            Width = 240,
+            Left = 80,
+            Top = 40,
+            AutoCompleteMode = AutoCompleteMode.SuggestAppend,
+            AutoCompleteSource = AutoCompleteSource.ListItems,
+            DataSource = DBTest.dadosConsulta.ToList(),
+            DisplayMember = "nomeMedico",
+            ValueMember = "codigo",
+            MaxLength = 100
+        };
 
         var dtpData = Builder.NewDateTimePicker(75, 80, "dd/MM/yyyy");
         dtpData.MinDate = new DateTime(2026, 1, 1);
@@ -633,8 +657,8 @@ public class Dialog
         };
 
         // Carrega dos dados as informações, para a interface, de acordo com o id da linha selecionada no momento.
-        txtNomePaciente.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomePaciente;
-        txtNomeMedico.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomeMedico;
+        comboNomePaciente.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomePaciente;
+        comboNomeMedico.Text = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].nomeMedico;
 
         string dataConsulta = DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].data.ToString();
         dtpData.Text = dataConsulta;
@@ -659,8 +683,8 @@ public class Dialog
         formDialog.Controls.Add(lblData);
         formDialog.Controls.Add(lblHorario);
         formDialog.Controls.Add(lblRetorno);
-        formDialog.Controls.Add(txtNomePaciente);
-        formDialog.Controls.Add(txtNomeMedico);
+        formDialog.Controls.Add(comboNomePaciente);
+        formDialog.Controls.Add(comboNomeMedico);
         formDialog.Controls.Add(dtpData);
         formDialog.Controls.Add(dtpTime);
         formDialog.Controls.Add(dtpRetorno);
@@ -670,10 +694,28 @@ public class Dialog
         formDialog.AcceptButton = btnOk;
         formDialog.CancelButton = btnCancel;
 
-        if (formDialog.ShowDialog() == DialogResult.OK)
+        btnOk.Click += (_, _) =>
         {
-            // TODO...
-        }
+            Consultorio.registroConsulta = new RegistroConsulta(
+                DBTest.dadosConsulta[Eventos.GetCurrentSelectedRowId()].codigo,
+                comboNomeMedico.Text,
+                comboNomePaciente.Text,
+                DateOnly.Parse(dtpData.Text),
+                TimeSpan.Parse(dtpTime.Text),
+                chkRetorno.Checked,
+                DateOnly.Parse(dtpRetorno.Text)
+            );
+
+            // validação frontend dos campos nomePaciente e nomeMédico
+            Eventos.ValidateComboBox(btnOk, new List<ComboBox> { comboNomePaciente, comboNomeMedico }, formDialog, DBTest.UpdateConsulta);
+        };
+
+        btnCancel.Click += (_, _) =>
+        {
+            Console.WriteLine("Operação Cancelada!");
+        };
+
+        formDialog.ShowDialog();
     }
 
     private static void EditMedico(string actionType, string subject)
@@ -695,6 +737,8 @@ public class Dialog
 
         var btnOk = Builder.AddButton("Salvar", 90, 150);
         var btnCancel = Builder.AddButton("Cancelar", 230, 150);
+        btnOk.DialogResult = DialogResult.None;
+        btnCancel.DialogResult = DialogResult.Cancel;
 
         formDialog.Controls.Clear();
 
@@ -706,13 +750,54 @@ public class Dialog
         formDialog.Controls.Add(txtValorConsulta);
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
-        formDialog.AcceptButton = btnOk;
-        formDialog.CancelButton = btnCancel;
+        // formDialog.AcceptButton = btnOk;
+        // formDialog.CancelButton = btnCancel;
 
-        if (formDialog.ShowDialog() == DialogResult.OK)
+        btnOk.Click += (_, _) =>
         {
-            // TODO...
-        }
+            // tryParse deve ser usado aqui por conta que pode ocorrer de a textbox estar vazia, evitando assim um erro de tipo, pois não é possível converter string vazia em double, nem letras.
+            double valorConsulta;
+            if (double.TryParse(txtValorConsulta.Text, out double value))
+            {
+                valorConsulta = value;
+            }
+            else
+            {
+                valorConsulta = 0.0;
+            }
+
+            Consultorio.registroMedico = new RegistroMedico(
+                DBTest.dadosMedico[Eventos.GetCurrentSelectedRowId()].codigo,
+                txtNomeMedico.Text,
+                txtTelefone.Text,
+                valorConsulta
+            );
+
+            Arguments<RegistroMedico> args = new Arguments<RegistroMedico>
+            {
+                newEntry = Consultorio.registroMedico,
+                table = (DataGridView)Consultorio.tab_medicos.Controls[$"table_{Consultorio.tab_medicos.Name}"],
+                db = DBTest.dadosMedico,
+                executeOperation = DBTest.UpdateMedico,
+                updateTable = UI.LoadMedicosToTable
+            };
+
+            Eventos.ValidateTextBox(btnOk,
+                new List<TextBox> {
+                    txtNomeMedico,
+                    txtTelefone,
+                    txtValorConsulta
+                    }, formDialog,
+                    !DBTest.isMedicoValid(Consultorio.registroMedico),
+                    $"Inválido!\n-Nome do médico deve conter mais de 2 caracteres.\n-Telefone deve conter pelo menos 8 números.\n-Valor da consulta deve ser numérico.", args);
+        };
+
+        btnCancel.Click += (_, _) =>
+        {
+            Console.WriteLine("Operação Cancelada!");
+        };
+
+        formDialog.ShowDialog();
     }
 
     private static void EditPaciente(string actionType, string subject)
@@ -764,6 +849,8 @@ public class Dialog
 
         var btnOk = Builder.AddButton("Salvar", 90, 250);
         var btnCancel = Builder.AddButton("Cancelar", 230, 250);
+        btnOk.DialogResult = DialogResult.None;
+        btnCancel.DialogResult = DialogResult.Cancel;
 
         formDialog.Controls.Clear();
 
@@ -789,13 +876,68 @@ public class Dialog
 
         formDialog.Controls.Add(btnOk);
         formDialog.Controls.Add(btnCancel);
-        formDialog.AcceptButton = btnOk;
-        formDialog.CancelButton = btnCancel;
+        // formDialog.AcceptButton = btnOk;
+        // formDialog.CancelButton = btnCancel;
 
-        if (formDialog.ShowDialog() == DialogResult.OK)
+        btnOk.Click += (_, _) =>
         {
-            // TODO...
-        }
+            int numero;
+            int cep;
+            if (int.TryParse(txtNumero.Text, out int num) && int.TryParse(txtCep.Text, out int ce))
+            {
+                numero = num;
+                cep = ce;
+            }
+            else
+            {
+                numero = 0;
+                cep = 0;
+            }
+
+            Consultorio.registroPaciente = new RegistroPaciente(
+                DBTest.dadosPaciente[Eventos.GetCurrentSelectedRowId()].codigo,
+                txtNomePaciente.Text,
+                txtEndereco.Text,
+                numero,
+                txtBairro.Text,
+                txtCidade.Text,
+                cep,
+                radioMasculino.Checked ? "Masculino" : "Feminino",
+                txtTelefone.Text,
+                txtCelular.Text
+            );
+
+            Arguments<RegistroPaciente> args = new Arguments<RegistroPaciente>
+            {
+                newEntry = Consultorio.registroPaciente,
+                table = (DataGridView)Consultorio.tab_pacientes.Controls[$"table_{Consultorio.tab_pacientes.Name}"],
+                db = DBTest.dadosPaciente,
+                executeOperation = DBTest.UpdatePaciente,
+                updateTable = UI.LoadPacientesToTable
+            };
+
+            Eventos.ValidateTextBox(btnOk, new List<TextBox>
+            {
+                txtNomePaciente,
+                txtEndereco,
+                txtNumero,
+                txtBairro,
+                txtCidade,
+                txtCep,
+                txtTelefone,
+                txtCelular
+            },
+            formDialog,
+            !DBTest.isPacienteValid(Consultorio.registroPaciente),
+            $"Inválido!\n-Campos de texto devem conter mais de 2 caracteres.\n-Campos numéricos devem ser pelo menos 8 números de 0 a 9", args);
+        };
+
+        btnCancel.Click += (_, _) =>
+        {
+            Console.WriteLine("Operação Cancelada!");
+        };
+
+        formDialog.ShowDialog();
     }
 
 
@@ -890,16 +1032,16 @@ public class DBTest
 
     public static List<RegistroMedico> dadosMedico = new List<RegistroMedico>
     {
-        new("1",  "Marcela Andrade", "0800-9090", 170),
-        new("2",  "Pedro Alcantara", "0500-9092", 250),
-        new("3",  "Marcos Almeida", "0400-9095", 180)
+        new("1",  "Marcela Andrade", "08009090", 170),
+        new("2",  "Pedro Alcantara", "05009092", 250),
+        new("3",  "Marcos Almeida", "04009095", 180)
     };
 
     public static List<RegistroPaciente> dadosPaciente = new List<RegistroPaciente>
     {
-        new("40", "João da Silva", "R. Terra das Dores", 157, "Jabuti", "Vilalopolis", 12300000, "Masculino", "-", "(65) 99345-7657"),
-        new("45", "Maria Cruz", "R. Francisco Polo", 161, "Mapuio", "Areias", 17800000, "Feminino", "0500-0880", "(85) 97385-1359"),
-        new("49", "Jacinta Ribeiro", "R. Ivo de Almeida", 240, "Jangada", "Verdes Prados", 19500000, "Feminino", "-", "(50) 98445-2656")
+        new("40", "João da Silva", "R. Terra das Dores", 157, "Jabuti", "Vilalopolis", 12300000, "Masculino", "00000000", "993457657"),
+        new("45", "Maria Cruz", "R. Francisco Polo", 161, "Mapuio", "Areias", 17800000, "Feminino", "05000880", "973851359"),
+        new("49", "Jacinta Ribeiro", "R. Ivo de Almeida", 240, "Jangada", "Verdes Prados", 19500000, "Feminino", "00000000", "984452656")
     };
 
     public static List<RegistroConsulta> SearchConsultas(List<RegistroConsulta> dados, FiltroConsulta filtro)
@@ -1020,14 +1162,62 @@ public class DBTest
     }
 
     //TODO: funções de edição de dados.
-    public static void UpdateConsulta() { }
-    public static void UpdateMedico() { }
-    public static void UpdatePaciente() { }
+    public static void UpdateConsulta(RegistroConsulta updateConsulta)
+    {
+        RegistroConsulta registro = dadosConsulta.FirstOrDefault(entry => entry.codigo == updateConsulta.codigo);
+
+        if (registro != null)
+        {
+            registro.codigo = updateConsulta.codigo;
+            registro.nomeMedico = updateConsulta.nomeMedico;
+            registro.nomePaciente = updateConsulta.nomePaciente;
+            registro.data = updateConsulta.data;
+            registro.horario = updateConsulta.horario;
+            registro.retorno = updateConsulta.retorno;
+            registro.dataRetorno = updateConsulta.dataRetorno;
+
+            Console.WriteLine("Update done!");
+        }
+        else
+        {
+            Console.WriteLine("Null value!");
+        }
+    }
+    public static void UpdateMedico(RegistroMedico updateMedico)
+    {
+        RegistroMedico registro = dadosMedico.FirstOrDefault(entry => entry.codigo == updateMedico.codigo);
+
+        if (registro != null)
+        {
+            registro.codigo = updateMedico.codigo;
+            registro.nomeMedico = updateMedico.nomeMedico;
+            registro.telefone = updateMedico.telefone;
+            registro.valorConsulta = updateMedico.valorConsulta;
+        }
+    }
+    public static void UpdatePaciente(RegistroPaciente updatePaciente)
+    {
+        RegistroPaciente registro = dadosPaciente.FirstOrDefault(entry => entry.codigo == updatePaciente.codigo);
+
+        if (registro != null)
+        {
+            registro.codigo = updatePaciente.codigo;
+            registro.nomePaciente = updatePaciente.nomePaciente;
+            registro.sexo = updatePaciente.sexo;
+            registro.endereco = updatePaciente.endereco;
+            registro.numero = updatePaciente.numero;
+            registro.cidade = updatePaciente.cidade;
+            registro.bairro = updatePaciente.bairro;
+            registro.cep = updatePaciente.cep;
+            registro.telefone = updatePaciente.telefone;
+            registro.celular = updatePaciente.celular;
+        }
+    }
 
     //TODO: funções de deleção de dados.
-    public static void RemoveConsulta() { }
-    public static void RemoveMedico() { }
-    public static void RemovePaciente() { }
+    public static void RemoveConsulta(RegistroConsulta removeConsulta) { }
+    public static void RemoveMedico(RegistroConsulta removeMedico) { }
+    public static void RemovePaciente(RegistroConsulta removePaciente) { }
 }
 
 public class UI
@@ -1241,14 +1431,14 @@ public class Eventos
 
         btnOk.DialogResult = DialogResult.OK;
 
-        args.registerData(args.newEntry);
+        args.executeOperation(args.newEntry);
         args.updateTable(args.table, args.db);
 
         Console.WriteLine("Operação completa!");
         formDiag.Close(); // fecha o form especificado
     }
 
-    public static void ValidateComboBox(Button btnOk, List<ComboBox> txtList, Form formDiag)
+    public static void ValidateComboBox(Button btnOk, List<ComboBox> txtList, Form formDiag, Action<RegistroConsulta> function)
     {
         foreach (ComboBox comboBox in txtList)
         {
@@ -1268,8 +1458,8 @@ public class Eventos
 
         btnOk.DialogResult = DialogResult.OK;
 
-        // Registra o novo cadastro na base.
-        DBTest.NewConsulta(Consultorio.registroConsulta);
+        // Registra o novo cadastro na base, ou edita um existente, dependendo do método passado ao Action.
+        function(Consultorio.registroConsulta);
 
         UI.LoadConsultasToTable((DataGridView)Consultorio.tab_consultas.Controls[$"table_{Consultorio.tab_consultas.Name}"], DBTest.dadosConsulta);
 
@@ -1392,13 +1582,73 @@ public class Builder
     }
 }
 
-// record é basicamente uma classe, só que simplificada para contexto de dados.
+// record é basicamente uma classe, só que simplificada para contexto de dados/propriedades, sem uso de métodos.
 // Modelo dos dados que serão apresentados. No caso, nomeMedico e nomePaciente serão puxados de tabelas diferentes da base, já que a tabela consulta só possui ids, e tais ids serão utilizados para puxar exatamente o nome que queremos.
-public record RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno);
+public record RegistroConsulta
+{
+    public string codigo { get; set; }
+    public string nomeMedico { get; set; }
+    public string nomePaciente { get; set; }
+    public DateOnly data { get; set; }
+    public TimeSpan horario { get; set; }
+    public bool retorno { get; set; }
+    public DateOnly dataRetorno { get; set; }
 
-public record RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta);
+    public RegistroConsulta(string codigo, string nomeMedico, string nomePaciente, DateOnly data, TimeSpan horario, bool retorno, DateOnly dataRetorno)
+    {
+        this.codigo = codigo;
+        this.nomeMedico = nomeMedico;
+        this.nomePaciente = nomePaciente;
+        this.data = data;
+        this.horario = horario;
+        this.retorno = retorno;
+        this.dataRetorno = dataRetorno;
+    }
+}
 
-public record RegistroPaciente(string codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, int cep, string sexo, string telefone, string celular);
+public record RegistroMedico
+{
+    public string codigo { get; set; }
+    public string nomeMedico { get; set; }
+    public string telefone { get; set; }
+    public double valorConsulta { get; set; }
+
+    public RegistroMedico(string codigo, string nomeMedico, string telefone, double valorConsulta)
+    {
+        this.codigo = codigo;
+        this.nomeMedico = nomeMedico;
+        this.telefone = telefone;
+        this.valorConsulta = valorConsulta;
+    }
+}
+
+public record RegistroPaciente
+{
+    public string codigo { get; set; }
+    public string nomePaciente { get; set; }
+    public string endereco { get; set; }
+    public int numero { get; set; }
+    public string bairro { get; set; }
+    public string cidade { get; set; }
+    public int cep { get; set; }
+    public string sexo { get; set; }
+    public string telefone { get; set; }
+    public string celular { get; set; }
+
+    public RegistroPaciente(string codigo, string nomePaciente, string endereco, int numero, string bairro, string cidade, int cep, string sexo, string telefone, string celular)
+    {
+        this.codigo = codigo;
+        this.nomePaciente = nomePaciente;
+        this.endereco = endereco;
+        this.numero = numero;
+        this.bairro = bairro;
+        this.cidade = cidade;
+        this.cep = cep;
+        this.sexo = sexo;
+        this.telefone = telefone;
+        this.celular = celular;
+    }
+}
 
 
 // filtros (basicamente, o conteúdo Text das textBoxes, que deverão ser usados pra comparar com os dados da base, na função de pesquisa):
@@ -1441,7 +1691,7 @@ public record Arguments<T>
     public T newEntry { get; init; }
     public DataGridView table { get; init; }
     public List<T> db { get; init; }
-    public Action<T> registerData { get; init; }
+    public Action<T> executeOperation { get; init; }
     public Action<DataGridView, List<T>> updateTable { get; init; }
 }
 
