@@ -47,10 +47,6 @@ O sistema é composto por vários módulos:
 - Persistência de dados
 - Operações de criação, leitura, atualização e exclusão
 
-### Jogo da Velha
-
-- Jogo local simples para dois jogadores
-
 ### Sistema de Login Simples
 
 - Cadastro e autenticação básica de usuários
@@ -62,19 +58,11 @@ O sistema é composto por vários módulos:
 - Requisições HTTP
 - Consumo e exibição de dados externos
 
-### Agenda de Contatos
+### Sistema de Consultório
 
-- Cadastro e gerenciamento de contatos em BD
-
-### Gerador de Senhas
-
-- Criação de senhas aleatórias com diferentes critérios
-
-### Sistema de Pizzaria
-
-- Simulação de pedidos
-- Cálculo de valores
-- Cadastro de clientes em BD
+- Simulação de Cadastros de consultas e de pacientes
+- Sistema ERP simples
+- Operações com dados (sem banco)
 
 ---
 

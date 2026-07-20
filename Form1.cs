@@ -11,6 +11,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
         private Button calculator;
         private Button unitConverter;
         private Button consultorio;
+        private Button authenticator;
 
         // Inicialização dos componentes no form:
         public Form1()
@@ -91,6 +92,13 @@ namespace Sistema_De_Aplicativos_Simples__.NET
                 Height = 100
             };
 
+            authenticator = new Button
+            {
+                Text = "Login To",
+                Width = 100,
+                Height = 100
+            };
+
             // Reseta a âncora de cada componente, de modo que sejam renderizados no centro de suas respectivas células no grid.
             toDo.Anchor = AnchorStyles.None;
             mediaPlayer.Anchor = AnchorStyles.None;
@@ -98,6 +106,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             calculator.Anchor = AnchorStyles.None;
             unitConverter.Anchor = AnchorStyles.None;
             consultorio.Anchor = AnchorStyles.None;
+            authenticator.Anchor = AnchorStyles.None;
 
             // Por último, adiciona os componentes ao grid:
             grid.Controls.Add(toDo);
@@ -106,6 +115,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             grid.Controls.Add(calculator);
             grid.Controls.Add(unitConverter);
             grid.Controls.Add(consultorio);
+            grid.Controls.Add(authenticator);
 
             this.Controls.Add(grid); // adiciona o grid ao Form.
 
@@ -116,7 +126,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             toDo.Click += (_, _) => OpenForm<ToDo>();
             unitConverter.Click += (_, _) => OpenForm<UnitConverter>();
             consultorio.Click += (_, _) => OpenForm<Consultorio>();
-
+            authenticator.Click += (_, _) => OpenForm<Authenticator>();
         }
 
         // Método genérico restritivo, onde T (Type) deve ser qualquer objeto que seja Form, e deve ser permitido uso de construtor, new():
