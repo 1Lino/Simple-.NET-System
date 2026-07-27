@@ -1,12 +1,21 @@
 
-// NOTE: Esta interface servirá apenas para dar suporte visual das operações de autenticação. O foco deste projeto é autenticação,
-// então será feito uso do prompt de comando para printar os resultados, e também messageboxes no form. Basicamente o Usuário tentará
-// criar um cadastro, e poderá então acessar com senha e usuário o sistema (somente isto, para o nível básico).
+// Esse pequeno projeto simula a estrutura base de projeto fullstack, no caso, focando apenas no que se refere ao serviço de autenticação de usuário. Estrutura:
+// programa.cs
+// │
+// ├── Authenticator/LoginForm  -> Interface (WinForms)
+// ├── Usuario                  -> Modelo para a base
+// ├── UsuarioRepository        -> Armazenamento/base
+// ├── AuthService              -> Regras de login (validação backend)
+// └── Validator                -> Validação (validação frontend)
+// Na camada de AuthService e na de cadastro de usuário, é possível também testar diversos métodos de salvamento de dados em hash, etc.
+
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
     public partial class Authenticator : Form
     {
         public static Authenticator Instance { get; private set; }
+        public static UsuarioRepository userRepo = new UsuarioRepository();
+        public static AuthService authService = new AuthService(userRepo);
 
         public Authenticator()
         {
@@ -16,6 +25,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
             this.CenterToScreen();
         }
 
+        // LOGIN FORM
         private void InitializeForm()
         {
             Text = "Login App - Teste de Autenticação";
@@ -92,6 +102,8 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
                 Top = 190,
                 Cursor = Cursors.Hand
             };
+
+            btn_login.Click += (_, _) => btnLogin_Click(txt_email, txt_senha, authService);
 
             panel.Controls.Add(lbl_email);
             panel.Controls.Add(txt_email);
@@ -190,8 +202,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             btn_cadastrar.Click += (_, _) =>
             {
-                btn_cadastrar.DialogResult = DialogResult.OK;
-                MessageBox.Show("Cadastrado!");
+                btnCadastrar_Click(txt_email, txt_senha, authService);
                 formDialog.Close();
             };
 
@@ -211,5 +222,90 @@ namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 
             formDialog.ShowDialog();
         }
+
+        private void btnCadastrar_Click(TextBox txtLogin, TextBox txtSenha, AuthService auth)
+        {
+            if (!Validator.CamposValidos(txtLogin.Text, txtSenha.Text))
+            {
+                MessageBox.Show("Preencha todos os campos.");
+                return;
+            }
+
+            bool sucesso = auth.Cadastrar(txtLogin.Text, txtSenha.Text);
+
+            MessageBox.Show(sucesso ? "Usuário cadastrado." : "Usuário já existe.");
+        }
+
+        private void btnLogin_Click(TextBox txtLogin, TextBox txtSenha, AuthService auth)
+        {
+            bool sucesso = auth.Login(txtLogin.Text, txtSenha.Text);
+
+            MessageBox.Show(sucesso ? "Login realizado." : "Login inválido.");
+        }
+    }
+}
+
+// classe que confere todos os parâmetros básicos de cadastro do usuário. É o que deve ser registrado e salvo na base.
+public class Usuario
+{
+    public string Login { get; set; }
+    public string Senha { get; set; }
+}
+
+// Simulação da base de usuários. A camada de userRepository é uma camada de dados, somente acessada pelo backend da aplicação
+// qualquer coisa só pode ser registrada nos dados se passar pelas validações e pelo processo de autenticação.
+public class UsuarioRepository
+{
+    private static List<Usuario> usuarios = new();
+
+    public void Adicionar(Usuario usuario)
+    {
+        usuarios.Add(usuario);
+    }
+
+    public Usuario Buscar(string login)
+    {
+        return usuarios.FirstOrDefault(u => u.Login == login);
+    }
+}
+
+// Isso aqui lida com o processo de autenticação. No caso, esta camada tem acesso aos dados da base.
+public class AuthService
+{
+    private static UsuarioRepository Repository;
+
+    public AuthService(UsuarioRepository repository)
+    {
+        Repository = repository;
+    }
+
+    public bool Cadastrar(string login, string senha)
+    {
+        if (Repository.Buscar(login) != null)
+            return false;
+
+        Repository.Adicionar(new Usuario
+        {
+            Login = login,
+            Senha = senha
+        });
+
+        return true;
+    }
+
+    public bool Login(string login, string senha)
+    {
+        var usuario = Repository.Buscar(login);
+
+        return usuario != null && usuario.Senha == senha;
+    }
+}
+
+// isto aqui lida com a validação dos campos. É um recurso básico de frontend.
+public class Validator
+{
+    public static bool CamposValidos(string login, string senha)
+    {
+        return !string.IsNullOrWhiteSpace(login) && !string.IsNullOrWhiteSpace(senha);
     }
 }
