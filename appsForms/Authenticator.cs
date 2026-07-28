@@ -1,4 +1,3 @@
-
 // Esse pequeno projeto simula a estrutura base de projeto fullstack, no caso, focando apenas no que se refere ao serviço de autenticação de usuário. Estrutura:
 // programa.cs
 // │
@@ -7,7 +6,8 @@
 // ├── UsuarioRepository        -> Armazenamento/base
 // ├── AuthService              -> Regras de login (validação backend)
 // └── Validator                -> Validação (validação frontend)
-// Na camada de AuthService e na de cadastro de usuário, é possível também testar diversos métodos de salvamento de dados em hash, etc.
+// Na camada de serviço ou AuthService e na de cadastro de usuário, é possível também testar diversos métodos de salvamento de dados em hash, regras de negócio, etc.
+using BCryptHash = BCrypt.Net.BCrypt; // comando do pacote: dotnet add package BCrypt.Net-Next
 
 namespace Sistema_De_Aplicativos_Simples__.NET.appsForms
 {
@@ -284,10 +284,13 @@ public class AuthService
         if (Repository.Buscar(login) != null)
             return false;
 
+        var hashPass = BCryptHash.HashPassword(senha);
+        Console.WriteLine($"Senha convertida para o hash: {hashPass}");
+
         Repository.Adicionar(new Usuario
         {
             Login = login,
-            Senha = senha
+            Senha = hashPass
         });
 
         return true;
@@ -297,7 +300,7 @@ public class AuthService
     {
         var usuario = Repository.Buscar(login);
 
-        return usuario != null && usuario.Senha == senha;
+        return usuario != null && BCryptHash.Verify(senha, usuario.Senha);
     }
 }
 
