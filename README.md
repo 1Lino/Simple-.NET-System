@@ -2,9 +2,9 @@
 
 Sistema simples desenvolvido em **C# com .NET WinForms**, utilizando o **VS Code** como ambiente de desenvolvimento.
 
-O objetivo deste projeto é ensinar fundamentos de programação através da implementação de várias aplicações comuns do dia a dia, mantendo o código **simples e acessível para iniciantes**.
+O objetivo deste projeto é demonstrar fundamentos de programação através da implementação de várias aplicações comuns, mantendo o código **simples e acessível para iniciantes**.
 
-> Este projeto é didático. A ideia não é ter a melhor arquitetura possível, mas sim permitir que qualquer pessoa consiga entender, replicar e evoluir o código. Dito isto, apesar de ser um projeto para iniciantes, é recomendado que se tenha conhecimento básico de WinForms, C# e banco de dados, já que são tecnologias cruciais neste projeto.
+> Este projeto é didático. A ideia não é ter a melhor arquitetura possível, nem ser completo, mas sim permitir que qualquer pessoa consiga entender, replicar e evoluir o código. Dito isto, apesar de ser um projeto para iniciantes, é recomendado que se tenha conhecimento básico de WinForms, C# e estruturas de dados, já que são tecnologias cruciais neste projeto.
 
 ---
 
@@ -51,9 +51,8 @@ O sistema é composto por vários módulos:
 
 - Cadastro e autenticação básica de usuários
 - Senhas hash
-- Token JWT
 
-### Consumidor de API Pública
+### Consumidor de API Pública (Open Library API)
 
 - Requisições HTTP
 - Consumo e exibição de dados externos
@@ -69,10 +68,10 @@ O sistema é composto por vários módulos:
 ## Tecnologias Utilizadas
 
 - C#
-- Plataforma .NET
 - WinForms
 - VS Code
 - SQLite
+- .NET Framework 10.0
 
 ---
 
@@ -111,6 +110,8 @@ cd Simple-.NET-System
 dotnet run
 ```
 
+Obs.: é necessário ter SDK .NET Framework 10.0 e todas as dependências da plataforma instalado na máquina para que o projeto rode.
+
 ---
 
 ## Melhorias Futuras
@@ -122,7 +123,6 @@ Sugestões quanto ao que pode ser feito:
 - Adicionar testes automatizados
 - Melhorar a organização do código (adicionando camadas)
 - Implementar autenticação mais segura (utilizando métodos modernos)
-- Persistência mais avançada
 
 ---
 

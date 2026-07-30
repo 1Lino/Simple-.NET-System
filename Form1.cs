@@ -12,6 +12,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
         private Button unitConverter;
         private Button consultorio;
         private Button authenticator;
+        private Button booksearch;
 
         // Inicialização dos componentes no form:
         public Form1()
@@ -99,6 +100,13 @@ namespace Sistema_De_Aplicativos_Simples__.NET
                 Height = 100
             };
 
+            booksearch = new Button
+            {
+                Text = "Booksearch",
+                Width = 100,
+                Height = 100
+            };
+
             // Reseta a âncora de cada componente, de modo que sejam renderizados no centro de suas respectivas células no grid.
             toDo.Anchor = AnchorStyles.None;
             mediaPlayer.Anchor = AnchorStyles.None;
@@ -107,6 +115,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             unitConverter.Anchor = AnchorStyles.None;
             consultorio.Anchor = AnchorStyles.None;
             authenticator.Anchor = AnchorStyles.None;
+            booksearch.Anchor = AnchorStyles.None;
 
             // Por último, adiciona os componentes ao grid:
             grid.Controls.Add(toDo);
@@ -116,6 +125,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             grid.Controls.Add(unitConverter);
             grid.Controls.Add(consultorio);
             grid.Controls.Add(authenticator);
+            grid.Controls.Add(booksearch);
 
             this.Controls.Add(grid); // adiciona o grid ao Form.
 
@@ -127,6 +137,7 @@ namespace Sistema_De_Aplicativos_Simples__.NET
             unitConverter.Click += (_, _) => OpenForm<UnitConverter>();
             consultorio.Click += (_, _) => OpenForm<Consultorio>();
             authenticator.Click += (_, _) => OpenForm<Authenticator>();
+            booksearch.Click += (_, _) => OpenForm<Booksearch>();
         }
 
         // Método genérico restritivo, onde T (Type) deve ser qualquer objeto que seja Form, e deve ser permitido uso de construtor, new():
